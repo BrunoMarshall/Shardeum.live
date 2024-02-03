@@ -9,22 +9,18 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 40px;
-            background-color: #333;
+            margin: 0; /* Remove default margin to fill the entire viewport */
+            background-image: url('https://github.com/BrunoMarshall/Shardeum.live/blob/main/images/Shardeum%20connection%20earth.png');
+            background-size: cover; /* Cover the entire viewport with the background image */
             color: #ccc;
-        }
-        h1, p {
-            color: #888;
         }
         h1 {
             text-align: center;
+            color: #6C757D;
         }
         main {
             text-align: center;
-        }
-        main p {
-            text-align: left;
-            margin-left: 20px;
+            padding: 40px; /* Add padding to make text more readable */
         }
         main a {
             color: #00c2ff;
@@ -36,7 +32,15 @@
             font-size: 1.5em;
             margin-right: 5px;
         }
+        section {
+            float: left;
+            width: 25%;
+            padding: 20px;
+            background-color: #555;
+            margin-top: 20px;
+        }
         footer {
+            clear: both;
             text-align: center;
             position: fixed;
             bottom: 0;
@@ -45,17 +49,28 @@
             color: #ccc;
             padding: 10px;
         }
+        section.right {
+            float: right;
+        }
     </style>
 </head>
 <body>
     <header>
-        <h1>Welcome to <span style="color: #6C757D;">Shardeum.live</span></h1>
+        <h1>Welcome to Shardeum.live</h1>
     </header>
     <main>
         <p><strong>Coming Soon!</strong></p>
         <p>Your gateway to secure and efficient blockchain validation on Shardeum blockchain. Join us in shaping the future of blockchain technology! Are you ready for the Shardeum Atomium Incentivized Testnet?? Launching soon...</p>
-        <p><a href="https://explorer-sphinx.shardeum.org/" target="_blank">Shardeum Explorer</a></p>
     </main>
+    <section>
+        <p><a href="https://explorer-sphinx.shardeum.org/" target="_blank">Shardeum Explorer</a></p>
+    </section>
+    <section class="right">
+        <p><a href="https://shardeum.org/" target="_blank">About Shardeum</a></p>
+        <p><a href="https://docs.shardeum.org/" target="_blank">Shardeum Docs</a></p>
+        <p><a href="https://docs.shardeum.org/faucet/claim" target="_blank">Testnet SHM Claim</a></p>
+        <p><a href="https://testshm.xyz/" target="_blank">Testnet Faucet Website</a></p>
+    </section>
     <footer>
         <p>&copy; 2023 Shardeum.live</p>
     </footer>
