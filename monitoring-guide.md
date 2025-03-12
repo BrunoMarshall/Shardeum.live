@@ -1,6 +1,6 @@
 # 🚀 Automating Alerts for Shardeum Validator Node Monitoring - Telegram Alerts in your smartphone
 
-Keeping your validator node online (LIVE! 😊) is essential for network stability and maximizing rewards. We've all felt the frustration of logging into the Shardeum dashboard and seeing that the validator has stopped. 😔 This is my contribution to Shardeum and a guide to help you set up an automated monitoring script that:    
+Keeping your Shardeum validator node online (LIVE! 😊) is essential for network stability and maximizing rewards. We've all felt the frustration of logging into the Shardeum dashboard and seeing that the validator has stopped. 😔 This is my contribution to Shardeum and a guide to help you set up an automated monitoring script that:    
 #### ✅ Regularly checks automatically your Shardeum validator node status  
 #### ✅ Sends a Telegram alert automatically if the node stops  
 #### ✅ Attempts to restart the node automatically  
@@ -8,7 +8,10 @@ Keeping your validator node online (LIVE! 😊) is essential for network stabili
 By following this guide, you'll have a reliable system in place to minimize downtime with instant notifications in your smartphone and automated recovery.
 
 # What do you will need:
-1- A running Shardeum validator node - I assume that you are using a VPS, you can install it and run it following Shardium documentation: https://docs.shardeum.org/docs/node/run/validator/self-host#download-and-install-validator  
+1- A running Shardeum validator node - I assume that you are using a VPS, you can install it and run it following Shardium documentation:  
+```
+https://docs.shardeum.org/docs/node/run/validator/self-host#download-and-install-validator
+```  
 2- A Telegram bot for notifications (I will show you how to do it, I choose telegram because is the easy and it is free)  
 3- Your Telegram Bot Token and Chat ID (I will show you how to do it)  
 
@@ -23,7 +26,10 @@ Type /newbot and follow the setup instructions
 Copy the Bot Token given at the end  
 # Step 2 :How to Get Your Chat ID  
 Send any message to your newly created bot  
-Open a browser and copy/paste your (<BOT_TOKEN>)in the link: https://api.telegram.org/bot<BOT_TOKEN>/getUpdates  
+Open a browser and copy/paste your (<BOT_TOKEN>)in the link:  
+```
+https://api.telegram.org/bot<BOT_TOKEN>/getUpdates
+```  
 Find your Chat ID in the response  
 
 
@@ -46,7 +52,7 @@ cd ~/shardeum
 ./shell.sh  
 ```
 
-## Copy/paste the full Monitoring Script below and change your "YOUR_BOT_TOKEN" and "YOUR_CHAT_ID"  
+## Copy/paste the full Monitoring Script below and use your "YOUR_BOT_TOKEN" and "YOUR_CHAT_ID"  
 ```  
 #!/bin/bash  
 
