@@ -40,9 +40,9 @@ If you're using a VPS like Contabo or AWS, log in to your server
 🔹 Start a tmux Session  
 To keep the script running in the background when you close the vps, use tmux:   
 ```
-tmux new-session -s shardium-monitor
+tmux new-session -s shardeum-monitor
 ```
-This opens a new terminal session named shardium-monitor.  
+This opens a new terminal session named shardeum-monitor.  
 
 🔹 Navigate to Your Shardeum Directory  
 Run:  
@@ -112,14 +112,14 @@ This will allow the script to continue running even after you log out.
 
 To reattach later and check the logs:  
 ```
-tmux attach-session -t shardium-monitor
+tmux attach-session -t shardeum-monitor
 ```
 
 # 🎯 Conclusion  
 Now, your shardeum validator node will:  
 ✔ Be monitored 24/7  
 ✔ Send alerts if it stops  
-✔ Restart automatically ----- Based on Shardeium testnet experience, if there's a version update, it's best to reinstall the new version rather than attempting to restart the node, as it may not work properly with the old version.  
+✔ Restart automatically ----- Based on Shardeum testnet experience, if there's a version update, it's best to reinstall the new version rather than attempting to restart the node, as it may not work properly with the old version.  
 
 If you have any questions or improvements, feel free to contribute! 🚀  
 
