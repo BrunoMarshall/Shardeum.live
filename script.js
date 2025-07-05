@@ -26,95 +26,113 @@ const probabilitySpan = document.getElementById('probability');
 const rewardSpan = document.getElementById('reward');
 const rewardsChartCanvas = document.getElementById('rewards-chart');
 
-// Initialize Sliders
-const nodePriceSlider = noUiSlider.create(document.getElementById('node-price-slider'), {
-    start: 0,
-    connect: 'lower',
-    range: { min: 0, max: 200 },
-    step: 1
-});
-const numServersSlider = noUiSlider.create(document.getElementById('num-servers-slider'), {
-    start: 1,
-    connect: 'lower',
-    range: { min: 1, max: 100 },
-    step: 1
-});
-const runningCostsSlider = noUiSlider.create(document.getElementById('running-costs-slider'), {
-    start: 0,
-    connect: 'lower',
-    range: { min: 0, max: 50 },
-    step: 0.5
-});
-const nodeStakeSlider = noUiSlider.create(document.getElementById('node-stake-slider'), {
-    start: 2400,
-    connect: 'lower',
-    range: { min: 2400, max: 100000 },
-    step: 100
-});
-const customProbabilitySlider = noUiSlider.create(document.getElementById('custom-probability-slider'), {
-    start: 55,
-    connect: 'lower',
-    range: { min: 0, max: 100 },
-    step: 0.1
-});
-const weeklyValidationsSlider = noUiSlider.create(document.getElementById('weekly-validations-slider'), {
-    start: 3.85, // Equivalent to 0.55 * 7
-    connect: 'lower',
-    range: { min: 0, max: 7 },
-    step: 0.1
+// Initialize Sliders with Error Handling
+const sliders = [
+    { id: 'node-price-slider', instance: null, config: { start: 0, connect: 'lower', range: { min: 0, max: 200 }, step: 1 } },
+    { id: 'num-servers-slider', instance: null, config: { start: 1, connect: 'lower', range: { min: 1, max: 100 }, step: 1 } },
+    { id: 'running-costs-slider', instance: null, config: { start: 0, connect: 'lower', range: { min: 0, max: 50 }, step: 0.5 } },
+    { id: 'node-stake-slider', instance: null, config: { start: 2400, connect: 'lower', range: { min: 2400, max: 100000 }, step: 100 } },
+    { id: 'custom-probability-slider', instance: null, config: { start: 55, connect: 'lower', range: { min: 0, max: 100 }, step: 0.1 } },
+    { id: 'weekly-validations-slider', instance: null, config: { start: 3.85, connect: 'lower', range: { min: 0, max: 7 }, step: 0.1 } }
+];
+
+sliders.forEach(slider => {
+    const element = document.getElementById(slider.id);
+    if (element) {
+        try {
+            slider.instance = noUiSlider.create(element, slider.config);
+            console.log(`Initialized slider: ${slider.id}`);
+        } catch (error) {
+            console.error(`Failed to initialize slider ${slider.id}:`, error);
+        }
+    } else {
+        console.error(`Slider element not found: ${slider.id}`);
+    }
 });
 
+const nodePriceSlider = sliders.find(s => s.id === 'node-price-slider').instance;
+const numServersSlider = sliders.find(s => s.id === 'num-servers-slider').instance;
+const runningCostsSlider = sliders.find(s => s.id === 'running-costs-slider').instance;
+const nodeStakeSlider = sliders.find(s => s.id === 'node-stake-slider').instance;
+const customProbabilitySlider = sliders.find(s => s.id === 'custom-probability-slider').instance;
+const weeklyValidationsSlider = sliders.find(s => s.id === 'weekly-validations-slider').instance;
+
 // Sync sliders with inputs and update results
-nodePriceSlider.on('update', (values) => {
-    nodePriceInput.value = parseFloat(values[0]).toFixed(2);
-    calculateEarnings();
-});
-numServersSlider.on('update', (values) => {
-    numServersInput.value = Math.round(values[0]);
-    calculateEarnings();
-});
-runningCostsSlider.on('update', (values) => {
-    runningCostsInput.value = parseFloat(values[0]).toFixed(2);
-    calculateEarnings();
-});
-nodeStakeSlider.on('update', (values) => {
-    nodeStakeInput.value = Math.round(values[0]);
-    calculateEarnings();
-});
-customProbabilitySlider.on('update', (values) => {
-    customProbabilityInput.value = parseFloat(values[0]).toFixed(1);
-    if (customProbability.checked) calculateEarnings();
-});
-weeklyValidationsSlider.on('update', (values) => {
-    weeklyValidationsInput.value = parseFloat(values[0]).toFixed(1);
-    if (weeklyValidations.checked) calculateEarnings();
-});
+if (nodePriceSlider) {
+    nodePriceSlider.on('update', (values) => {
+        nodePriceInput.value = parseFloat(values[0]).toFixed(2);
+        calculateEarnings();
+    });
+}
+if (numServersSlider) {
+    numServersSlider.on('update', (values) => {
+        numServersInput.value = Math.round(values[0]);
+        calculateEarnings();
+    });
+}
+if (runningCostsSlider) {
+    runningCostsSlider.on('update', (values) => {
+        runningCostsInput.value = parseFloat(values[0]).toFixed(2);
+        calculateEarnings();
+    });
+}
+if (nodeStakeSlider) {
+    nodeStakeSlider.on('update', (values) => {
+        nodeStakeInput.value = Math.round(values[0]);
+        calculateEarnings();
+    });
+}
+if (customProbabilitySlider) {
+    customProbabilitySlider.on('update', (values) => {
+        customProbabilityInput.value = parseFloat(values[0]).toFixed(1);
+        if (customProbability.checked) calculateEarnings();
+    });
+}
+if (weeklyValidationsSlider) {
+    weeklyValidationsSlider.on('update', (values) => {
+        weeklyValidationsInput.value = parseFloat(values[0]).toFixed(1);
+        if (weeklyValidations.checked) calculateEarnings();
+    });
+}
+
 nodePriceInput.addEventListener('input', () => {
-    nodePriceSlider.set(nodePriceInput.value);
-    calculateEarnings();
+    const value = parseFloat(nodePriceInput.value);
+    if (!isNaN(value) && nodePriceSlider) {
+        nodePriceSlider.set(value);
+        calculateEarnings();
+    }
 });
 numServersInput.addEventListener('input', () => {
-    numServersSlider.set(numServersInput.value);
-    calculateEarnings();
+    const value = parseInt(numServersInput.value);
+    if (!isNaN(value) && numServersSlider) {
+        numServersSlider.set(value);
+        calculateEarnings();
+    }
 });
 runningCostsInput.addEventListener('input', () => {
-    runningCostsSlider.set(runningCostsInput.value);
-    calculateEarnings();
+    const value = parseFloat(runningCostsInput.value);
+    if (!isNaN(value) && runningCostsSlider) {
+        runningCostsSlider.set(value);
+        calculateEarnings();
+    }
 });
 nodeStakeInput.addEventListener('input', () => {
-    nodeStakeSlider.set(nodeStakeInput.value);
-    calculateEarnings();
+    const value = parseInt(nodeStakeInput.value);
+    if (!isNaN(value) && nodeStakeSlider) {
+        nodeStakeSlider.set(value);
+        calculateEarnings();
+    }
 });
-customProbability Input.addEventListener('input', () => {
+customProbabilityInput.addEventListener('input', () => {
     const value = parseFloat(customProbabilityInput.value);
-    if (!isNaN(value)) {
+    if (!isNaN(value) && customProbabilitySlider) {
         customProbabilitySlider.set(value);
         if (customProbability.checked) calculateEarnings();
     }
 });
 weeklyValidationsInput.addEventListener('input', () => {
     const value = parseFloat(weeklyValidationsInput.value);
-    if (!isNaN(value)) {
+    if (!isNaN(value) && weeklyValidationsSlider) {
         weeklyValidationsSlider.set(value);
         if (weeklyValidations.checked) calculateEarnings();
     }
@@ -309,7 +327,6 @@ async function calculateEarnings() {
         initialInvestmentSpan.textContent = `${currencySymbol}${(nodePrice * numServers).toFixed(2)} ${nodeCurrency} + ${nodeStake * numServers} SHM (${totalInvestmentShm.toFixed(2)} SHM total)`;
         dailyNodesCostSpan.textContent = `${currencySymbol}${dailyNodesCostSelected.toFixed(2)} ${runningCurrency} (${dailyNodesCostShm.toFixed(2)} SHM)`;
         monthlyNodesCostSpan.textContent = `${currencySymbol}${monthlyNodesCostSelected.toFixed(2)} ${runningCurrency} (${monthlyNodesCostShm.toFixed(2)} SHM)`;
-        monthlyNodesCostSpan.textContent = `${currencySymbol}${monthlyNodesCostSelected.toFixed(2)} ${runningCurrency} (${monthlyNodesCostShm.toFixed(2)} SHM)`;
         annualNodesCostSpan.textContent = `${currencySymbol}${annualNodesCostSelected.toFixed(2)} ${runningCurrency} (${annualRunningCostsShm.toFixed(2)} SHM)`;
         netAnnualProfitSpan.textContent = `${currencySymbol}${netAnnualProfitSelected.toFixed(2)} ${runningCurrency} (${netAnnualProfitShm.toFixed(2)} SHM)`;
         weeklyRewardsSpan.textContent = `${currencySymbol}${weeklyRewardsSelected.toFixed(2)} ${runningCurrency} (${weeklyRewardsShm.toFixed(2)} SHM)`;
@@ -376,8 +393,8 @@ Promise.all([fetchShmPrice(), fetchConfig()]).then(([shmPrice, config]) => {
     rewardSpan.textContent = config.reward.toFixed(0);
     customProbabilityInput.value = (config.probability * 100).toFixed(1);
     weeklyValidationsInput.value = (config.probability * 7).toFixed(1);
-    customProbabilitySlider.set(config.probability * 100);
-    weeklyValidationsSlider.set(config.probability * 7);
+    if (customProbabilitySlider) customProbabilitySlider.set(config.probability * 100);
+    if (weeklyValidationsSlider) weeklyValidationsSlider.set(config.probability * 7);
     console.log('Page load: SHM price and config fetched');
     calculateEarnings(); // Trigger initial calculation
 }).catch(error => {
