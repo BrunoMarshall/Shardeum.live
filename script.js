@@ -10,7 +10,6 @@ const customProbability = document.getElementById('custom-probability');
 const weeklyValidations = document.getElementById('weekly-validations');
 const customProbabilityInput = document.getElementById('custom-probability-input');
 const weeklyValidationsInput = document.getElementById('weekly-validations-input');
-const calculateBtn = document.getElementById('calculate-btn');
 const resultsDiv = document.getElementById('results');
 const shmPriceSpan = document.getElementById('shm-price');
 const initialInvestmentSpan = document.getElementById('initial-investment');
@@ -106,13 +105,19 @@ nodeStakeInput.addEventListener('input', () => {
     nodeStakeSlider.set(nodeStakeInput.value);
     calculateEarnings();
 });
-customProbabilityInput.addEventListener('input', () => {
-    customProbabilitySlider.set(customProbabilityInput.value);
-    if (customProbability.checked) calculateEarnings();
+customProbability Input.addEventListener('input', () => {
+    const value = parseFloat(customProbabilityInput.value);
+    if (!isNaN(value)) {
+        customProbabilitySlider.set(value);
+        if (customProbability.checked) calculateEarnings();
+    }
 });
 weeklyValidationsInput.addEventListener('input', () => {
-    weeklyValidationsSlider.set(weeklyValidationsInput.value);
-    if (weeklyValidations.checked) calculateEarnings();
+    const value = parseFloat(weeklyValidationsInput.value);
+    if (!isNaN(value)) {
+        weeklyValidationsSlider.set(value);
+        if (weeklyValidations.checked) calculateEarnings();
+    }
 });
 
 // Toggle probability input visibility
@@ -304,6 +309,7 @@ async function calculateEarnings() {
         initialInvestmentSpan.textContent = `${currencySymbol}${(nodePrice * numServers).toFixed(2)} ${nodeCurrency} + ${nodeStake * numServers} SHM (${totalInvestmentShm.toFixed(2)} SHM total)`;
         dailyNodesCostSpan.textContent = `${currencySymbol}${dailyNodesCostSelected.toFixed(2)} ${runningCurrency} (${dailyNodesCostShm.toFixed(2)} SHM)`;
         monthlyNodesCostSpan.textContent = `${currencySymbol}${monthlyNodesCostSelected.toFixed(2)} ${runningCurrency} (${monthlyNodesCostShm.toFixed(2)} SHM)`;
+        monthlyNodesCostSpan.textContent = `${currencySymbol}${monthlyNodesCostSelected.toFixed(2)} ${runningCurrency} (${monthlyNodesCostShm.toFixed(2)} SHM)`;
         annualNodesCostSpan.textContent = `${currencySymbol}${annualNodesCostSelected.toFixed(2)} ${runningCurrency} (${annualRunningCostsShm.toFixed(2)} SHM)`;
         netAnnualProfitSpan.textContent = `${currencySymbol}${netAnnualProfitSelected.toFixed(2)} ${runningCurrency} (${netAnnualProfitShm.toFixed(2)} SHM)`;
         weeklyRewardsSpan.textContent = `${currencySymbol}${weeklyRewardsSelected.toFixed(2)} ${runningCurrency} (${weeklyRewardsShm.toFixed(2)} SHM)`;
@@ -353,12 +359,6 @@ async function calculateEarnings() {
     }
 }
 
-// Event Listener for Calculate Button
-calculateBtn.addEventListener('click', () => {
-    console.log('Calculate button clicked');
-    calculateEarnings();
-});
-
 // Event Listener for Currency Changes
 nodePriceCurrency.addEventListener('change', () => {
     console.log('Node price currency changed');
@@ -369,7 +369,7 @@ runningCostsCurrency.addEventListener('change', () => {
     calculateEarnings();
 });
 
-// Fetch SHM price and config on page load
+// Fetch SHM price and config on page load and calculate earnings
 Promise.all([fetchShmPrice(), fetchConfig()]).then(([shmPrice, config]) => {
     shmPriceSpan.textContent = `$${shmPrice.usd.toFixed(2)} / €${shmPrice.eur.toFixed(2)} / ₹${shmPrice.inr.toFixed(2)}`;
     probabilitySpan.textContent = (config.probability * 100).toFixed(1);
@@ -379,6 +379,7 @@ Promise.all([fetchShmPrice(), fetchConfig()]).then(([shmPrice, config]) => {
     customProbabilitySlider.set(config.probability * 100);
     weeklyValidationsSlider.set(config.probability * 7);
     console.log('Page load: SHM price and config fetched');
+    calculateEarnings(); // Trigger initial calculation
 }).catch(error => {
     console.error('Error on page load:', error);
     resultsDiv.innerHTML = '<p class="text-red-500 text-center">Error loading initial data. Please refresh the page.</p>';
