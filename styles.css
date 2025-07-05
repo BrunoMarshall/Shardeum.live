@@ -34,3 +34,17 @@ button {
 canvas {
     max-height: 300px;
 }
+
+nav {
+    background-color: #2563eb; /* Matches bg-blue-600 */
+}
+
+nav a {
+    transition: color 0.3s ease;
+}
+
+nav a:hover {
+    color: #e5e7eb; /* Light gray for hover effect */
+}
+
+
