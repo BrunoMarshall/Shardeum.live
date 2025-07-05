@@ -43,13 +43,15 @@
             <!-- Monthly VPS Costs per Server -->
             <div>
                 <label class="block text-gray-700 font-medium mb-2">Monthly VPS Costs per Server</label>
-                <input id="running-costs" type="number" min="0" step="0.01" placeholder="Enter VPS costs" class="w-full p-2 border rounded">
-                <select id="running-costs-currency" class="w-full p-2 border rounded mt-2">
-                    <option value="USD">USD</option>
-                    <option value="EUR">EUR</option>
-                    <option value="INR">INR</option>
-                    <option value="SHM">SHM</option>
-                </select>
+                <div class="flex items-center space-x-2">
+                    <input id="running-costs" type="number" min="0" step="0.01" placeholder="Enter VPS costs" class="w-3/4 p-2 border rounded">
+                    <select id="running-costs-currency" class="w-1/4 p-2 border rounded">
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                        <option value="INR">INR</option>
+                        <option value="SHM">SHM</option>
+                    </select>
+                </div>
                 <div id="running-costs-slider" class="mt-4"></div>
                 <p class="text-sm text-gray-500 mt-2">Monthly VPS costs per server (e.g., hosting, electricity).</p>
             </div>
@@ -65,13 +67,15 @@
             <!-- Hardware Investment (if applicable) -->
             <div>
                 <label class="block text-gray-700 font-medium mb-2">Hardware Investment (if applicable)</label>
-                <input id="node-price" type="number" min="0" step="0.01" placeholder="Enter hardware cost" class="w-full p-2 border rounded">
-                <select id="node-price-currency" class="w-full p-2 border rounded mt-2">
-                    <option value="USD">USD</option>
-                    <option value="EUR">EUR</option>
-                    <option value="INR">INR</option>
-                    <option value="SHM">SHM</option>
-                </select>
+                <div class="flex items-center space-x-2">
+                    <input id="node-price" type="number" min="0" step="0.01" placeholder="Enter hardware cost" class="w-3/4 p-2 border rounded">
+                    <select id="node-price-currency" class="w-1/4 p-2 border rounded">
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                        <option value="INR">INR</option>
+                        <option value="SHM">SHM</option>
+                    </select>
+                </div>
                 <div id="node-price-slider" class="mt-4"></div>
                 <p class="text-sm text-gray-500 mt-2">Hardware investment (if using VPS, enter 0).</p>
             </div>
