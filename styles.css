@@ -1,3 +1,4 @@
+/* styles.css */
 body {
     font-family: 'Roboto', sans-serif;
     background-color: #f3f4f6;
@@ -13,16 +14,16 @@ header img {
 }
 
 #node-price-slider, #num-servers-slider, #running-costs-slider, #node-stake-slider, #custom-probability-slider, #weekly-validations-slider {
-    margin: 1rem 0;
+    margin: 16px 0; /* Restored to match common Tailwind spacing (my-4) */
 }
 
 .noUi-connect {
-    background: #2563eb;
+    background: #2563eb; /* Blue track */
 }
 
 .noUi-handle {
-    background: #ffffff;
-    border: 2px solid #2563eb;
+    background: #ffffff; /* White handle */
+    border: 2px solid #2563eb; /* Blue border */
     border-radius: 50%;
     cursor: pointer;
 }
