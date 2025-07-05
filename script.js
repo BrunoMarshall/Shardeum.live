@@ -35,14 +35,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Verify DOM elements
     console.log('DOM elements loaded:', {
+        probabilityForm: !!probabilityForm,
         useCommunityProbability: !!useCommunityProbability,
         customProbability: !!customProbability,
         weeklyValidations: !!weeklyValidations,
         customProbabilityInput: !!customProbabilityInput,
         weeklyValidationsInput: !!weeklyValidationsInput,
         customProbabilitySlider: !!document.getElementById('custom-probability-slider'),
-        weeklyValidationsSlider: !!document.getElementById('weekly-validations-slider'),
-        probabilityForm: !!probabilityForm
+        weeklyValidationsSlider: !!document.getElementById('weekly-validations-slider')
     });
 
     // Initialize Sliders
@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     } catch (error) {
         console.error('Slider initialization error:', error);
-        errorMessage.textContent = 'Failed to initialize sliders';
+        errorMessage.textContent = 'Failed to initialize sliders, possibly due to CSP restrictions';
         errorMessage.classList.remove('hidden');
     }
 
@@ -204,39 +204,64 @@ document.addEventListener('DOMContentLoaded', () => {
             debouncedCalculateEarnings();
         });
     } else {
-        console.error('Probability form not found');
-        errorMessage.textContent = 'Probability form not found';
-        errorMessage.classList.remove('hidden');
+        console.warn('Probability form not found, using individual radio listeners');
+        if (useCommunityProbability) {
+            useCommunityProbability.addEventListener('change', () => {
+                console.log('useCommunityProbability changed');
+                toggleProbabilityInputs();
+                debouncedCalculateEarnings();
+            });
+        }
+        if (customProbability) {
+            customProbability.addEventListener('change', () => {
+                console.log('customProbability changed');
+                toggleProbabilityInputs();
+                debouncedCalculateEarnings();
+            });
+        }
+        if (weeklyValidations) {
+            weeklyValidations.addEventListener('change', () => {
+                console.log('weeklyValidations changed');
+                toggleProbabilityInputs();
+                debouncedCalculateEarnings();
+            });
+        }
     }
 
     // Toggle probability inputs
     function toggleProbabilityInputs() {
         console.log('toggleProbabilityInputs called');
-        console.log('useCommunityProbability:', useCommunityProbability?.checked);
-        console.log('customProbability:', customProbability?.checked);
-        console.log('weeklyValidations:', weeklyValidations?.checked);
-        if (customProbabilityInput && weeklyValidationsInput && document.getElementById('custom-probability-slider') && document.getElementById('weekly-validations-slider')) {
-            customProbabilityInput.classList.add('hidden');
-            weeklyValidationsInput.classList.add('hidden');
-            document.getElementById('custom-probability-slider').classList.add('hidden');
-            document.getElementById('weekly-validations-slider').classList.add('hidden');
+        console.log('Radio states:', {
+            useCommunityProbability: useCommunityProbability?.checked,
+            customProbability: customProbability?.checked,
+            weeklyValidations: weeklyValidations?.checked
+        });
+        const customInput = customProbabilityInput;
+        const weeklyInput = weeklyValidationsInput;
+        const customSlider = document.getElementById('custom-probability-slider');
+        const weeklySlider = document.getElementById('weekly-validations-slider');
+        if (customInput && weeklyInput && customSlider && weeklySlider) {
+            customInput.classList.add('hidden');
+            weeklyInput.classList.add('hidden');
+            customSlider.classList.add('hidden');
+            weeklySlider.classList.add('hidden');
             if (customProbability?.checked) {
                 console.log('Showing Custom Probability input and slider');
-                customProbabilityInput.classList.remove('hidden');
-                document.getElementById('custom-probability-slider').classList.remove('hidden');
+                customInput.classList.remove('hidden');
+                customSlider.classList.remove('hidden');
             } else if (weeklyValidations?.checked) {
                 console.log('Showing Weekly Validations input and slider');
-                weeklyValidationsInput.classList.remove('hidden');
-                document.getElementById('weekly-validations-slider').classList.remove('hidden');
+                weeklyInput.classList.remove('hidden');
+                weeklySlider.classList.remove('hidden');
             }
         } else {
-            console.error('One or more probability inputs/sliders not found:', {
-                customProbabilityInput: !!customProbabilityInput,
-                weeklyValidationsInput: !!weeklyValidationsInput,
-                customProbabilitySlider: !!document.getElementById('custom-probability-slider'),
-                weeklyValidationsSlider: !!document.getElementById('weekly-validations-slider')
+            console.error('Missing probability inputs/sliders:', {
+                customInput: !!customInput,
+                weeklyInput: !!weeklyInput,
+                customSlider: !!customSlider,
+                weeklySlider: !!weeklySlider
             });
-            errorMessage.textContent = 'Probability inputs or sliders not found';
+            errorMessage.textContent = 'Missing probability inputs or sliders';
             errorMessage.classList.remove('hidden');
         }
     }

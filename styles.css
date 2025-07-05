@@ -13,7 +13,7 @@ header img {
 }
 
 #node-price-slider, #num-servers-slider, #running-costs-slider, #node-stake-slider, #custom-probability-slider, #weekly-validations-slider {
-    margin: 20px 10px;
+    margin: 1rem 0;
 }
 
 .noUi-connect {
@@ -52,14 +52,10 @@ nav a:hover {
 }
 
 #custom-probability-input, #weekly-validations-input {
-    width: 100%;
-    max-width: 150px;
-    padding: 0.5rem;
     display: none !important;
 }
 
 #custom-probability-slider, #weekly-validations-slider {
-    margin: 1rem 0;
     display: none !important;
 }
 
