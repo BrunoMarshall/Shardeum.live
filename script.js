@@ -1,10 +1,7 @@
-// Hardcoded values (update manually)
-const ACTIVE_PROBABILITY = 0.55; // 55% chance of being active
-const REWARD_PER_SLOT = 40; // 40 SHM per active slot
-
 // DOM Elements
 const nodePriceInput = document.getElementById('node-price');
 const nodePriceCurrency = document.getElementById('node-price-currency');
+const numServersInput = document.getElementById('num-servers');
 const runningCostsInput = document.getElementById('running-costs');
 const runningCostsCurrency = document.getElementById('running-costs-currency');
 const calculateBtn = document.getElementById('calculate-btn');
@@ -15,25 +12,36 @@ const monthlyRewardsSpan = document.getElementById('monthly-rewards');
 const weeklyRewardsSpan = document.getElementById('weekly-rewards');
 const netRoiSpan = document.getElementById('net-roi');
 const estimatedApySpan = document.getElementById('estimated-apy');
+const probabilitySpan = document.getElementById('probability');
+const rewardSpan = document.getElementById('reward');
 const rewardsChartCanvas = document.getElementById('rewards-chart');
 
 // Initialize Sliders
 const nodePriceSlider = noUiSlider.create(document.getElementById('node-price-slider'), {
-    start: 1000,
+    start: 0,
     connect: 'lower',
-    range: { min: 0, max: 10000 },
-    step: 10
+    range: { min: 0, max: 200 },
+    step: 1
+});
+const numServersSlider = noUiSlider.create(document.getElementById('num-servers-slider'), {
+    start: 1,
+    connect: 'lower',
+    range: { min: 1, max: 100 },
+    step: 1
 });
 const runningCostsSlider = noUiSlider.create(document.getElementById('running-costs-slider'), {
-    start: 50,
+    start: 0,
     connect: 'lower',
-    range: { min: 0, max: 500 },
-    step: 1
+    range: { min: 0, max: 50 },
+    step: 0.5
 });
 
 // Sync sliders with inputs
 nodePriceSlider.on('update', (values) => {
     nodePriceInput.value = parseFloat(values[0]).toFixed(2);
+});
+numServersSlider.on('update', (values) => {
+    numServersInput.value = Math.round(values[0]);
 });
 runningCostsSlider.on('update', (values) => {
     runningCostsInput.value = parseFloat(values[0]).toFixed(2);
@@ -41,66 +49,108 @@ runningCostsSlider.on('update', (values) => {
 nodePriceInput.addEventListener('input', () => {
     nodePriceSlider.set(nodePriceInput.value);
 });
+numServersInput.addEventListener('input', () => {
+    numServersSlider.set(numServersInput.value);
+});
 runningCostsInput.addEventListener('input', () => {
     runningCostsSlider.set(runningCostsInput.value);
 });
 
+// Fetch Config from JSON
+async function fetchConfig() {
+    try {
+        const response = await fetch('assets/config.json');
+        if (!response.ok) throw new Error('Failed to fetch config.json');
+        const data = await response.json();
+        return {
+            probability: data.probability || 0.55,
+            reward: data.reward || 40
+        };
+    } catch (error) {
+        console.error('Error fetching config:', error);
+        return { probability: 0.55, reward: 40 };
+    }
+}
+
 // Fetch SHM Price from CoinGecko
 async function fetchShmPrice() {
     try {
-        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=shardeum&vs_currencies=usd,eur');
+        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=shardeum&vs_currencies=usd,eur,inr');
         const data = await response.json();
         return {
-            usd: data.shardeum.usd,
-            eur: data.shardeum.eur
+            usd: data.shardeum.usd || 0,
+            eur: data.shardeum.eur || 0,
+            inr: data.shardeum.inr || 0
         };
     } catch (error) {
         console.error('Error fetching SHM price:', error);
-        return { usd: 0, eur: 0 };
+        return { usd: 0, eur: 0, inr: 0 };
     }
 }
 
 // Calculate Earnings
 async function calculateEarnings() {
+    console.log("Calculator updated with user-selected currency results");
     const nodePrice = parseFloat(nodePriceInput.value) || 0;
+    const numServers = parseInt(numServersInput.value) || 1;
     const runningCosts = parseFloat(runningCostsInput.value) || 0;
     const nodeCurrency = nodePriceCurrency.value;
     const runningCurrency = runningCostsCurrency.value;
 
-    // Fetch SHM price
+    // Fetch config and SHM price
+    const config = await fetchConfig();
     const shmPrice = await fetchShmPrice();
+
+    // Update probability and reward display
+    probabilitySpan.textContent = (config.probability * 100).toFixed(0);
+    rewardSpan.textContent = config.reward.toFixed(0);
 
     // Convert inputs to SHM
     let nodePriceShm = nodePrice;
     let runningCostsShm = runningCosts;
-    if (nodeCurrency === 'USD') nodePriceShm = nodePrice / shmPrice.usd;
-    else if (nodeCurrency === 'EUR') nodePriceShm = nodePrice / shmPrice.eur;
-    if (runningCurrency === 'USD') runningCostsShm = runningCosts / shmPrice.usd;
-    else if (runningCurrency === 'EUR') runningCostsShm = runningCosts / shmPrice.eur;
+    if (nodeCurrency === 'USD') nodePriceShm = shmPrice.usd > 0 ? nodePrice / shmPrice.usd : 0;
+    else if (nodeCurrency === 'EUR') nodePriceShm = shmPrice.eur > 0 ? nodePrice / shmPrice.eur : 0;
+    else if (nodeCurrency === 'INR') nodePriceShm = shmPrice.inr > 0 ? nodePrice / shmPrice.inr : 0;
+    if (runningCurrency === 'USD') runningCostsShm = shmPrice.usd > 0 ? runningCosts / shmPrice.usd : 0;
+    else if (runningCurrency === 'EUR') runningCostsShm = shmPrice.eur > 0 ? runningCosts / shmPrice.eur : 0;
+    else if (runningCurrency === 'INR') runningCostsShm = shmPrice.inr > 0 ? runningCosts / shmPrice.inr : 0;
 
-    // Calculate rewards
-    const dailyRewardsShm = ACTIVE_PROBABILITY * REWARD_PER_SLOT;
+    // Calculate rewards (per server, multiplied by number of servers)
+    const dailyRewardsShm = config.probability * config.reward * numServers;
     const weeklyRewardsShm = dailyRewardsShm * 7;
     const monthlyRewardsShm = dailyRewardsShm * 30;
     const annualRewardsShm = dailyRewardsShm * 365;
 
-    // Convert rewards to USD and EUR
-    const monthlyRewardsUsd = monthlyRewardsShm * shmPrice.usd;
-    const monthlyRewardsEur = monthlyRewardsShm * shmPrice.eur;
-    const weeklyRewardsUsd = weeklyRewardsShm * shmPrice.usd;
-    const weeklyRewardsEur = weeklyRewardsShm * shmPrice.eur;
+    // Convert rewards to selected currency
+    let monthlyRewardsSelected, weeklyRewardsSelected;
+    let currencySymbol = runningCurrency === 'USD' ? '$' : runningCurrency === 'EUR' ? '€' : runningCurrency === 'INR' ? '₹' : '';
+    if (runningCurrency === 'USD') {
+        monthlyRewardsSelected = monthlyRewardsShm * shmPrice.usd;
+        weeklyRewardsSelected = weeklyRewardsShm * shmPrice.usd;
+    } else if (runningCurrency === 'EUR') {
+        monthlyRewardsSelected = monthlyRewardsShm * shmPrice.eur;
+        weeklyRewardsSelected = weeklyRewardsShm * shmPrice.eur;
+    } else if (runningCurrency === 'INR') {
+        monthlyRewardsSelected = monthlyRewardsShm * shmPrice.inr;
+        weeklyRewardsSelected = weeklyRewardsShm * shmPrice.inr;
+    } else {
+        monthlyRewardsSelected = monthlyRewardsShm;
+        weeklyRewardsSelected = weeklyRewardsShm;
+        currencySymbol = 'SHM';
+    }
 
     // Calculate ROI and APY
-    const annualRunningCostsShm = runningCostsShm * 12;
+    const annualRunningCostsShm = runningCostsShm * 12 * numServers; // Total costs for all servers
     const netAnnualProfitShm = annualRewardsShm - annualRunningCostsShm;
-    const roi = (netAnnualProfitShm / nodePriceShm) * 100; // ROI in percentage
+    const totalInvestmentShm = nodePriceShm * numServers; // Total hardware investment
+    const roi = totalInvestmentShm > 0 ? (netAnnualProfitShm / totalInvestmentShm) * 100 : 0; // Avoid division by zero
     const apy = roi; // Simplified APY (no compounding)
 
-    // Display results
-    shmPriceSpan.textContent = `$${shmPrice.usd.toFixed(2)} / €${shmPrice.eur.toFixed(2)}`;
-    initialInvestmentSpan.textContent = `${nodePriceShm.toFixed(2)} SHM (${nodePrice.toFixed(2)} ${nodeCurrency})`;
-    monthlyRewardsSpan.textContent = `${monthlyRewardsShm.toFixed(2)} SHM ($${monthlyRewardsUsd.toFixed(2)} / €${monthlyRewardsEur.toFixed(2)})`;
-    weeklyRewardsSpan.textContent = `${weeklyRewardsShm.toFixed(2)} SHM ($${weeklyRewardsUsd.toFixed(2)} / €${weeklyRewardsEur.toFixed(2)})`;
+    // Display results in selected currencies
+    shmPriceSpan.textContent = `$${shmPrice.usd.toFixed(2)} / €${shmPrice.eur.toFixed(2)} / ₹${shmPrice.inr.toFixed(2)}`;
+    initialInvestmentSpan.textContent = `${currencySymbol}${(nodePrice * numServers).toFixed(2)} ${nodeCurrency} (${totalInvestmentShm.toFixed(2)} SHM)`;
+    monthlyRewardsSpan.textContent = `${currencySymbol}${monthlyRewardsSelected.toFixed(2)} ${runningCurrency} (${monthlyRewardsShm.toFixed(2)} SHM)`;
+    weeklyRewardsSpan.textContent = `${currencySymbol}${weeklyRewardsSelected.toFixed(2)} ${runningCurrency} (${weeklyRewardsShm.toFixed(2)} SHM)`;
     netRoiSpan.textContent = `${roi.toFixed(2)}%`;
     estimatedApySpan.textContent = `${apy.toFixed(2)}%`;
 
@@ -113,8 +163,8 @@ async function calculateEarnings() {
         data: {
             labels: ['Weekly Rewards', 'Monthly Rewards'],
             datasets: [{
-                label: 'Rewards (SHM)',
-                data: [weeklyRewardsShm, monthlyRewardsShm],
+                label: `Rewards (${runningCurrency})`,
+                data: [weeklyRewardsSelected, monthlyRewardsSelected],
                 backgroundColor: ['#2563eb', '#1e40af']
             }]
         },
@@ -123,7 +173,7 @@ async function calculateEarnings() {
             scales: {
                 y: {
                     beginAtZero: true,
-                    title: { display: true, text: 'SHM' }
+                    title: { display: true, text: runningCurrency }
                 }
             }
         }
@@ -133,7 +183,9 @@ async function calculateEarnings() {
 // Event Listener for Calculate Button
 calculateBtn.addEventListener('click', calculateEarnings);
 
-// Fetch SHM price on page load
-fetchShmPrice().then(shmPrice => {
-    shmPriceSpan.textContent = `$${shmPrice.usd.toFixed(2)} / €${shmPrice.eur.toFixed(2)}`;
+// Fetch SHM price and config on page load
+Promise.all([fetchShmPrice(), fetchConfig()]).then(([shmPrice, config]) => {
+    shmPriceSpan.textContent = `$${shmPrice.usd.toFixed(2)} / €${shmPrice.eur.toFixed(2)} / ₹${shmPrice.inr.toFixed(2)}`;
+    probabilitySpan.textContent = (config.probability * 100).toFixed(0);
+    rewardSpan.textContent = config.reward.toFixed(0);
 });

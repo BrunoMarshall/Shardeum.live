@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+<!-- Updated July 2025 with INR and currency-based results -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,31 +24,41 @@
         <p class="text-center text-gray-600 mb-4">Enter your node details to estimate SHM rewards and APY.</p>
 
         <!-- Input Form -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Node Price -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Hardware Investment -->
             <div>
-                <label class="block text-gray-700 font-medium mb-2">Node Price</label>
-                <input id="node-price" type="number" min="0" step="0.01" placeholder="Enter node price" class="w-full p-2 border rounded">
+                <label class="block text-gray-700 font-medium mb-2">Hardware Investment</label>
+                <input id="node-price" type="number" min="0" step="0.01" placeholder="Enter hardware cost" class="w-full p-2 border rounded">
                 <select id="node-price-currency" class="w-full p-2 border rounded mt-2">
                     <option value="USD">USD</option>
                     <option value="EUR">EUR</option>
+                    <option value="INR">INR</option>
                     <option value="SHM">SHM</option>
                 </select>
                 <div id="node-price-slider" class="mt-4"></div>
-                <p class="text-sm text-gray-500 mt-2">Initial cost of setting up your node (e.g., hardware).</p>
+                <p class="text-sm text-gray-500 mt-2">Hardware investment (if using VPS, enter 0 USD).</p>
             </div>
 
-            <!-- Running Costs -->
+            <!-- Number of Servers -->
             <div>
-                <label class="block text-gray-700 font-medium mb-2">Monthly VPS/Running Costs</label>
-                <input id="running-costs" type="number" min="0" step="0.01" placeholder="Enter monthly costs" class="w-full p-2 border rounded">
+                <label class="block text-gray-700 font-medium mb-2">Number of Servers</label>
+                <input id="num-servers" type="number" min="1" max="100" step="1" placeholder="Enter number of servers" class="w-full p-2 border rounded">
+                <div id="num-servers-slider" class="mt-4"></div>
+                <p class="text-sm text-gray-500 mt-2">How many servers do you have? (1–100).</p>
+            </div>
+
+            <!-- Monthly VPS Costs per Server -->
+            <div>
+                <label class="block text-gray-700 font-medium mb-2">Monthly VPS Costs per Server</label>
+                <input id="running-costs" type="number" min="0" step="0.01" placeholder="Enter VPS costs" class="w-full p-2 border rounded">
                 <select id="running-costs-currency" class="w-full p-2 border rounded mt-2">
                     <option value="USD">USD</option>
                     <option value="EUR">EUR</option>
+                    <option value="INR">INR</option>
                     <option value="SHM">SHM</option>
                 </select>
                 <div id="running-costs-slider" class="mt-4"></div>
-                <p class="text-sm text-gray-500 mt-2">Monthly operational costs (e.g., VPS, electricity).</p>
+                <p class="text-sm text-gray-500 mt-2">Monthly VPS costs per server (e.g., hosting, electricity).</p>
             </div>
         </div>
 
@@ -70,7 +81,7 @@
                     <canvas id="rewards-chart" class="w-full"></canvas>
                 </div>
             </div>
-            <p class="text-sm text-gray-500 mt-4">Note: Based on a 55% chance of being selected daily, with 40 SHM per active slot. Values may change.</p>
+            <p class="text-sm text-gray-500 mt-4">Note: Based on a <span id="probability"></span>% chance of being selected daily, with <span id="reward"></span> SHM per active slot per server. Values may change.</p>
         </div>
     </main>
 
