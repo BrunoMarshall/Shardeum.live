@@ -65,42 +65,74 @@ const weeklyValidationsSlider = noUiSlider.create(document.getElementById('weekl
     step: 0.1
 });
 
-// Sync sliders with inputs
+// Sync sliders with inputs and trigger calculation
 nodePriceSlider.on('update', (values) => {
     nodePriceInput.value = parseFloat(values[0]).toFixed(2);
+    calculateEarnings();
 });
 numServersSlider.on('update', (values) => {
     numServersInput.value = Math.round(values[0]);
+    console.log(`Number of Servers updated to: ${numServersInput.value}`);
+    calculateEarnings();
 });
 runningCostsSlider.on('update', (values) => {
     runningCostsInput.value = parseFloat(values[0]).toFixed(2);
+    calculateEarnings();
 });
 nodeStakeSlider.on('update', (values) => {
     nodeStakeInput.value = Math.round(values[0]);
+    calculateEarnings();
 });
 customProbabilitySlider.on('update', (values) => {
     customProbabilityInput.value = parseFloat(values[0]).toFixed(1);
+    if (customProbability.checked) calculateEarnings();
 });
 weeklyValidationsSlider.on('update', (values) => {
     weeklyValidationsInput.value = parseFloat(values[0]).toFixed(1);
+    if (weeklyValidations.checked) calculateEarnings();
 });
+
+// Sync inputs with sliders and trigger calculation
 nodePriceInput.addEventListener('input', () => {
     nodePriceSlider.set(nodePriceInput.value);
+    calculateEarnings();
 });
 numServersInput.addEventListener('input', () => {
     numServersSlider.set(numServersInput.value);
+    console.log(`Number of Servers input changed to: ${numServersInput.value}`);
+    calculateEarnings();
 });
 runningCostsInput.addEventListener('input', () => {
     runningCostsSlider.set(runningCostsInput.value);
+    calculateEarnings();
 });
 nodeStakeInput.addEventListener('input', () => {
     nodeStakeSlider.set(nodeStakeInput.value);
+    calculateEarnings();
 });
 customProbabilityInput.addEventListener('input', () => {
     customProbabilitySlider.set(customProbabilityInput.value);
+    if (customProbability.checked) calculateEarnings();
 });
 weeklyValidationsInput.addEventListener('input', () => {
     weeklyValidationsSlider.set(weeklyValidationsInput.value);
+    if (weeklyValidations.checked) calculateEarnings();
+});
+
+// Add change listeners for dropdowns and radio buttons
+nodePriceCurrency.addEventListener('change', calculateEarnings);
+runningCostsCurrency.addEventListener('change', calculateEarnings);
+useCommunityProbability.addEventListener('change', () => {
+    toggleProbabilityInputs();
+    calculateEarnings();
+});
+customProbability.addEventListener('change', () => {
+    toggleProbabilityInputs();
+    calculateEarnings();
+});
+weeklyValidations.addEventListener('change', () => {
+    toggleProbabilityInputs();
+    calculateEarnings();
 });
 
 // Toggle probability input visibility
@@ -124,10 +156,6 @@ function toggleProbabilityInputs() {
         weeklyValidationsSlider.classList.remove('hidden');
     }
 }
-
-useCommunityProbability.addEventListener('change', toggleProbabilityInputs);
-customProbability.addEventListener('change', toggleProbabilityInputs);
-weeklyValidations.addEventListener('change', toggleProbabilityInputs);
 
 // Fetch Config from JSON
 async function fetchConfig() {
@@ -163,7 +191,16 @@ async function fetchShmPrice() {
 
 // Calculate Earnings
 async function calculateEarnings() {
-    console.log("Calculator updated with validator stake, new cost metrics, annual metrics, and custom probability");
+    console.log("Calculating earnings with inputs: ", {
+        numServers: numServersInput.value,
+        runningCosts: runningCostsInput.value,
+        nodeStake: nodeStakeInput.value,
+        nodePrice: nodePriceInput.value,
+        probabilityOption: document.querySelector('input[name="probability-option"]:checked').value,
+        customProbability: customProbabilityInput.value,
+        weeklyValidations: weeklyValidationsInput.value
+    });
+
     const nodePrice = parseFloat(nodePriceInput.value) || 0;
     const numServers = parseInt(numServersInput.value) || 1;
     const runningCosts = parseFloat(runningCostsInput.value) || 0;
@@ -273,7 +310,8 @@ async function calculateEarnings() {
     resultsDiv.classList.remove('hidden');
 
     // Render Chart
-    new Chart(rewardsChartCanvas, {
+    if (window.rewardsChart) window.rewardsChart.destroy(); // Destroy existing chart to prevent overlap
+    window.rewardsChart = new Chart(rewardsChartCanvas, {
         type: 'bar',
         data: {
             labels: ['Weekly Rewards', 'Monthly Rewards'],
@@ -307,6 +345,7 @@ Promise.all([fetchShmPrice(), fetchConfig()]).then(([shmPrice, config]) => {
     weeklyValidationsInput.value = (config.probability * 7).toFixed(1);
     customProbabilitySlider.set(config.probability * 100);
     weeklyValidationsSlider.set(config.probability * 7);
+    calculateEarnings(); // Initial calculation on page load
 });
 
 // Initialize probability inputs
