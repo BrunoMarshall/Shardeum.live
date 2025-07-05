@@ -140,10 +140,17 @@ async function calculateEarnings() {
     }
 
     // Calculate ROI and APY
-    const annualRunningCostsShm = runningCostsShm * 12 * numServers; // Total costs for all servers
+    const annualRunningCostsShm = runningCostsShm * 12 * numServers; // Total annual running costs
     const netAnnualProfitShm = annualRewardsShm - annualRunningCostsShm;
     const totalInvestmentShm = nodePriceShm * numServers; // Total hardware investment
-    const roi = totalInvestmentShm > 0 ? (netAnnualProfitShm / totalInvestmentShm) * 100 : 0; // Avoid division by zero
+    let roi;
+    if (totalInvestmentShm > 0) {
+        roi = (netAnnualProfitShm / totalInvestmentShm) * 100; // ROI based on hardware investment
+    } else if (annualRunningCostsShm > 0) {
+        roi = (netAnnualProfitShm / annualRunningCostsShm) * 100; // ROI based on running costs
+    } else {
+        roi = 0; // No investment or costs, so ROI is 0
+    }
     const apy = roi; // Simplified APY (no compounding)
 
     // Display results in selected currencies
