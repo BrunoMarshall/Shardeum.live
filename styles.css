@@ -35,6 +35,10 @@ canvas {
     max-height: 300px;
 }
 
+nav {
+    background-color: #2563eb;
+}
+
 nav a {
     transition: color 0.3s ease;
 }
@@ -43,15 +47,26 @@ nav a:hover {
     color: #e5e7eb;
 }
 
+#probability-form, #probability-inputs {
+    display: block !important;
+}
+
+#custom-probability-input, #weekly-validations-input {
+    display: none !important;
+}
+
+#custom-probability-slider, #weekly-validations-slider {
+    display: none !important;
+}
+
+#custom-probability-input:not(.hidden), #weekly-validations-input:not(.hidden) {
+    display: block !important;
+}
+
+#custom-probability-slider:not(.hidden), #weekly-validations-slider:not(.hidden) {
+    display: block !important;
+}
+
 .hidden {
-    display: none !important;
-}
-
-/* Ensure probability inputs and sliders are toggled correctly */
-#custom-probability-input.hidden, #weekly-validations-input.hidden {
-    display: none !important;
-}
-
-#custom-probability-slider.hidden, #weekly-validations-slider.hidden {
     display: none !important;
 }
