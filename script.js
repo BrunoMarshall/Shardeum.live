@@ -149,7 +149,7 @@ async function calculateEarnings() {
     } else if (annualRunningCostsShm > 0) {
         roi = (netAnnualProfitShm / annualRunningCostsShm) * 100; // ROI based on running costs
     } else {
-        roi = 0; // No investment or costs, so ROI is 0
+        roi = null; // No investment or costs, ROI is undefined
     }
     const apy = roi; // Simplified APY (no compounding)
 
@@ -158,8 +158,8 @@ async function calculateEarnings() {
     initialInvestmentSpan.textContent = `${currencySymbol}${(nodePrice * numServers).toFixed(2)} ${nodeCurrency} (${totalInvestmentShm.toFixed(2)} SHM)`;
     monthlyRewardsSpan.textContent = `${currencySymbol}${monthlyRewardsSelected.toFixed(2)} ${runningCurrency} (${monthlyRewardsShm.toFixed(2)} SHM)`;
     weeklyRewardsSpan.textContent = `${currencySymbol}${weeklyRewardsSelected.toFixed(2)} ${runningCurrency} (${weeklyRewardsShm.toFixed(2)} SHM)`;
-    netRoiSpan.textContent = `${roi.toFixed(2)}%`;
-    estimatedApySpan.textContent = `${apy.toFixed(2)}%`;
+    netRoiSpan.textContent = roi !== null ? `${roi.toFixed(2)}%` : 'N/A';
+    estimatedApySpan.textContent = apy !== null ? `${apy.toFixed(2)}%` : 'N/A';
 
     // Show results
     resultsDiv.classList.remove('hidden');
