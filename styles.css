@@ -1,0 +1,36 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f3f4f6;
+}
+
+header, footer {
+    background: linear-gradient(135deg, #2563eb, #1e40af);
+}
+
+header img {
+    max-height: 64px;
+    width: auto;
+}
+
+#node-price-slider, #running-costs-slider {
+    margin: 20px 10px;
+}
+
+.nouislider .noUi-connect {
+    background: #2563eb;
+}
+
+.nouislider .noUi-handle {
+    background: #ffffff;
+    border: 2px solid #2563eb;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+button {
+    transition: background-color 0.3s ease;
+}
+
+canvas {
+    max-height: 300px;
+}

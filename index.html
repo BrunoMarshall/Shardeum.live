@@ -1,80 +1,88 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Pay2Friends | Powered by Shardeum</title>
-  <link rel="icon" type="image/png" href="Pay2Friends_Logo.png" />
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f9f9f9;
-      color: #333;
-      margin: 0;
-      padding: 0;
-    }
-    header {
-      background: #005EA6;
-      color: white;
-      padding: 20px;
-      text-align: center;
-    }
-    header img {
-      height: 60px;
-      margin-bottom: 10px;
-    }
-    .logo {
-      font-size: 2rem;
-      font-weight: bold;
-      letter-spacing: 1px;
-    }
-    main {
-      padding: 40px 20px;
-      text-align: center;
-    }
-    h1 {
-      color: #005EA6;
-    }
-    p {
-      font-size: 1.2rem;
-      max-width: 600px;
-      margin: auto;
-    }
-    .button {
-      display: inline-block;
-      margin-top: 30px;
-      padding: 12px 25px;
-      background: #00c897;
-      color: white;
-      border-radius: 8px;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    footer {
-      text-align: center;
-      padding: 20px;
-      background: #eee;
-      font-size: 0.9rem;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shardeum Node APY Calculator</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="assets/shardeum_live_favicon.png">
 </head>
-<body>
+<body class="bg-gray-100 font-sans">
+    <!-- Header -->
+    <header class="bg-blue-600 text-white py-6 text-center">
+        <img src="assets/shardeum_live_logo.png" alt="Shardeum Logo" class="mx-auto h-16 mb-3">
+        <h1 class="text-3xl font-bold">Shardeum Node APY Calculator</h1>
+        <p class="mt-2 text-lg">Estimate your SHM earnings as a Shardeum node validator</p>
+    </header>
 
-  <header>
-    <img src="Pay2Friends_Logo.png" alt="Pay2Friends Logo" />
-    <div class="logo">Pay2Friends</div>
-    <div>Micro & Macro Payments. Powered by Shardeum.</div>
-  </header>
+    <!-- Main Calculator Section -->
+    <main class="max-w-4xl mx-auto my-8 p-6 bg-white rounded-lg shadow-lg">
+        <h2 class="text-2xl font-semibold text-center mb-6">Calculate Your Earnings</h2>
+        <p class="text-center text-gray-600 mb-4">Enter your node details to estimate SHM rewards and APY.</p>
 
-  <main>
-    <h1>Simple Payments for Everyone</h1>
-    <p>Pay2Friends is a decentralized peer-to-peer payment system built on Shardeum. Send, receive, and track crypto payments easily — for games, local trade, social sharing and more.</p>
-    <a href="#" class="button">Coming Soon 🚀</a>
-  </main>
+        <!-- Input Form -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Node Price -->
+            <div>
+                <label class="block text-gray-700 font-medium mb-2">Node Price</label>
+                <input id="node-price" type="number" min="0" step="0.01" placeholder="Enter node price" class="w-full p-2 border rounded">
+                <select id="node-price-currency" class="w-full p-2 border rounded mt-2">
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="SHM">SHM</option>
+                </select>
+                <div id="node-price-slider" class="mt-4"></div>
+                <p class="text-sm text-gray-500 mt-2">Initial cost of setting up your node (e.g., hardware).</p>
+            </div>
 
-  <footer>
-    &copy; 2025 Pay2Friends. Built on Shardeum from the community to the community.
-  </footer>
+            <!-- Running Costs -->
+            <div>
+                <label class="block text-gray-700 font-medium mb-2">Monthly VPS/Running Costs</label>
+                <input id="running-costs" type="number" min="0" step="0.01" placeholder="Enter monthly costs" class="w-full p-2 border rounded">
+                <select id="running-costs-currency" class="w-full p-2 border rounded mt-2">
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="SHM">SHM</option>
+                </select>
+                <div id="running-costs-slider" class="mt-4"></div>
+                <p class="text-sm text-gray-500 mt-2">Monthly operational costs (e.g., VPS, electricity).</p>
+            </div>
+        </div>
 
+        <!-- Calculate Button -->
+        <button id="calculate-btn" class="mt-6 w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Calculate Earnings</button>
+
+        <!-- Results Section -->
+        <div id="results" class="mt-8 hidden">
+            <h3 class="text-xl font-semibold text-center mb-4">Your Estimated Earnings</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <p><strong>Current SHM Price:</strong> <span id="shm-price"></span></p>
+                    <p><strong>Initial Investment:</strong> <span id="initial-investment"></span></p>
+                    <p><strong>Monthly Rewards:</strong> <span id="monthly-rewards"></span></p>
+                    <p><strong>Weekly Rewards:</strong> <span id="weekly-rewards"></span></p>
+                    <p><strong>Net ROI (Annual):</strong> <span id="net-roi"></span></p>
+                    <p><strong>Estimated APY:</strong> <span id="estimated-apy"></span></p>
+                </div>
+                <div>
+                    <canvas id="rewards-chart" class="w-full"></canvas>
+                </div>
+            </div>
+            <p class="text-sm text-gray-500 mt-4">Note: Based on a 55% chance of being selected daily, with 40 SHM per active slot. Values may change.</p>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-blue-600 text-white py-4 text-center">
+        <p>© 2025 Shardeum Node APY Calculator. Powered by <a href="https://shardeum.org" class="underline">Shardeum</a>.</p>
+        <p class="mt-2">Data sourced from <a href="https://www.coingecko.com" class="underline">CoinGecko</a>.</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
