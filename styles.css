@@ -12,7 +12,7 @@ header img {
     width: auto;
 }
 
-#node-price-slider, #running-costs-slider {
+#node-price-slider, #num-servers-slider, #running-costs-slider {
     margin: 20px 10px;
 }
 
