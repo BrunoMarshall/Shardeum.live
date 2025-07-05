@@ -4,6 +4,7 @@ const nodePriceCurrency = document.getElementById('node-price-currency');
 const numServersInput = document.getElementById('num-servers');
 const runningCostsInput = document.getElementById('running-costs');
 const runningCostsCurrency = document.getElementById('running-costs-currency');
+const nodeStakeInput = document.getElementById('node-stake');
 const calculateBtn = document.getElementById('calculate-btn');
 const resultsDiv = document.getElementById('results');
 const shmPriceSpan = document.getElementById('shm-price');
@@ -35,6 +36,12 @@ const runningCostsSlider = noUiSlider.create(document.getElementById('running-co
     range: { min: 0, max: 50 },
     step: 0.5
 });
+const nodeStakeSlider = noUiSlider.create(document.getElementById('node-stake-slider'), {
+    start: 2400,
+    connect: 'lower',
+    range: { min: 2400, max: 100000 },
+    step: 100
+});
 
 // Sync sliders with inputs
 nodePriceSlider.on('update', (values) => {
@@ -46,6 +53,9 @@ numServersSlider.on('update', (values) => {
 runningCostsSlider.on('update', (values) => {
     runningCostsInput.value = parseFloat(values[0]).toFixed(2);
 });
+nodeStakeInput.addEventListener('input', () => {
+    nodeStakeSlider.set(nodeStakeInput.value);
+});
 nodePriceInput.addEventListener('input', () => {
     nodePriceSlider.set(nodePriceInput.value);
 });
@@ -54,6 +64,9 @@ numServersInput.addEventListener('input', () => {
 });
 runningCostsInput.addEventListener('input', () => {
     runningCostsSlider.set(runningCostsInput.value);
+});
+nodeStakeSlider.on('update', (values) => {
+    nodeStakeInput.value = Math.round(values[0]);
 });
 
 // Fetch Config from JSON
@@ -90,10 +103,11 @@ async function fetchShmPrice() {
 
 // Calculate Earnings
 async function calculateEarnings() {
-    console.log("Calculator updated with user-selected currency results");
+    console.log("Calculator updated with user-selected currency results and node stake");
     const nodePrice = parseFloat(nodePriceInput.value) || 0;
     const numServers = parseInt(numServersInput.value) || 1;
     const runningCosts = parseFloat(runningCostsInput.value) || 0;
+    const nodeStake = parseFloat(nodeStakeInput.value) || 2400; // Default to minimum stake
     const nodeCurrency = nodePriceCurrency.value;
     const runningCurrency = runningCostsCurrency.value;
 
@@ -142,20 +156,18 @@ async function calculateEarnings() {
     // Calculate ROI and APY
     const annualRunningCostsShm = runningCostsShm * 12 * numServers; // Total annual running costs
     const netAnnualProfitShm = annualRewardsShm - annualRunningCostsShm;
-    const totalInvestmentShm = nodePriceShm * numServers; // Total hardware investment
+    const totalInvestmentShm = (nodePriceShm * numServers) + (nodeStake * numServers); // Include stake
     let roi;
     if (totalInvestmentShm > 0) {
-        roi = (netAnnualProfitShm / totalInvestmentShm) * 100; // ROI based on hardware investment
-    } else if (annualRunningCostsShm > 0) {
-        roi = (netAnnualProfitShm / annualRunningCostsShm) * 100; // ROI based on running costs
+        roi = (netAnnualProfitShm / totalInvestmentShm) * 100; // ROI based on hardware and stake
     } else {
-        roi = null; // No investment or costs, ROI is undefined
+        roi = null; // No investment or stake, ROI is undefined
     }
     const apy = roi; // Simplified APY (no compounding)
 
     // Display results in selected currencies
     shmPriceSpan.textContent = `$${shmPrice.usd.toFixed(2)} / €${shmPrice.eur.toFixed(2)} / ₹${shmPrice.inr.toFixed(2)}`;
-    initialInvestmentSpan.textContent = `${currencySymbol}${(nodePrice * numServers).toFixed(2)} ${nodeCurrency} (${totalInvestmentShm.toFixed(2)} SHM)`;
+    initialInvestmentSpan.textContent = `${currencySymbol}${(nodePrice * numServers).toFixed(2)} ${nodeCurrency} + ${nodeStake * numServers} SHM (${totalInvestmentShm.toFixed(2)} SHM total)`;
     monthlyRewardsSpan.textContent = `${currencySymbol}${monthlyRewardsSelected.toFixed(2)} ${runningCurrency} (${monthlyRewardsShm.toFixed(2)} SHM)`;
     weeklyRewardsSpan.textContent = `${currencySymbol}${weeklyRewardsSelected.toFixed(2)} ${runningCurrency} (${weeklyRewardsShm.toFixed(2)} SHM)`;
     netRoiSpan.textContent = roi !== null ? `${roi.toFixed(2)}%` : 'N/A';

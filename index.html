@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<!-- Updated July 2025 with INR and currency-based results -->
+<!-- Updated July 2025 with INR, currency-based results, and node stake -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -24,7 +24,7 @@
         <p class="text-center text-gray-600 mb-4">Enter your node details to estimate SHM rewards and APY.</p>
 
         <!-- Input Form -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Hardware Investment -->
             <div>
                 <label class="block text-gray-700 font-medium mb-2">Hardware Investment</label>
@@ -36,7 +36,7 @@
                     <option value="SHM">SHM</option>
                 </select>
                 <div id="node-price-slider" class="mt-4"></div>
-                <p class="text-sm text-gray-500 mt-2">Hardware investment (if using VPS, enter 0 USD).</p>
+                <p class="text-sm text-gray-500 mt-2">Hardware investment (if using VPS, enter 0).</p>
             </div>
 
             <!-- Number of Servers -->
@@ -60,6 +60,14 @@
                 <div id="running-costs-slider" class="mt-4"></div>
                 <p class="text-sm text-gray-500 mt-2">Monthly VPS costs per server (e.g., hosting, electricity).</p>
             </div>
+
+            <!-- Current Node Stake -->
+            <div>
+                <label class="block text-gray-700 font-medium mb-2">Current Node Stake (SHM)</label>
+                <input id="node-stake" type="number" min="2400" max="100000" step="100" placeholder="Enter node stake" class="w-full p-2 border rounded">
+                <div id="node-stake-slider" class="mt-4"></div>
+                <p class="text-sm text-gray-500 mt-2">Node stake in SHM (2400–100,000).</p>
+            </div>
         </div>
 
         <!-- Calculate Button -->
@@ -74,8 +82,8 @@
                     <p><strong>Initial Investment:</strong> <span id="initial-investment"></span></p>
                     <p><strong>Monthly Rewards:</strong> <span id="monthly-rewards"></span></p>
                     <p><strong>Weekly Rewards:</strong> <span id="weekly-rewards"></span></p>
-                    <p><strong>Net ROI (Annual):</strong> <span id="net-roi"></span></p>
-                    <p><strong>Estimated APY:</strong> <span id="estimated-apy"></span></p>
+                    <p><strong>Net ROI (Return on Investment):</strong> <span id="net-roi"></span></p>
+                    <p><strong>Estimated APY (Annual Percentage Yield):</strong> <span id="estimated-apy"></span></p>
                 </div>
                 <div>
                     <canvas id="rewards-chart" class="w-full"></canvas>
