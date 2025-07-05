@@ -1,4 +1,3 @@
-/* styles.css */
 body {
     font-family: 'Roboto', sans-serif;
     background-color: #f3f4f6;
@@ -13,17 +12,17 @@ header img {
     width: auto;
 }
 
-#node-price-slider, #num-servers-slider, #running-costs-slider, #node-stake-slider, #custom-probability-slider, #weekly-validations-slider {
-    margin: 16px 0; /* Restored to match common Tailwind spacing (my-4) */
+#node-price-slider, #running-costs-slider {
+    margin: 20px 10px;
 }
 
-.noUi-connect {
-    background: #2563eb; /* Blue track */
+.nouislider .noUi-connect {
+    background: #2563eb;
 }
 
-.noUi-handle {
-    background: #ffffff; /* White handle */
-    border: 2px solid #2563eb; /* Blue border */
+.nouislider .noUi-handle {
+    background: #ffffff;
+    border: 2px solid #2563eb;
     border-radius: 50%;
     cursor: pointer;
 }
@@ -34,40 +33,4 @@ button {
 
 canvas {
     max-height: 300px;
-}
-
-nav {
-    background-color: #2563eb;
-}
-
-nav a {
-    transition: color 0.3s ease;
-}
-
-nav a:hover {
-    color: #e5e7eb;
-}
-
-#probability-form, #probability-inputs {
-    display: block !important;
-}
-
-#custom-probability-input, #weekly-validations-input {
-    display: none !important;
-}
-
-#custom-probability-slider, #weekly-validations-slider {
-    display: none !important;
-}
-
-#custom-probability-input:not(.hidden), #weekly-validations-input:not(.hidden) {
-    display: block !important;
-}
-
-#custom-probability-slider:not(.hidden), #weekly-validations-slider:not(.hidden) {
-    display: block !important;
-}
-
-.hidden {
-    display: none !important;
 }
