@@ -27,8 +27,11 @@ const estimatedApySpan = document.getElementById('estimated-apy');
 const probabilitySpan = document.getElementById('probability');
 const rewardSpan = document.getElementById('reward');
 const rewardsChartCanvas = document.getElementById('rewards-chart');
+const errorMessage = document.createElement('p'); // Add error message element
+errorMessage.className = 'text-red-600 text-center mt-2 hidden';
+resultsDiv.parentElement.insertBefore(errorMessage, resultsDiv);
 
-// Debounce function to limit rapid calls
+// Debounce function
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -73,7 +76,7 @@ const customProbabilitySlider = noUiSlider.create(document.getElementById('custo
     step: 0.1
 });
 const weeklyValidationsSlider = noUiSlider.create(document.getElementById('weekly-validations-slider'), {
-    start: 3.85, // Equivalent to 0.55 * 7
+    start: 3.85,
     connect: 'lower',
     range: { min: 0, max: 7 },
     step: 0.1
@@ -82,7 +85,7 @@ const weeklyValidationsSlider = noUiSlider.create(document.getElementById('weekl
 // Debounced calculateEarnings
 const debouncedCalculateEarnings = debounce(calculateEarnings, 300);
 
-// Sync sliders with inputs and trigger calculation
+// Sync sliders with inputs
 nodePriceSlider.on('update', (values) => {
     nodePriceInput.value = parseFloat(values[0]).toFixed(2);
     debouncedCalculateEarnings();
@@ -109,7 +112,7 @@ weeklyValidationsSlider.on('update', (values) => {
     if (weeklyValidations.checked) debouncedCalculateEarnings();
 });
 
-// Sync inputs with sliders and trigger calculation
+// Sync inputs with sliders
 nodePriceInput.addEventListener('input', () => {
     const value = parseFloat(nodePriceInput.value);
     if (!isNaN(value) && value >= 0) {
@@ -154,7 +157,7 @@ weeklyValidationsInput.addEventListener('input', () => {
     }
 });
 
-// Add change listeners for dropdowns and radio buttons
+// Add change listeners
 nodePriceCurrency.addEventListener('change', debouncedCalculateEarnings);
 runningCostsCurrency.addEventListener('change', debouncedCalculateEarnings);
 useCommunityProbability.addEventListener('change', () => {
@@ -170,19 +173,12 @@ weeklyValidations.addEventListener('change', () => {
     debouncedCalculateEarnings();
 });
 
-// Toggle probability input visibility
+// Toggle probability inputs
 function toggleProbabilityInputs() {
-    const probabilityInputs = document.getElementById('probability-inputs');
-    const customProbabilityInput = document.getElementById('custom-probability-input');
-    const weeklyValidationsInput = document.getElementById('weekly-validations-input');
-    const customProbabilitySlider = document.getElementById('custom-probability-slider');
-    const weeklyValidationsSlider = document.getElementById('weekly-validations-slider');
-
     customProbabilityInput.classList.add('hidden');
     weeklyValidationsInput.classList.add('hidden');
     customProbabilitySlider.classList.add('hidden');
     weeklyValidationsSlider.classList.add('hidden');
-
     if (customProbability.checked) {
         customProbabilityInput.classList.remove('hidden');
         customProbabilitySlider.classList.remove('hidden');
@@ -192,12 +188,35 @@ function toggleProbabilityInputs() {
     }
 }
 
-// Fetch Config from JSON with cache busting
+// Cache SHM price with timestamp
+function cacheShmPrice(shmPrice) {
+    localStorage.setItem('shmPrice', JSON.stringify({
+        prices: shmPrice,
+        timestamp: Date.now()
+    }));
+    console.log('Cached SHM price:', shmPrice);
+}
+
+// Retrieve cached SHM price
+function getCachedShmPrice() {
+    const cached = localStorage.getItem('shmPrice');
+    if (cached) {
+        const { prices, timestamp } = JSON.parse(cached);
+        const age = (Date.now() - timestamp) / 1000 / 60; // Age in minutes
+        if (age < 10) { // Cache valid for 10 minutes
+            console.log('Using cached SHM price:', prices);
+            return prices;
+        }
+    }
+    return null;
+}
+
+// Fetch Config
 async function fetchConfig(bustCache = false) {
     try {
         const url = bustCache ? `assets/config.json?t=${new Date().getTime()}` : 'assets/config.json';
         const response = await fetch(url, { cache: 'no-store' });
-        if (!response.ok) throw new Error('Failed to fetch config.json');
+        if (!response.ok) throw new Error(`Failed to fetch config.json: ${response.status}`);
         const data = await response.json();
         console.log('Fetched config:', data);
         return {
@@ -206,26 +225,45 @@ async function fetchConfig(bustCache = false) {
         };
     } catch (error) {
         console.error('Error fetching config:', error);
+        errorMessage.textContent = 'Failed to fetch config, using default values';
+        errorMessage.classList.remove('hidden');
         return { probability: 0.55, reward: 40 };
     }
 }
 
-// Fetch SHM Price from CoinGecko with cache busting
+// Fetch SHM Price with retry and cache
 async function fetchShmPrice(bustCache = false) {
+    if (!bustCache) {
+        const cachedPrice = getCachedShmPrice();
+        if (cachedPrice) return cachedPrice;
+    }
     try {
         const url = bustCache
             ? `https://api.coingecko.com/api/v3/simple/price?ids=shardeum&vs_currencies=usd,eur,inr&t=${new Date().getTime()}`
             : 'https://api.coingecko.com/api/v3/simple/price?ids=shardeum&vs_currencies=usd,eur,inr';
         const response = await fetch(url, { cache: 'no-store' });
+        if (!response.ok) throw new Error(`API error: ${response.status} ${response.statusText}`);
         const data = await response.json();
-        console.log('Fetched SHM price:', data);
-        return {
+        if (!data.shardeum) throw new Error('No SHM price data');
+        const shmPrice = {
             usd: data.shardeum.usd || 0,
             eur: data.shardeum.eur || 0,
             inr: data.shardeum.inr || 0
         };
+        console.log('Fetched SHM price:', shmPrice);
+        cacheShmPrice(shmPrice);
+        errorMessage.classList.add('hidden');
+        return shmPrice;
     } catch (error) {
         console.error('Error fetching SHM price:', error);
+        const cachedPrice = getCachedShmPrice();
+        if (cachedPrice) {
+            errorMessage.textContent = `Failed to fetch SHM price (${error.message}), using cached price`;
+            errorMessage.classList.remove('hidden');
+            return cachedPrice;
+        }
+        errorMessage.textContent = `Failed to fetch SHM price (${error.message}), using default price (0)`;
+        errorMessage.classList.remove('hidden');
         return { usd: 0, eur: 0, inr: 0 };
     }
 }
@@ -233,6 +271,7 @@ async function fetchShmPrice(bustCache = false) {
 // Calculate Earnings
 async function calculateEarnings(bustCache = false) {
     loadingIndicator.classList.remove('hidden');
+    errorMessage.classList.add('hidden');
     console.log("Calculating earnings with inputs: ", {
         numServers: numServersInput.value,
         runningCosts: runningCostsInput.value,
@@ -285,7 +324,7 @@ async function calculateEarnings(bustCache = false) {
     const monthlyRewardsShm = dailyRewardsShm * 30;
     const annualRewardsShm = dailyRewardsShm * 365;
 
-    // Convert rewards and costs to selected currency
+    // Convert to selected currency
     let monthlyRewardsSelected, weeklyRewardsSelected, monthlyNodesCostSelected, dailyNodesCostSelected, annualNodesCostSelected, netAnnualProfitSelected;
     let currencySymbol = runningCurrency === 'USD' ? '$' : runningCurrency === 'EUR' ? '€' : runningCurrency === 'INR' ? '₹' : '';
     if (runningCurrency === 'USD') {
@@ -319,7 +358,7 @@ async function calculateEarnings(bustCache = false) {
         currencySymbol = 'SHM';
     }
 
-    // Calculate ROI, APY, and Daily Return
+    // Calculate ROI, APY, Daily Return
     const annualRunningCostsShm = runningCostsShm * 12 * numServers;
     const monthlyNodesCostShm = runningCostsShm * numServers;
     const dailyNodesCostShm = monthlyNodesCostShm / 30;
@@ -348,7 +387,7 @@ async function calculateEarnings(bustCache = false) {
     netRoiSpan.textContent = roi !== null ? `${roi.toFixed(2)}%` : 'N/A';
     estimatedApySpan.textContent = apy !== null ? `${apy.toFixed(2)}%` : 'N/A';
 
-    // Show results and hide loading
+    // Show results
     resultsDiv.classList.remove('hidden');
     loadingIndicator.classList.add('hidden');
 
@@ -376,13 +415,14 @@ async function calculateEarnings(bustCache = false) {
     });
 }
 
-// Event Listener for Calculate Button with cache busting
+// Event Listener for Calculate Button
 calculateBtn.addEventListener('click', () => {
     console.log('Calculate button clicked, forcing cache refresh');
-    calculateEarnings(true); // Pass bustCache=true
+    localStorage.removeItem('shmPrice'); // Clear cached price
+    calculateEarnings(true); // Force fresh fetch
 });
 
-// Fetch SHM price and config on page load
+// Fetch on page load
 Promise.all([fetchShmPrice(), fetchConfig()]).then(([shmPrice, config]) => {
     shmPriceSpan.textContent = `$${shmPrice.usd.toFixed(2)} / €${shmPrice.eur.toFixed(2)} / ₹${shmPrice.inr.toFixed(2)}`;
     probabilitySpan.textContent = (config.probability * 100).toFixed(1);
@@ -391,7 +431,7 @@ Promise.all([fetchShmPrice(), fetchConfig()]).then(([shmPrice, config]) => {
     weeklyValidationsInput.value = (config.probability * 7).toFixed(1);
     customProbabilitySlider.set(config.probability * 100);
     weeklyValidationsSlider.set(config.probability * 7);
-    calculateEarnings(); // Initial calculation
+    calculateEarnings();
 });
 
 // Initialize probability inputs
