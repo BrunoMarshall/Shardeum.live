@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const weeklyValidations = document.getElementById('weekly-validations');
     const customProbabilityInput = document.getElementById('custom-probability-input');
     const weeklyValidationsInput = document.getElementById('weekly-validations-input');
+    const probabilityForm = document.getElementById('probability-form');
     const calculateBtn = document.getElementById('calculate-btn');
     const loadingIndicator = document.getElementById('loading-indicator');
     const resultsDiv = document.getElementById('results');
@@ -32,6 +33,67 @@ document.addEventListener('DOMContentLoaded', () => {
     errorMessage.className = 'text-red-600 text-center mt-2 hidden';
     resultsDiv.parentElement.insertBefore(errorMessage, resultsDiv);
 
+    // Verify DOM elements
+    console.log('DOM elements loaded:', {
+        useCommunityProbability: !!useCommunityProbability,
+        customProbability: !!customProbability,
+        weeklyValidations: !!weeklyValidations,
+        customProbabilityInput: !!customProbabilityInput,
+        weeklyValidationsInput: !!weeklyValidationsInput,
+        customProbabilitySlider: !!document.getElementById('custom-probability-slider'),
+        weeklyValidationsSlider: !!document.getElementById('weekly-validations-slider'),
+        probabilityForm: !!probabilityForm
+    });
+
+    // Initialize Sliders
+    let nodePriceSlider, numServersSlider, runningCostsSlider, nodeStakeSlider, customProbabilitySlider, weeklyValidationsSlider;
+    try {
+        nodePriceSlider = noUiSlider.create(document.getElementById('node-price-slider'), {
+            start: 0,
+            connect: 'lower',
+            range: { min: 0, max: 200 },
+            step: 1
+        });
+        numServersSlider = noUiSlider.create(document.getElementById('num-servers-slider'), {
+            start: 1,
+            connect: 'lower',
+            range: { min: 1, max: 100 },
+            step: 1
+        });
+        runningCostsSlider = noUiSlider.create(document.getElementById('running-costs-slider'), {
+            start: 0,
+            connect: 'lower',
+            range: { min: 0, max: 50 },
+            step: 0.5
+        });
+        nodeStakeSlider = noUiSlider.create(document.getElementById('node-stake-slider'), {
+            start: 2400,
+            connect: 'lower',
+            range: { min: 2400, max: 100000 },
+            step: 100
+        });
+        if (document.getElementById('custom-probability-slider')) {
+            customProbabilitySlider = noUiSlider.create(document.getElementById('custom-probability-slider'), {
+                start: 55,
+                connect: 'lower',
+                range: { min: 0, max: 100 },
+                step: 0.1
+            });
+        }
+        if (document.getElementById('weekly-validations-slider')) {
+            weeklyValidationsSlider = noUiSlider.create(document.getElementById('weekly-validations-slider'), {
+                start: 3.85,
+                connect: 'lower',
+                range: { min: 0, max: 7 },
+                step: 0.1
+            });
+        }
+    } catch (error) {
+        console.error('Slider initialization error:', error);
+        errorMessage.textContent = 'Failed to initialize sliders';
+        errorMessage.classList.remove('hidden');
+    }
+
     // Debounce function
     function debounce(func, wait) {
         let timeout;
@@ -45,85 +107,59 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // Initialize Sliders
-    const nodePriceSlider = noUiSlider.create(document.getElementById('node-price-slider'), {
-        start: 0,
-        connect: 'lower',
-        range: { min: 0, max: 200 },
-        step: 1
-    });
-    const numServersSlider = noUiSlider.create(document.getElementById('num-servers-slider'), {
-        start: 1,
-        connect: 'lower',
-        range: { min: 1, max: 100 },
-        step: 1
-    });
-    const runningCostsSlider = noUiSlider.create(document.getElementById('running-costs-slider'), {
-        start: 0,
-        connect: 'lower',
-        range: { min: 0, max: 50 },
-        step: 0.5
-    });
-    const nodeStakeSlider = noUiSlider.create(document.getElementById('node-stake-slider'), {
-        start: 2400,
-        connect: 'lower',
-        range: { min: 2400, max: 100000 },
-        step: 100
-    });
-    const customProbabilitySlider = noUiSlider.create(document.getElementById('custom-probability-slider'), {
-        start: 55,
-        connect: 'lower',
-        range: { min: 0, max: 100 },
-        step: 0.1
-    });
-    const weeklyValidationsSlider = noUiSlider.create(document.getElementById('weekly-validations-slider'), {
-        start: 3.85,
-        connect: 'lower',
-        range: { min: 0, max: 7 },
-        step: 0.1
-    });
-
     // Debounced calculateEarnings
     const debouncedCalculateEarnings = debounce(calculateEarnings, 300);
 
     // Sync sliders with inputs
-    nodePriceSlider.on('update', (values) => {
-        nodePriceInput.value = parseFloat(values[0]).toFixed(2);
-        debouncedCalculateEarnings();
-    });
-    numServersSlider.on('update', (values) => {
-        numServersInput.value = Math.round(values[0]);
-        console.log(`Number of Servers updated to: ${numServersInput.value}`);
-        debouncedCalculateEarnings();
-    });
-    runningCostsSlider.on('update', (values) => {
-        runningCostsInput.value = parseFloat(values[0]).toFixed(2);
-        debouncedCalculateEarnings();
-    });
-    nodeStakeSlider.on('update', (values) => {
-        nodeStakeInput.value = Math.round(values[0]);
-        debouncedCalculateEarnings();
-    });
-    customProbabilitySlider.on('update', (values) => {
-        customProbabilityInput.value = parseFloat(values[0]).toFixed(1);
-        if (customProbability.checked) debouncedCalculateEarnings();
-    });
-    weeklyValidationsSlider.on('update', (values) => {
-        weeklyValidationsInput.value = parseFloat(values[0]).toFixed(1);
-        if (weeklyValidations.checked) debouncedCalculateEarnings();
-    });
+    if (nodePriceSlider) {
+        nodePriceSlider.on('update', (values) => {
+            nodePriceInput.value = parseFloat(values[0]).toFixed(2);
+            debouncedCalculateEarnings();
+        });
+    }
+    if (numServersSlider) {
+        numServersSlider.on('update', (values) => {
+            numServersInput.value = Math.round(values[0]);
+            console.log(`Number of Servers updated to: ${numServersInput.value}`);
+            debouncedCalculateEarnings();
+        });
+    }
+    if (runningCostsSlider) {
+        runningCostsSlider.on('update', (values) => {
+            runningCostsInput.value = parseFloat(values[0]).toFixed(2);
+            debouncedCalculateEarnings();
+        });
+    }
+    if (nodeStakeSlider) {
+        nodeStakeSlider.on('update', (values) => {
+            nodeStakeInput.value = Math.round(values[0]);
+            debouncedCalculateEarnings();
+        });
+    }
+    if (customProbabilitySlider) {
+        customProbabilitySlider.on('update', (values) => {
+            customProbabilityInput.value = parseFloat(values[0]).toFixed(1);
+            if (customProbability?.checked) debouncedCalculateEarnings();
+        });
+    }
+    if (weeklyValidationsSlider) {
+        weeklyValidationsSlider.on('update', (values) => {
+            weeklyValidationsInput.value = parseFloat(values[0]).toFixed(1);
+            if (weeklyValidations?.checked) debouncedCalculateEarnings();
+        });
+    }
 
     // Sync inputs with sliders
     nodePriceInput.addEventListener('input', () => {
         const value = parseFloat(nodePriceInput.value);
-        if (!isNaN(value) && value >= 0) {
+        if (!isNaN(value) && value >= 0 && nodePriceSlider) {
             nodePriceSlider.set(value);
             debouncedCalculateEarnings();
         }
     });
     numServersInput.addEventListener('input', () => {
         const value = parseInt(numServersInput.value);
-        if (!isNaN(value) && value >= 1 && value <= 100) {
+        if (!isNaN(value) && value >= 1 && value <= 100 && numServersSlider) {
             numServersSlider.set(value);
             console.log(`Number of Servers input changed to: ${numServersInput.value}`);
             debouncedCalculateEarnings();
@@ -131,28 +167,28 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     runningCostsInput.addEventListener('input', () => {
         const value = parseFloat(runningCostsInput.value);
-        if (!isNaN(value) && value >= 0) {
+        if (!isNaN(value) && value >= 0 && runningCostsSlider) {
             runningCostsSlider.set(value);
             debouncedCalculateEarnings();
         }
     });
     nodeStakeInput.addEventListener('input', () => {
         const value = parseInt(nodeStakeInput.value);
-        if (!isNaN(value) && value >= 2400 && value <= 100000) {
+        if (!isNaN(value) && value >= 2400 && value <= 100000 && nodeStakeSlider) {
             nodeStakeSlider.set(value);
             debouncedCalculateEarnings();
         }
     });
     customProbabilityInput.addEventListener('input', () => {
         const value = parseFloat(customProbabilityInput.value);
-        if (!isNaN(value) && value >= 0 && value <= 100 && customProbability.checked) {
+        if (!isNaN(value) && value >= 0 && value <= 100 && customProbability?.checked && customProbabilitySlider) {
             customProbabilitySlider.set(value);
             debouncedCalculateEarnings();
         }
     });
     weeklyValidationsInput.addEventListener('input', () => {
         const value = parseFloat(weeklyValidationsInput.value);
-        if (!isNaN(value) && value >= 0 && value <= 7 && weeklyValidations.checked) {
+        if (!isNaN(value) && value >= 0 && value <= 7 && weeklyValidations?.checked && weeklyValidationsSlider) {
             weeklyValidationsSlider.set(value);
             debouncedCalculateEarnings();
         }
@@ -161,40 +197,47 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add change listeners
     nodePriceCurrency.addEventListener('change', debouncedCalculateEarnings);
     runningCostsCurrency.addEventListener('change', debouncedCalculateEarnings);
-    useCommunityProbability.addEventListener('change', () => {
-        console.log('Community Probability selected');
-        toggleProbabilityInputs();
-        debouncedCalculateEarnings();
-    });
-    customProbability.addEventListener('change', () => {
-        console.log('Custom Probability selected');
-        toggleProbabilityInputs();
-        debouncedCalculateEarnings();
-    });
-    weeklyValidations.addEventListener('change', () => {
-        console.log('Weekly Validations selected');
-        toggleProbabilityInputs();
-        debouncedCalculateEarnings();
-    });
+    if (probabilityForm) {
+        probabilityForm.addEventListener('change', (e) => {
+            console.log('Probability form changed, target:', e.target.id);
+            toggleProbabilityInputs();
+            debouncedCalculateEarnings();
+        });
+    } else {
+        console.error('Probability form not found');
+        errorMessage.textContent = 'Probability form not found';
+        errorMessage.classList.remove('hidden');
+    }
 
     // Toggle probability inputs
     function toggleProbabilityInputs() {
         console.log('toggleProbabilityInputs called');
-        console.log('useCommunityProbability.checked:', useCommunityProbability.checked);
-        console.log('customProbability.checked:', customProbability.checked);
-        console.log('weeklyValidations.checked:', weeklyValidations.checked);
-        customProbabilityInput.classList.add('hidden');
-        weeklyValidationsInput.classList.add('hidden');
-        customProbabilitySlider.classList.add('hidden');
-        weeklyValidationsSlider.classList.add('hidden');
-        if (customProbability.checked) {
-            console.log('Showing Custom Probability input and slider');
-            customProbabilityInput.classList.remove('hidden');
-            customProbabilitySlider.classList.remove('hidden');
-        } else if (weeklyValidations.checked) {
-            console.log('Showing Weekly Validations input and slider');
-            weeklyValidationsInput.classList.remove('hidden');
-            weeklyValidationsSlider.classList.remove('hidden');
+        console.log('useCommunityProbability:', useCommunityProbability?.checked);
+        console.log('customProbability:', customProbability?.checked);
+        console.log('weeklyValidations:', weeklyValidations?.checked);
+        if (customProbabilityInput && weeklyValidationsInput && document.getElementById('custom-probability-slider') && document.getElementById('weekly-validations-slider')) {
+            customProbabilityInput.classList.add('hidden');
+            weeklyValidationsInput.classList.add('hidden');
+            document.getElementById('custom-probability-slider').classList.add('hidden');
+            document.getElementById('weekly-validations-slider').classList.add('hidden');
+            if (customProbability?.checked) {
+                console.log('Showing Custom Probability input and slider');
+                customProbabilityInput.classList.remove('hidden');
+                document.getElementById('custom-probability-slider').classList.remove('hidden');
+            } else if (weeklyValidations?.checked) {
+                console.log('Showing Weekly Validations input and slider');
+                weeklyValidationsInput.classList.remove('hidden');
+                document.getElementById('weekly-validations-slider').classList.remove('hidden');
+            }
+        } else {
+            console.error('One or more probability inputs/sliders not found:', {
+                customProbabilityInput: !!customProbabilityInput,
+                weeklyValidationsInput: !!weeklyValidationsInput,
+                customProbabilitySlider: !!document.getElementById('custom-probability-slider'),
+                weeklyValidationsSlider: !!document.getElementById('weekly-validations-slider')
+            });
+            errorMessage.textContent = 'Probability inputs or sliders not found';
+            errorMessage.classList.remove('hidden');
         }
     }
 
@@ -287,7 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
             runningCosts: runningCostsInput.value,
             nodeStake: nodeStakeInput.value,
             nodePrice: nodePriceInput.value,
-            probabilityOption: document.querySelector('input[name="probability-option"]:checked').value,
+            probabilityOption: document.querySelector('input[name="probability-option"]:checked')?.value,
             customProbability: customProbabilityInput.value,
             weeklyValidations: weeklyValidationsInput.value
         });
@@ -305,13 +348,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Determine probability
         let probability;
-        if (useCommunityProbability.checked) {
+        if (useCommunityProbability?.checked) {
             probability = config.probability;
-        } else if (customProbability.checked) {
+        } else if (customProbability?.checked) {
             probability = (parseFloat(customProbabilityInput.value) || 0) / 100;
-        } else if (weeklyValidations.checked) {
+        } else if (weeklyValidations?.checked) {
             const weeklyValidationsValue = parseFloat(weeklyValidationsInput.value) || 0;
             probability = weeklyValidationsValue / 7;
+        } else {
+            probability = config.probability;
+            console.warn('No probability option selected, using default:', probability);
         }
 
         // Update probability and reward display
@@ -336,7 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Convert to selected currency
         let monthlyRewardsSelected, weeklyRewardsSelected, monthlyNodesCostSelected, dailyNodesCostSelected, annualNodesCostSelected, netAnnualProfitSelected;
-        let currencySymbol = runningCurrency === 'USD' ? '$' : runningCurrency === 'EUR' ? '€' : runningCurrency === 'INR' ? '₹' : '';
+        let currencySymbol = runningCurrency === 'USD' ? '$' : runningCurrency === 'EUR' ? '€' : runningCurrency === 'INR' ? '₹' : 'SHM';
         if (runningCurrency === 'USD') {
             monthlyRewardsSelected = monthlyRewardsShm * shmPrice.usd;
             weeklyRewardsSelected = weeklyRewardsShm * shmPrice.usd;
@@ -365,7 +411,6 @@ document.addEventListener('DOMContentLoaded', () => {
             dailyNodesCostSelected = runningCostsShm * numServers / 30;
             annualNodesCostSelected = runningCostsShm * 12 * numServers;
             netAnnualProfitSelected = annualRewardsShm - (runningCostsShm * 12 * numServers);
-            currencySymbol = 'SHM';
         }
 
         // Calculate ROI, APY, Daily Return
@@ -437,10 +482,10 @@ document.addEventListener('DOMContentLoaded', () => {
         shmPriceSpan.textContent = `$${shmPrice.usd.toFixed(2)} / €${shmPrice.eur.toFixed(2)} / ₹${shmPrice.inr.toFixed(2)}`;
         probabilitySpan.textContent = (config.probability * 100).toFixed(1);
         rewardSpan.textContent = config.reward.toFixed(0);
-        customProbabilityInput.value = (config.probability * 100).toFixed(1);
-        weeklyValidationsInput.value = (config.probability * 7).toFixed(1);
-        customProbabilitySlider.set(config.probability * 100);
-        weeklyValidationsSlider.set(config.probability * 7);
+        if (customProbabilityInput) customProbabilityInput.value = (config.probability * 100).toFixed(1);
+        if (weeklyValidationsInput) weeklyValidationsInput.value = (config.probability * 7).toFixed(1);
+        if (customProbabilitySlider) customProbabilitySlider.set(config.probability * 100);
+        if (weeklyValidationsSlider) weeklyValidationsSlider.set(config.probability * 7);
         calculateEarnings();
     });
 
