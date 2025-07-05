@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<!-- Updated July 2025 with INR, currency-based results, and node stake -->
+<!-- Updated July 2025 with INR, validator stake, new cost metrics, annual metrics, and custom probability -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -25,20 +25,6 @@
 
         <!-- Input Form -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Hardware Investment -->
-            <div>
-                <label class="block text-gray-700 font-medium mb-2">Hardware Investment</label>
-                <input id="node-price" type="number" min="0" step="0.01" placeholder="Enter hardware cost" class="w-full p-2 border rounded">
-                <select id="node-price-currency" class="w-full p-2 border rounded mt-2">
-                    <option value="USD">USD</option>
-                    <option value="EUR">EUR</option>
-                    <option value="INR">INR</option>
-                    <option value="SHM">SHM</option>
-                </select>
-                <div id="node-price-slider" class="mt-4"></div>
-                <p class="text-sm text-gray-500 mt-2">Hardware investment (if using VPS, enter 0).</p>
-            </div>
-
             <!-- Number of Servers -->
             <div>
                 <label class="block text-gray-700 font-medium mb-2">Number of Servers</label>
@@ -61,12 +47,46 @@
                 <p class="text-sm text-gray-500 mt-2">Monthly VPS costs per server (e.g., hosting, electricity).</p>
             </div>
 
-            <!-- Current Node Stake -->
+            <!-- Validator Stake (SHM) in Each Server -->
             <div>
-                <label class="block text-gray-700 font-medium mb-2">Current Node Stake (SHM)</label>
+                <label class="block text-gray-700 font-medium mb-2">Validator Stake (SHM) in Each Server</label>
                 <input id="node-stake" type="number" min="2400" max="100000" step="100" placeholder="Enter node stake" class="w-full p-2 border rounded">
                 <div id="node-stake-slider" class="mt-4"></div>
-                <p class="text-sm text-gray-500 mt-2">Node stake in SHM (2400–100,000).</p>
+                <p class="text-sm text-gray-500 mt-2">Stake per server in SHM (2400–100,000).</p>
+            </div>
+
+            <!-- Hardware Investment (if applicable) -->
+            <div>
+                <label class="block text-gray-700 font-medium mb-2">Hardware Investment (if applicable)</label>
+                <input id="node-price" type="number" min="0" step="0.01" placeholder="Enter hardware cost" class="w-full p-2 border rounded">
+                <select id="node-price-currency" class="w-full p-2 border rounded mt-2">
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="INR">INR</option>
+                    <option value="SHM">SHM</option>
+                </select>
+                <div id="node-price-slider" class="mt-4"></div>
+                <p class="text-sm text-gray-500 mt-2">Hardware investment (if using VPS, enter 0).</p>
+            </div>
+
+            <!-- Daily Selection Probability -->
+            <div class="col-span-1 md:col-span-2">
+                <label class="block text-gray-700 font-medium mb-2">Daily Selection Probability</label>
+                <div class="flex items-center mb-2">
+                    <input type="radio" id="use-community-probability" name="probability-option" value="community" checked class="mr-2">
+                    <label for="use-community-probability" class="mr-4">Use Community Probability</label>
+                    <input type="radio" id="custom-probability" name="probability-option" value="custom" class="mr-2">
+                    <label for="custom-probability" class="mr-4">Custom Probability (%)</label>
+                    <input type="radio" id="weekly-validations" name="probability-option" value="weekly" class="mr-2">
+                    <label for="weekly-validations">Weekly Validations per Node</label>
+                </div>
+                <div id="probability-inputs" class="mt-2">
+                    <input id="custom-probability-input" type="number" min="0" max="100" step="0.1" placeholder="Enter probability (%)" class="w-full p-2 border rounded hidden">
+                    <input id="weekly-validations-input" type="number" min="0" max="7" step="0.1" placeholder="Enter weekly validations (0–7)" class="w-full p-2 border rounded hidden">
+                    <div id="custom-probability-slider" class="mt-4 hidden"></div>
+                    <div id="weekly-validations-slider" class="mt-4 hidden"></div>
+                </div>
+                <p class="text-sm text-gray-500 mt-2">If you want to use the probability taken from community nodes, select 'Use Community Probability.' Otherwise, input your node's daily selection probability (%) or how many times your node validates per week to calculate the probability and results.</p>
             </div>
         </div>
 
@@ -80,8 +100,13 @@
                 <div>
                     <p><strong>Current SHM Price:</strong> <span id="shm-price"></span></p>
                     <p><strong>Initial Investment:</strong> <span id="initial-investment"></span></p>
-                    <p><strong>Monthly Rewards:</strong> <span id="monthly-rewards"></span></p>
+                    <p><strong>Daily Nodes Cost:</strong> <span id="daily-nodes-cost"></span></p>
+                    <p><strong>Monthly Nodes Cost:</strong> <span id="monthly-nodes-cost"></span></p>
+                    <p><strong>Annual Nodes Cost:</strong> <span id="annual-nodes-cost"></span></p>
+                    <p><strong>Net Annual Profit:</strong> <span id="net-annual-profit"></span></p>
                     <p><strong>Weekly Rewards:</strong> <span id="weekly-rewards"></span></p>
+                    <p><strong>Monthly Rewards:</strong> <span id="monthly-rewards"></span></p>
+                    <p><strong>Net Daily Return (Daily Return on Investment):</strong> <span id="net-daily-return"></span></p>
                     <p><strong>Net ROI (Return on Investment):</strong> <span id="net-roi"></span></p>
                     <p><strong>Estimated APY (Annual Percentage Yield):</strong> <span id="estimated-apy"></span></p>
                 </div>
