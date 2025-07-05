@@ -129,6 +129,11 @@ useCommunityProbability.addEventListener('change', toggleProbabilityInputs);
 customProbability.addEventListener('change', toggleProbabilityInputs);
 weeklyValidations.addEventListener('change', toggleProbabilityInputs);
 
+// Cache for SHM price
+let cachedShmPrice = null;
+let cacheTimestamp = null;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+
 // Fetch Config from JSON
 async function fetchConfig() {
     try {
@@ -145,19 +150,31 @@ async function fetchConfig() {
     }
 }
 
-// Fetch SHM Price from CoinGecko
+// Fetch SHM Price from CoinGecko with caching
 async function fetchShmPrice() {
+    const now = Date.now();
+    // Check if cached price is valid
+    if (cachedShmPrice && cacheTimestamp && (now - cacheTimestamp < CACHE_DURATION)) {
+        console.log('Using cached SHM price');
+        return cachedShmPrice;
+    }
+
     try {
         const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=shardeum&vs_currencies=usd,eur,inr');
+        if (!response.ok) throw new Error('Failed to fetch SHM price');
         const data = await response.json();
-        return {
+        cachedShmPrice = {
             usd: data.shardeum.usd || 0,
             eur: data.shardeum.eur || 0,
             inr: data.shardeum.inr || 0
         };
+        cacheTimestamp = now;
+        console.log('Fetched new SHM price:', cachedShmPrice);
+        return cachedShmPrice;
     } catch (error) {
         console.error('Error fetching SHM price:', error);
-        return { usd: 0, eur: 0, inr: 0 };
+        // Return cached price if available, otherwise default to 0
+        return cachedShmPrice || { usd: 0, eur: 0, inr: 0 };
     }
 }
 
