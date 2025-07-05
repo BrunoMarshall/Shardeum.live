@@ -117,7 +117,6 @@ weeklyValidationsInput.addEventListener('input', () => {
 
 // Toggle probability input visibility
 function toggleProbabilityInputs() {
-    const probabilityInputs = document.getElementById('probability-inputs');
     const customProbabilityInput = document.getElementById('custom-probability-input');
     const weeklyValidationsInput = document.getElementById('weekly-validations-input');
     const customProbabilitySlider = document.getElementById('custom-probability-slider');
@@ -153,6 +152,7 @@ async function fetchConfig() {
         const response = await fetch('assets/config.json');
         if (!response.ok) throw new Error('Failed to fetch config.json');
         const data = await response.json();
+        console.log('Fetched config:', data);
         return {
             probability: data.probability || 0.55,
             reward: data.reward || 40
@@ -166,9 +166,8 @@ async function fetchConfig() {
 // Fetch SHM Price from CoinGecko with caching
 async function fetchShmPrice() {
     const now = Date.now();
-    // Check if cached price is valid
     if (cachedShmPrice && cacheTimestamp && (now - cacheTimestamp < CACHE_DURATION)) {
-        console.log('Using cached SHM price');
+        console.log('Using cached SHM price:', cachedShmPrice);
         return cachedShmPrice;
     }
 
@@ -177,163 +176,198 @@ async function fetchShmPrice() {
         if (!response.ok) throw new Error('Failed to fetch SHM price');
         const data = await response.json();
         cachedShmPrice = {
-            USD: data.shardeum.usd || 0,
-            EUR: data.shardeum.eur || 0,
-            INR: data.shardeum.inr || 0
+            usd: data.shardeum.usd || 0,
+            eur: data.shardeum.eur || 0,
+            inr: data.shardeum.inr || 0
         };
         cacheTimestamp = now;
         console.log('Fetched new SHM price:', cachedShmPrice);
         return cachedShmPrice;
     } catch (error) {
         console.error('Error fetching SHM price:', error);
-        // Return cached price if available, otherwise default to 0
         return cachedShmPrice || { usd: 0, eur: 0, inr: 0 };
     }
 }
 
 // Calculate Earnings
 async function calculateEarnings() {
-    console.log("Calculator updated with validator stake, new cost metrics, annual metrics, and custom probability");
-    const nodePrice = parseFloat(nodePriceInput.value) || 0;
-    const numServers = parseInt(numServersInput.value) || 1;
-    const runningCosts = parseFloat(runningCostsInput.value) || 0;
-    const nodeStake = parseFloat(nodeStakeInput.value) || 2400; // Default to minimum stake
-    const nodeCurrency = nodePriceCurrency.value;
-    const runningCurrency = runningCostsCurrency.value;
+    console.log('Starting calculateEarnings');
+    try {
+        const nodePrice = parseFloat(nodePriceInput.value) || 0;
+        const numServers = parseInt(numServersInput.value) || 1;
+        const runningCosts = parseFloat(runningCostsInput.value) || 0;
+        const nodeStake = parseFloat(nodeStakeInput.value) || 2400; // Default to minimum stake
+        const nodeCurrency = nodePriceCurrency.value;
+        const runningCurrency = runningCostsCurrency.value;
 
-    // Fetch config and SHM price
-    const config = await fetchConfig();
-    const shmPrice = await fetchShmPrice();
+        console.log('Inputs:', { nodePrice, numServers, runningCosts, nodeStake, nodeCurrency, runningCurrency });
 
-    // Determine probability
-    let probability;
-    if (useCommunityProbability.checked) {
-        probability = config.probability;
-    } else if (customProbability.checked) {
-        probability = (parseFloat(customProbabilityInput.value) || 0) / 100;
-    } else if (weeklyValidations.checked) {
-        const weeklyValidationsValue = parseFloat(weeklyValidationsInput.value) || 0;
-        probability = weeklyValidationsValue / 7;
-    }
+        // Fetch config and SHM price
+        const config = await fetchConfig();
+        const shmPrice = await fetchShmPrice();
 
-    // Update probability and reward display
-    probabilitySpan.textContent = (probability * 100).toFixed(1);
-    rewardSpan.textContent = config.reward.toFixed(0);
+        console.log('Config:', config, 'SHM Price:', shmPrice);
 
-    // Convert inputs to SHM
-    let nodePriceShm = nodePrice;
-    let runningCostsShm = runningCosts;
-    if (nodeCurrency === 'USD') nodePriceShm = shmPrice.usd > 0 ? nodePrice / shmPrice.usd : 0;
-    else if (nodeCurrency === 'EUR') nodePriceShm = shmPrice.eur > 0 ? nodePrice / shmPrice.eur : 0;
-    else if (nodeCurrency === 'INR') nodePriceShm = shmPrice.inr > 0 ? nodePrice / shmPrice.inr : 0;
-    if (runningCurrency === 'USD') runningCostsShm = shmPrice.usd > 0 ? runningCosts / shmPrice.usd : 0;
-    else if (runningCurrency === 'EUR') runningCostsShm = shmPrice.eur > 0 ? runningCosts / shmPrice.eur : 0;
-    else if (runningCurrency === 'INR') runningCostsShm = shmPrice.inr > 0 ? runningCosts / shmPrice.inr : 0;
-
-    // Calculate rewards (per server, multiplied by number of servers)
-    const dailyRewardsShm = probability * config.reward * numServers;
-    const weeklyRewardsShm = dailyRewardsShm * 7;
-    const monthlyRewardsShm = dailyRewardsShm * 30;
-    const annualRewardsShm = dailyRewardsShm * 365;
-
-    // Convert rewards and costs to selected currency
-    let monthlyRewardsSelected, weeklyRewardsSelected, monthlyNodesCostSelected, dailyNodesCostSelected, annualNodesCostSelected, netAnnualProfitSelected;
-    let currencySymbol = runningCurrency === 'USD' ? '$' : runningCurrency === 'EUR' ? '€' : runningCurrency === 'INR' ? '₹' : '';
-    if (runningCurrency === 'USD') {
-        monthlyRewardsSelected = monthlyRewardsShm * shmPrice.usd;
-        weeklyRewardsSelected = weeklyRewardsShm * shmPrice.usd;
-        monthlyNodesCostSelected = runningCostsShm * numServers * shmPrice.usd;
-        dailyNodesCostSelected = (runningCostsShm * numServers / 30) * shmPrice.usd;
-        annualNodesCostSelected = runningCostsShm * 12 * numServers * shmPrice.usd;
-        netAnnualProfitSelected = (annualRewardsShm - (runningCostsShm * 12 * numServers)) * shmPrice.usd;
-    } else if (runningCurrency === 'EUR') {
-        monthlyRewardsSelected = monthlyRewardsShm * shmPrice.eur;
-        weeklyRewardsSelected = weeklyRewardsShm * shmPrice.eur;
-        monthlyNodesCostSelected = runningCostsShm * numServers * shmPrice.eur;
-        dailyNodesCostSelected = (runningCostsShm * numServers / 30) * shmPrice.eur;
-        annualNodesCostSelected = runningCostsShm * 12 * numServers * shmPrice.eur;
-        netAnnualProfitSelected = (annualRewardsShm - (runningCostsShm * 12 * numServers)) * shmPrice.eur;
-    } else if (runningCurrency === 'INR') {
-        monthlyRewardsSelected = monthlyRewardsShm * shmPrice.inr;
-        weeklyRewardsSelected = weeklyRewardsShm * shmPrice.inr;
-        monthlyNodesCostSelected = runningCostsShm * numServers * shmPrice.inr;
-        dailyNodesCostSelected = (runningCostsShm * numServers / 30) * shmPrice.inr;
-        annualNodesCostSelected = runningCostsShm * 12 * numServers * shmPrice.inr;
-        netAnnualProfitSelected = (annualRewardsShm - (runningCostsShm * 12 * numServers)) * shmPrice.inr;
-    } else {
-        monthlyRewardsSelected = monthlyRewardsShm;
-        weeklyRewardsSelected = weeklyRewardsShm;
-        monthlyNodesCostSelected = runningCostsShm * numServers;
-        dailyNodesCostSelected = runningCostsShm * numServers / 30;
-        annualNodesCostSelected = runningCostsShm * 12 * numServers;
-        netAnnualProfitSelected = annualRewardsShm - (runningCostsShm * 12 * numServers);
-        currencySymbol = 'SHM';
-    }
-
-    // Calculate ROI, APY, and Daily Return
-    const annualRunningCostsShm = runningCostsShm * 12 * numServers; // Total annual running costs
-    const monthlyNodesCostShm = runningCostsShm * numServers; // Monthly nodes cost
-    const dailyNodesCostShm = monthlyNodesCostShm / 30; // Daily nodes cost
-    const netAnnualProfitShm = annualRewardsShm - annualRunningCostsShm;
-    const totalInvestmentShm = (nodePriceShm * numServers) + (nodeStake * numServers); // Include stake per server
-    let roi, netDailyReturn;
-    if (totalInvestmentShm > 0) {
-        roi = (netAnnualProfitShm / totalInvestmentShm) * 100; // ROI based on hardware and stake
-        netDailyReturn = ((dailyRewardsShm - dailyNodesCostShm) / totalInvestmentShm) * 100; // Net daily return
-    } else {
-        roi = null; // No investment or stake, ROI is undefined
-        netDailyReturn = null; // No investment, daily return is undefined
-    }
-    const apy = roi; // Simplified APY (no compounding)
-
-    // Display results in selected currencies
-    shmPriceSpan.textContent = `$${shmPrice.usd.toFixed(2)} / €${shmPrice.eur.toFixed(2)} / ₹${shmPrice.inr.toFixed(2)}`;
-    initialInvestmentSpan.textContent = `${currencySymbol}${(nodePrice * numServers).toFixed(2)} ${nodeCurrency} + ${nodeStake * numServers} SHM (${totalInvestmentShm.toFixed(2)} SHM total)`;
-    dailyNodesCostSpan.textContent = `${currencySymbol}${dailyNodesCostSelected.toFixed(2)} ${runningCurrency} (${dailyNodesCostShm.toFixed(2)} SHM)`;
-    monthlyNodesCostSpan.textContent = `${currencySymbol}${monthlyNodesCostSelected.toFixed(2)} ${runningCurrency} (${monthlyNodesCostShm.toFixed(2)} SHM)`;
-    annualNodesCostSpan.textContent = `${currencySymbol}${annualNodesCostSelected.toFixed(2)} ${runningCurrency} (${annualRunningCostsShm.toFixed(2)} SHM)`;
-    netAnnualProfitSpan.textContent = `${currencySymbol}${netAnnualProfitSelected.toFixed(2)} ${runningCurrency} (${netAnnualProfitShm.toFixed(2)} SHM)`;
-    weeklyRewardsSpan.textContent = `${currencySymbol}${weeklyRewardsSelected.toFixed(2)} ${runningCurrency} (${weeklyRewardsShm.toFixed(2)} SHM)`;
-    monthlyRewardsSpan.textContent = `${currencySymbol}${monthlyRewardsSelected.toFixed(2)} ${runningCurrency} (${monthlyRewardsShm.toFixed(2)} SHM)`;
-    netDailyReturnSpan.textContent = netDailyReturn !== null ? `${netDailyReturn.toFixed(2)}%` : 'N/A';
-    netRoiSpan.textContent = roi !== null ? `${roi.toFixed(2)}%` : 'N/A';
-    estimatedApySpan.textContent = apy !== null ? `${apy.toFixed(2)}%` : 'N/A';
-
-    // Show results
-    resultsDiv.classList.remove('hidden');
-
-    // Render Chart
-    if (rewardsChartCanvas.chart) {
-        rewardsChartCanvas.chart.destroy(); // Destroy existing chart to prevent memory leaks
-    }
-    rewardsChartCanvas.chart = new Chart(rewardsChartCanvas, {
-        type: 'bar',
-        data: {
-            labels: ['Weekly Rewards', 'Monthly Rewards'],
-            datasets: [{
-                label: `Rewards (${runningCurrency})`,
-                data: [weeklyRewardsSelected, monthlyRewardsSelected],
-                backgroundColor: ['#2563eb', '#1e40af']
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: { display: true, text: runningCurrency }
-                }
-            }
+        // Determine probability
+        let probability;
+        if (useCommunityProbability.checked) {
+            probability = config.probability;
+        } else if (customProbability.checked) {
+            probability = (parseFloat(customProbabilityInput.value) || 0) / 100;
+        } else if (weeklyValidations.checked) {
+            const weeklyValidationsValue = parseFloat(weeklyValidationsInput.value) || 0;
+            probability = weeklyValidationsValue / 7;
         }
-    });
+
+        console.log('Probability:', probability);
+
+        // Update probability and reward display
+        probabilitySpan.textContent = (probability * 100).toFixed(1);
+        rewardSpan.textContent = config.reward.toFixed(0);
+
+        // Convert inputs to SHM
+        let nodePriceShm = nodePrice;
+        let runningCostsShm = runningCosts;
+        if (nodeCurrency === 'USD') nodePriceShm = shmPrice.usd > 0 ? nodePrice / shmPrice.usd : 0;
+        else if (nodeCurrency === 'EUR') nodePriceShm = shmPrice.eur > 0 ? nodePrice / shmPrice.eur : 0;
+        else if (nodeCurrency === 'INR') nodePriceShm = shmPrice.inr > 0 ? nodePrice / shmPrice.inr : 0;
+        if (runningCurrency === 'USD') runningCostsShm = shmPrice.usd > 0 ? runningCosts / shmPrice.usd : 0;
+        else if (runningCurrency === 'EUR') runningCostsShm = shmPrice.eur > 0 ? runningCosts / shmPrice.eur : 0;
+        else if (runningCurrency === 'INR') runningCostsShm = shmPrice.inr > 0 ? runningCosts / shmPrice.inr : 0;
+
+        console.log('Converted to SHM:', { nodePriceShm, runningCostsShm });
+
+        // Calculate rewards (per server, multiplied by number of servers)
+        const dailyRewardsShm = probability * config.reward * numServers;
+        const weeklyRewardsShm = dailyRewardsShm * 7;
+        const monthlyRewardsShm = dailyRewardsShm * 30;
+        const annualRewardsShm = dailyRewardsShm * 365;
+
+        console.log('Rewards (SHM):', { dailyRewardsShm, weeklyRewardsShm, monthlyRewardsShm, annualRewardsShm });
+
+        // Convert rewards and costs to selected currency
+        let monthlyRewardsSelected, weeklyRewardsSelected, monthlyNodesCostSelected, dailyNodesCostSelected, annualNodesCostSelected, netAnnualProfitSelected;
+        let currencySymbol = runningCurrency === 'USD' ? '$' : runningCurrency === 'EUR' ? '€' : runningCurrency === 'INR' ? '₹' : '';
+        if (runningCurrency === 'USD') {
+            monthlyRewardsSelected = monthlyRewardsShm * shmPrice.usd;
+            weeklyRewardsSelected = weeklyRewardsShm * shmPrice.usd;
+            monthlyNodesCostSelected = runningCostsShm * numServers * shmPrice.usd;
+            dailyNodesCostSelected = (runningCostsShm * numServers / 30) * shmPrice.usd;
+            annualNodesCostSelected = runningCostsShm * 12 * numServers * shmPrice.usd;
+            netAnnualProfitSelected = (annualRewardsShm - (runningCostsShm * 12 * numServers)) * shmPrice.usd;
+        } else if (runningCurrency === 'EUR') {
+            monthlyRewardsSelected = monthlyRewardsShm * shmPrice.eur;
+            weeklyRewardsSelected = weeklyRewardsShm * shmPrice.eur;
+            monthlyNodesCostSelected = runningCostsShm * numServers * shmPrice.eur;
+            dailyNodesCostSelected = (runningCostsShm * numServers / 30) * shmPrice.eur;
+            annualNodesCostSelected = runningCostsShm * 12 * numServers * shmPrice.eur;
+            netAnnualProfitSelected = (annualRewardsShm - (runningCostsShm * 12 * numServers)) * shmPrice.eur;
+        } else if (runningCurrency === 'INR') {
+            monthlyRewardsSelected = monthlyRewardsShm * shmPrice.inr;
+            weeklyRewardsSelected = weeklyRewardsShm * shmPrice.inr;
+            monthlyNodesCostSelected = runningCostsShm * numServers * shmPrice.inr;
+            dailyNodesCostSelected = (runningCostsShm * numServers / 30) * shmPrice.inr;
+            annualNodesCostSelected = runningCostsShm * 12 * numServers * shmPrice.inr;
+            netAnnualProfitSelected = (annualRewardsShm - (runningCostsShm * 12 * numServers)) * shmPrice.inr;
+        } else {
+            monthlyRewardsSelected = monthlyRewardsShm;
+            weeklyRewardsSelected = weeklyRewardsShm;
+            monthlyNodesCostSelected = runningCostsShm * numServers;
+            dailyNodesCostSelected = runningCostsShm * numServers / 30;
+            annualNodesCostSelected = runningCostsShm * 12 * numServers;
+            netAnnualProfitSelected = annualRewardsShm - (runningCostsShm * 12 * numServers);
+            currencySymbol = 'SHM';
+        }
+
+        console.log('Converted to selected currency:', { monthlyRewardsSelected, weeklyRewardsSelected, monthlyNodesCostSelected, dailyNodesCostSelected, annualNodesCostSelected, netAnnualProfitSelected });
+
+        // Calculate ROI, APY, and Daily Return
+        const annualRunningCostsShm = runningCostsShm * 12 * numServers; // Total annual running costs
+        const monthlyNodesCostShm = runningCostsShm * numServers; // Monthly nodes cost
+        const dailyNodesCostShm = monthlyNodesCostShm / 30; // Daily nodes cost
+        const netAnnualProfitShm = annualRewardsShm - annualRunningCostsShm;
+        const totalInvestmentShm = (nodePriceShm * numServers) + (nodeStake * numServers); // Include stake per server
+        let roi, netDailyReturn;
+        if (totalInvestmentShm > 0) {
+            roi = (netAnnualProfitShm / totalInvestmentShm) * 100; // ROI based on hardware and stake
+            netDailyReturn = ((dailyRewardsShm - dailyNodesCostShm) / totalInvestmentShm) * 100; // Net daily return
+        } else {
+            roi = null; // No investment or stake, ROI is undefined
+            netDailyReturn = null; // No investment, daily return is undefined
+        }
+        const apy = roi; // Simplified APY (no compounding)
+
+        console.log('Calculations:', { roi, netDailyReturn, apy });
+
+        // Display results in selected currencies
+        shmPriceSpan.textContent = `$${shmPrice.usd.toFixed(2)} / €${shmPrice.eur.toFixed(2)} / ₹${shmPrice.inr.toFixed(2)}`;
+        initialInvestmentSpan.textContent = `${currencySymbol}${(nodePrice * numServers).toFixed(2)} ${nodeCurrency} + ${nodeStake * numServers} SHM (${totalInvestmentShm.toFixed(2)} SHM total)`;
+        dailyNodesCostSpan.textContent = `${currencySymbol}${dailyNodesCostSelected.toFixed(2)} ${runningCurrency} (${dailyNodesCostShm.toFixed(2)} SHM)`;
+        monthlyNodesCostSpan.textContent = `${currencySymbol}${monthlyNodesCostSelected.toFixed(2)} ${runningCurrency} (${monthlyNodesCostShm.toFixed(2)} SHM)`;
+        annualNodesCostSpan.textContent = `${currencySymbol}${annualNodesCostSelected.toFixed(2)} ${runningCurrency} (${annualRunningCostsShm.toFixed(2)} SHM)`;
+        netAnnualProfitSpan.textContent = `${currencySymbol}${netAnnualProfitSelected.toFixed(2)} ${runningCurrency} (${netAnnualProfitShm.toFixed(2)} SHM)`;
+        weeklyRewardsSpan.textContent = `${currencySymbol}${weeklyRewardsSelected.toFixed(2)} ${runningCurrency} (${weeklyRewardsShm.toFixed(2)} SHM)`;
+        monthlyRewardsSpan.textContent = `${currencySymbol}${monthlyRewardsSelected.toFixed(2)} ${runningCurrency} (${monthlyRewardsShm.toFixed(2)} SHM)`;
+        netDailyReturnSpan.textContent = netDailyReturn !== null ? `${netDailyReturn.toFixed(2)}%` : 'N/A';
+        netRoiSpan.textContent = roi !== null ? `${roi.toFixed(2)}%` : 'N/A';
+        estimatedApySpan.textContent = apy !== null ? `${apy.toFixed(2)}%` : 'N/A';
+
+        // Show results
+        resultsDiv.classList.remove('hidden');
+        console.log('Results displayed');
+
+        // Render Chart
+        if (rewardsChartCanvas.chart) {
+            rewardsChartCanvas.chart.data.datasets[0].data = [weeklyRewardsSelected, monthlyRewardsSelected];
+            rewardsChartCanvas.chart.data.datasets[0].label = `Rewards (${runningCurrency})`;
+            rewardsChartCanvas.chart.options.scales.y.title.text = runningCurrency;
+            rewardsChartCanvas.chart.update();
+            console.log('Updated existing chart');
+        } else {
+            rewardsChartCanvas.chart = new Chart(rewardsChartCanvas, {
+                type: 'bar',
+                data: {
+                    labels: ['Weekly Rewards', 'Monthly Rewards'],
+                    datasets: [{
+                        label: `Rewards (${runningCurrency})`,
+                        data: [weeklyRewardsSelected, monthlyRewardsSelected],
+                        backgroundColor: ['#2563eb', '#1e40af']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: runningCurrency }
+                        }
+                    }
+                }
+            });
+            console.log('Created new chart');
+        }
+    } catch (error) {
+        console.error('Error in calculateEarnings:', error);
+        resultsDiv.innerHTML = '<p class="text-red-500 text-center">Error calculating earnings. Please try again.</p>';
+        resultsDiv.classList.remove('hidden');
+    }
 }
 
 // Event Listener for Calculate Button
-calculateBtn.addEventListener('click', calculateEarnings);
+calculateBtn.addEventListener('click', () => {
+    console.log('Calculate button clicked');
+    calculateEarnings();
+});
 
 // Event Listener for Currency Changes
-nodePriceCurrency.addEventListener('change', calculateEarnings);
-runningCostsCurrency.addEventListener('change', calculateEarnings);
+nodePriceCurrency.addEventListener('change', () => {
+    console.log('Node price currency changed');
+    calculateEarnings();
+});
+runningCostsCurrency.addEventListener('change', () => {
+    console.log('Running costs currency changed');
+    calculateEarnings();
+});
 
 // Fetch SHM price and config on page load
 Promise.all([fetchShmPrice(), fetchConfig()]).then(([shmPrice, config]) => {
@@ -344,6 +378,11 @@ Promise.all([fetchShmPrice(), fetchConfig()]).then(([shmPrice, config]) => {
     weeklyValidationsInput.value = (config.probability * 7).toFixed(1);
     customProbabilitySlider.set(config.probability * 100);
     weeklyValidationsSlider.set(config.probability * 7);
+    console.log('Page load: SHM price and config fetched');
+}).catch(error => {
+    console.error('Error on page load:', error);
+    resultsDiv.innerHTML = '<p class="text-red-500 text-center">Error loading initial data. Please refresh the page.</p>';
+    resultsDiv.classList.remove('hidden');
 });
 
 // Initialize probability inputs
