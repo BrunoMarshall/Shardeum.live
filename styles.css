@@ -1,50 +1,17 @@
-body {
-    font-family: 'Roboto', sans-serif;
-    background-color: #f3f4f6;
+#probability-form {
+    display: block;
 }
-
-header, footer {
-    background: linear-gradient(135deg, #2563eb, #1e40af);
+#probability-inputs {
+    display: block;
 }
-
-header img {
-    max-height: 64px;
-    width: auto;
+#custom-probability-input, #weekly-validations-input {
+    width: 100%;
+    max-width: 150px;
+    padding: 0.5rem;
 }
-
-#node-price-slider, #num-servers-slider, #running-costs-slider {
-    margin: 20px 10px;
+#custom-probability-slider, #weekly-validations-slider {
+    margin: 1rem 0;
 }
-
-.nouislider .noUi-connect {
-    background: #2563eb;
+.hidden {
+    display: none !important;
 }
-
-.nouislider .noUi-handle {
-    background: #ffffff;
-    border: 2px solid #2563eb;
-    border-radius: 50%;
-    cursor: pointer;
-}
-
-button {
-    transition: background-color 0.3s ease;
-}
-
-canvas {
-    max-height: 300px;
-}
-
-nav {
-    background-color: #2563eb; /* Matches bg-blue-600 */
-}
-
-nav a {
-    transition: color 0.3s ease;
-}
-
-nav a:hover {
-    color: #e5e7eb; /* Light gray for hover effect */
-}
-
-
