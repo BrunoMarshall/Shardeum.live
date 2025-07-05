@@ -6,13 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shardeum Node APY Calculator</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css">
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" href="assets/shardeum_live_favicon.png">
 </head>
 <body class="bg-gray-100 font-sans">
     <!-- Navigation -->
-    <nav class="bg-blue-600 text-white py-4">
+    <nav class="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-4">
         <div class="max-w-4xl mx-auto flex justify-between items-center px-6">
             <div class="flex items-center">
                 <img src="assets/shardeum_live_logo.png" alt="Shardeum Logo" class="h-12 mr-3">
@@ -26,114 +27,127 @@
     </nav>
 
     <!-- Main Calculator Section -->
-    <main class="max-w-4xl mx-auto my-8 p-6 bg-white rounded-lg shadow-lg">
-        <h2 class="text-2xl font-semibold text-center mb-6">Calculate Your Earnings</h2>
-        <p class="text-center text-gray-600 mb-4">Enter your node details to estimate SHM rewards and APY. Learn more in the <a href="about.html" class="underline">About</a> page.</p>
+    <main class="container mx-auto p-6">
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-semibold text-center mb-6">Calculate Your Earnings</h2>
+            <p class="text-center text-gray-600 mb-4">Enter your node details to estimate SHM rewards and APY. Learn more in the <a href="about.html" class="underline">About</a> page.</p>
 
-        <!-- Input Form -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Number of Servers -->
-            <div>
-                <label class="block text-gray-700 font-medium mb-2">Number of Servers</label>
-                <input id="num-servers" type="number" min="1" max="100" step="1" placeholder="Enter number of servers" class="w-full p-2 border rounded">
-                <div id="num-servers-slider" class="mt-4"></div>
-                <p class="text-sm text-gray-500 mt-2">How many servers do you have? (1–100).</p>
-            </div>
-
-            <!-- Monthly VPS Costs per Server -->
-            <div>
-                <label class="block text-gray-700 font-medium mb-2">Monthly VPS Costs per Server</label>
-                <input id="running-costs" type="number" min="0" step="0.01" placeholder="Enter VPS costs" class="w-full p-2 border rounded">
-                <select id="running-costs-currency" class="w-full p-2 border rounded mt-2">
-                    <option value="USD">USD</option>
-                    <option value="EUR">EUR</option>
-                    <option value="INR">INR</option>
-                    <option value="SHM">SHM</option>
-                </select>
-                <div id="running-costs-slider" class="mt-4"></div>
-                <p class="text-sm text-gray-500 mt-2">Monthly VPS costs per server (e.g., hosting, electricity).</p>
-            </div>
-
-            <!-- Validator Stake (SHM) in Each Server -->
-            <div>
-                <label class="block text-gray-700 font-medium mb-2">Validator Stake (SHM) in Each Server</label>
-                <input id="node-stake" type="number" min="2400" max="100000" step="100" placeholder="Enter node stake" class="w-full p-2 border rounded">
-                <div id="node-stake-slider" class="mt-4"></div>
-                <p class="text-sm text-gray-500 mt-2">Stake per server in SHM (2400–100,000).</p>
-            </div>
-
-            <!-- Hardware Investment (if applicable) -->
-            <div>
-                <label class="block text-gray-700 font-medium mb-2">Hardware Investment (if applicable)</label>
-                <input id="node-price" type="number" min="0" step="0.01" placeholder="Enter hardware cost" class="w-full p-2 border rounded">
-                <select id="node-price-currency" class="w-full p-2 border rounded mt-2">
-                    <option value="USD">USD</option>
-                    <option value="EUR">EUR</option>
-                    <option value="INR">INR</option>
-                    <option value="SHM">SHM</option>
-                </select>
-                <div id="node-price-slider" class="mt-4"></div>
-                <p class="text-sm text-gray-500 mt-2">Hardware investment (if using VPS, enter 0).</p>
-            </div>
-
-            <!-- Daily Selection Probability -->
-            <div class="col-span-1 md:col-span-2">
-                <label class="block text-gray-700 font-medium mb-2">Daily Selection Probability</label>
-                <div class="flex items-center mb-2">
-                    <input type="radio" id="use-community-probability" name="probability-option" value="community" checked class="mr-2">
-                    <label for="use-community-probability" class="mr-4">Use Community Probability</label>
-                    <input type="radio" id="custom-probability" name="probability-option" value="custom" class="mr-2">
-                    <label for="custom-probability" class="mr-4">Custom Probability (%)</label>
-                    <input type="radio" id="weekly-validations" name="probability-option" value="weekly" class="mr-2">
-                    <label for="weekly-validations">Weekly Validations per Node</label>
-                </div>
-                <div id="probability-inputs" class="mt-2">
-                    <input id="custom-probability-input" type="number" min="0" max="100" step="0.1" placeholder="Enter probability (%)" class="w-full p-2 border rounded hidden">
-                    <input id="weekly-validations-input" type="number" min="0" max="7" step="0.1" placeholder="Enter weekly validations (0–7)" class="w-full p-2 border rounded hidden">
-                    <div id="custom-probability-slider" class="mt-4 hidden"></div>
-                    <div id="weekly-validations-slider" class="mt-4 hidden"></div>
-                </div>
-                <p class="text-sm text-gray-500 mt-2">If you want to use the probability taken from community nodes, select 'Use Community Probability.' Otherwise, input your node's daily selection probability (%) or how many times your node validates per week to calculate the probability and results.</p>
-            </div>
-        </div>
-
-        <!-- Calculate Button -->
-        <button id="calculate-btn" class="mt-6 w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Calculate Earnings</button>
-
-        <!-- Results Section -->
-        <div id="results" class="mt-8 hidden">
-            <h3 class="text-xl font-semibold text-center mb-4">Your Estimated Earnings</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Input Form -->
+            <form id="calculator-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Node Price -->
                 <div>
-                    <p><strong>Current SHM Price:</strong> <span id="shm-price"></span></p>
-                    <p><strong>Initial Investment:</strong> <span id="initial-investment"></span></p>
-                    <p><strong>Daily Nodes Cost:</strong> <span id="daily-nodes-cost"></span></p>
-                    <p><strong>Monthly Nodes Cost:</strong> <span id="monthly-nodes-cost"></span></p>
-                    <p><strong>Annual Nodes Cost:</strong> <span id="annual-nodes-cost"></span></p>
-                    <p><strong>Net Annual Profit:</strong> <span id="net-annual-profit"></span></p>
-                    <p><strong>Weekly Rewards:</strong> <span id="weekly-rewards"></span></p>
-                    <p><strong>Monthly Rewards:</strong> <span id="monthly-rewards"></span></p>
-                    <p><strong>Net Daily Return (Daily Return on Investment):</strong> <span id="net-daily-return"></span></p>
-                    <p><strong>Net ROI (Return on Investment):</strong> <span id="net-roi"></span></p>
-                    <p><strong>Estimated APY (Annual Percentage Yield):</strong> <span id="estimated-apy"></span></p>
+                    <label for="node-price" class="block text-gray-700 font-medium mb-2">Hardware Investment (if applicable)</label>
+                    <div class="flex items-center">
+                        <input id="node-price" type="number" min="0" step="0.01" value="0" class="w-full p-2 border rounded">
+                        <select id="node-price-currency" class="ml-2 p-2 border rounded">
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="INR">INR</option>
+                            <option value="SHM">SHM</option>
+                        </select>
+                    </div>
+                    <div id="node-price-slider" class="mt-4"></div>
+                    <p class="text-sm text-gray-500 mt-2">If using VPS, enter 0.</p>
                 </div>
+
+                <!-- Number of Servers -->
                 <div>
-                    <canvas id="rewards-chart" class="w-full"></canvas>
+                    <label for="num-servers" class="block text-gray-700 font-medium mb-2">Number of Servers</label>
+                    <input id="num-servers" type="number" min="1" max="100" step="1" value="1" class="w-full p-2 border rounded">
+                    <div id="num-servers-slider" class="mt-4"></div>
+                    <p class="text-sm text-gray-500 mt-2">How many servers do you have? (1–100).</p>
                 </div>
+
+                <!-- Running Costs -->
+                <div>
+                    <label for="running-costs" class="block text-gray-700 font-medium mb-2">Monthly VPS Costs per Server</label>
+                    <div class="flex items-center">
+                        <input id="running-costs" type="number" min="0" step="0.01" value="0" class="w-full p-2 border rounded">
+                        <select id="running-costs-currency" class="ml-2 p-2 border rounded">
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="INR">INR</option>
+                            <option value="SHM">SHM</option>
+                        </select>
+                    </div>
+                    <div id="running-costs-slider" class="mt-4"></div>
+                    <p class="text-sm text-gray-500 mt-2">Monthly VPS costs per server (e.g., hosting, electricity).</p>
+                </div>
+
+                <!-- Node Stake -->
+                <div>
+                    <label for="node-stake" class="block text-gray-700 font-medium mb-2">Validator Stake (SHM) in Each Server</label>
+                    <input id="node-stake" type="number" min="2400" max="100000" step="100" value="2400" class="w-full p-2 border rounded">
+                    <div id="node-stake-slider" class="mt-4"></div>
+                    <p class="text-sm text-gray-500 mt-2">Stake per server in SHM (2400–100,000).</p>
+                </div>
+
+                <!-- Daily Selection Probability -->
+                <div id="probability-form" class="col-span-1 md:col-span-2">
+                    <label class="block text-gray-700 font-medium mb-2">Daily Selection Probability</label>
+                    <div class="flex items-center mb-2">
+                        <input type="radio" id="use-community-probability" name="probability-option" value="community" checked class="mr-2">
+                        <label for="use-community-probability" class="mr-4">Use Community Probability</label>
+                        <input type="radio" id="custom-probability" name="probability-option" value="custom" class="mr-2">
+                        <label for="custom-probability" class="mr-4">Custom Probability (%)</label>
+                        <input type="radio" id="weekly-validations" name="probability-option" value="weekly" class="mr-2">
+                        <label for="weekly-validations">Weekly Validations per Node</label>
+                    </div>
+                    <div id="probability-inputs" class="mt-2">
+                        <input id="custom-probability-input" type="number" min="0" max="100" step="0.1" placeholder="Enter probability (%)" class="w-full max-w-xs p-2 border rounded hidden">
+                        <input id="weekly-validations-input" type="number" min="0" max="7" step="0.1" placeholder="Enter weekly validations (0–7)" class="w-full max-w-xs p-2 border rounded hidden">
+                        <div id="custom-probability-slider" class="mt-4 hidden"></div>
+                        <div id="weekly-validations-slider" class="mt-4 hidden"></div>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-2">Select 'Use Community Probability' to use community node data, or input your node's daily selection probability (%) or weekly validations to calculate results.</p>
+                </div>
+
+                <!-- Calculate Button -->
+                <div class="col-span-1 md:col-span-2 text-center">
+                    <button id="calculate-btn" type="button" class="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700">Calculate</button>
+                </div>
+            </form>
+
+            <!-- Loading Indicator -->
+            <div id="loading-indicator" class="text-center hidden">
+                <p class="text-gray-700">Loading...</p>
             </div>
-            <p class="text-sm text-gray-500 mt-4">Note: Based on a <span id="probability"></span>% chance of being selected daily, with <span id="reward"></span> SHM per active slot per server. Values may change.</p>
+
+            <!-- Results -->
+            <div id="results" class="hidden mt-6 p-6 bg-gray-50 rounded-lg">
+                <h3 class="text-xl font-semibold text-center mb-4">Your Estimated Earnings</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <p><strong>Current SHM Price:</strong> <span id="shm-price"></span></p>
+                        <p><strong>Initial Investment:</strong> <span id="initial-investment"></span></p>
+                        <p><strong>Daily Nodes Cost:</strong> <span id="daily-nodes-cost"></span></p>
+                        <p><strong>Monthly Nodes Cost:</strong> <span id="monthly-nodes-cost"></span></p>
+                        <p><strong>Annual Nodes Cost:</strong> <span id="annual-nodes-cost"></span></p>
+                        <p><strong>Net Annual Profit:</strong> <span id="net-annual-profit"></span></p>
+                        <p><strong>Weekly Rewards:</strong> <span id="weekly-rewards"></span></p>
+                        <p><strong>Monthly Rewards:</strong> <span id="monthly-rewards"></span></p>
+                        <p><strong>Net Daily Return (Daily Return on Investment):</strong> <span id="net-daily-return"></span></p>
+                        <p><strong>Net ROI (Return on Investment):</strong> <span id="net-roi"></span></p>
+                        <p><strong>Estimated APY (Annual Percentage Yield):</strong> <span id="estimated-apy"></span></p>
+                    </div>
+                    <div>
+                        <canvas id="rewards-chart" class="w-full"></canvas>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-500 mt-4">Note: Based on a <span id="probability"></span>% chance of being selected daily, with <span id="reward"></span> SHM per active slot per server. Values may change.</p>
+            </div>
         </div>
     </main>
 
     <!-- Footer -->
-    <footer class="bg-blue-600 text-white py-4 text-center">
+    <footer class="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-4 text-center">
         <p>© 2025 Shardeum Node APY Calculator. Powered by <a href="https://shardeum.org" class="underline">Shardeum</a>.</p>
         <p class="mt-2">Data sourced from <a href="https://www.coingecko.com" class="underline">CoinGecko</a>.</p>
     </footer>
 
     <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

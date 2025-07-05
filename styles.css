@@ -12,15 +12,15 @@ header img {
     width: auto;
 }
 
-#node-price-slider, #num-servers-slider, #running-costs-slider {
-    margin: 20px 10px;
+#node-price-slider, #num-servers-slider, #running-costs-slider, #node-stake-slider, #custom-probability-slider, #weekly-validations-slider {
+    margin: 16px 0;
 }
 
-.nouislider .noUi-connect {
+.noUi-connect {
     background: #2563eb;
 }
 
-.nouislider .noUi-handle {
+.noUi-handle {
     background: #ffffff;
     border: 2px solid #2563eb;
     border-radius: 50%;
@@ -33,4 +33,25 @@ button {
 
 canvas {
     max-height: 300px;
+}
+
+nav a {
+    transition: color 0.3s ease;
+}
+
+nav a:hover {
+    color: #e5e7eb;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Ensure probability inputs and sliders are toggled correctly */
+#custom-probability-input.hidden, #weekly-validations-input.hidden {
+    display: none !important;
+}
+
+#custom-probability-slider.hidden, #weekly-validations-slider.hidden {
+    display: none !important;
 }
