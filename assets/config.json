@@ -1,0 +1,3 @@
+return {
+    reward: data.reward || 40
+};

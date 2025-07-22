@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - Shardeum Node APY Calculator</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="assets/shardeum_live_favicon.png">
+</head>
+<body class="bg-gray-100 font-sans">
+    <!-- Navigation -->
+    <nav class="bg-blue-600 text-white py-4">
+        <div class="max-w-4xl mx-auto flex justify-between items-center px-6">
+            <div class="flex items-center">
+                <img src="assets/shardeum_live_logo.png" alt="Shardeum Logo" class="h-12 mr-3">
+                <h1 class="text-xl font-bold">Shardeum Node APY Calculator</h1>
+            </div>
+            <div>
+                <a href="index.html" class="text-white hover:underline mr-4">Home</a>
+                <a href="apy-calculator.html" class="text-white hover:underline mr-4">Calculator</a>
+                <a href="about.html" class="text-white hover:underline font-semibold">About</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto my-8 p-6 bg-white rounded-lg shadow-lg">
+        <h2 class="text-2xl font-semibold text-center mb-6">About the Shardeum Node APY Calculator</h2>
+        <p class="text-gray-600 mb-6">This page provides detailed information about the Shardeum Node APY Calculator, its functionality, input fields, output metrics, and how to use it to estimate your SHM earnings as a Shardeum node validator.</p>
+
+        <!-- Purpose -->
+        <section class="mb-8">
+            <h3 class="text-xl font-semibold mb-3">Purpose of the Calculator</h3>
+            <p class="text-gray-700">The Shardeum Node APY Calculator is designed to help validators estimate their potential earnings in SHM (Shardeum’s native token) by running validator nodes. It calculates rewards, costs, and profitability metrics based on user inputs such as the number of servers, VPS costs, validator stake, hardware investment, and the probability of being selected for validation. The calculator provides a user-friendly interface to explore different scenarios and understand the financial implications of running Shardeum nodes.</p>
+        </section>
+
+        <!-- Input Fields -->
+        <section class="mb-8">
+            <h3 class="text-xl font-semibold mb-3">Input Fields</h3>
+            <ul class="list-disc pl-6 text-gray-700">
+                <li><strong>Number of Servers (1–100):</strong> The number of servers you are running as validator nodes. Each server requires its own validator stake and incurs separate VPS costs.</li>
+                <li><strong>Monthly VPS Costs per Server:</strong> The monthly cost to operate each server (e.g., hosting, electricity) in USD, EUR, INR, or SHM. Enter 0 if there are no ongoing costs.</li>
+                <li><strong>Validator Stake (SHM) in Each Server (2400–100,000):</strong> The amount of SHM staked per server to participate in validation. The minimum stake is 2400 SHM per server, and increasing the stake does not affect rewards but impacts the initial investment.</li>
+                <li><strong>Hardware Investment (if applicable):</strong> The one-time cost to purchase hardware for each server in USD, EUR, INR, or SHM. Enter 0 if using VPS or rented servers.</li>
+                <li><strong>Daily Selection Probability:</strong> The probability (%) of a node being selected for validation each day. Choose from:
+                    <ul class="list-circle pl-6 mt-2">
+                        <li><strong>Use Community Probability:</strong> Uses the default probability from community data (e.g., 22%), sourced from <code>config.json</code>.</li>
+                        <li><strong>Custom Probability (%):</strong> Enter a custom daily selection probability (0–100%).</li>
+                        <li><strong>Weekly Validations per Node:</strong> Enter the number of times your node validates per week (0–7), and the calculator computes the probability as validations ÷ 7.</li>
+                    </ul>
+                </li>
+            </ul>
+            <p class="text-sm text-gray-500 mt-2">Note: All inputs except Number of Servers and Validator Stake are optional and default to 0 or community values if not provided.</p>
+        </section>
+
+        <!-- Output Metrics -->
+        <section class="mb-8">
+            <h3 class="text-xl font-semibold mb-3">Output Metrics</h3>
+            <ul class="list-disc pl-6 text-gray-700">
+                <li><strong>Total Nodes in Shardeum:</strong> The total number of nodes currently active in the Shardeum network, fetched from the Shardeum API.</li>
+                <li><strong>Community Available Slots Active:</strong> The number of community nodes (non-foundation nodes) active in the Shardeum network, fetched from the Shardeum API.</li>
+                <li><strong>Current SHM Price:</strong> The market price of SHM in USD, EUR, and INR, sourced from <a href="https://www.coingecko.com" class="underline">CoinGecko</a>.</li>
+                <li><strong>Initial Investment:</strong> Total upfront cost, including hardware investment (Number of Servers × Hardware Cost per Server) plus validator stake (Number of Servers × Validator Stake per Server), displayed in the selected currency and SHM.</li>
+                <li><strong>Daily Nodes Cost:</strong> Daily operating cost per server (Monthly VPS Costs ÷ 30) × Number of Servers, in selected currency and SHM.</li>
+                <li><strong>Monthly Nodes Cost:</strong> Monthly operating cost (Monthly VPS Costs × Number of Servers), in selected currency and SHM.</li>
+                <li><strong>Annual Nodes Cost:</strong> Annual operating cost (Monthly VPS Costs × 12 × Number of Servers), in selected currency and SHM.</li>
+                <li><strong>Net Annual Profit:</strong> Annual rewards (Daily Rewards × 365) minus Annual Nodes Cost, in selected currency and SHM.</li>
+                <li><strong>Weekly Rewards:</strong> Weekly rewards (Daily Rewards × 7), where Daily Rewards = Probability × Reward per Validation × Number of Servers, in selected currency and SHM.</li>
+                <li><strong>Monthly Rewards:</strong> Monthly rewards (Daily Rewards × 30), in selected currency and SHM.</li>
+                <li><strong>Net Daily Return (Daily Return on Investment):</strong> (Daily Rewards - Daily Nodes Cost) ÷ Initial Investment × 100, displayed as a percentage.</li>
+                <li><strong>Net ROI (Return on Investment):</strong> Net Annual Profit ÷ Initial Investment × 100, displayed as a percentage.</li>
+                <li><strong>Estimated APY (Annual Percentage Yield):</strong> Equal to Net ROI (simplified, no compounding), displayed as a percentage.</li>
+            </ul>
+            <p class="text-sm text-gray-500 mt-2">Note: Metrics are displayed in the selected currency (USD, EUR, INR, or SHM) and SHM for clarity. 'N/A' is shown for ROI, APY, and Daily Return if Initial Investment is 0.</p>
+        </section>
+
+        <!-- Calculation Formulas -->
+        <section class="mb-8">
+            <h3 class="text-xl font-semibold mb-3">Calculation Formulas</h3>
+            <p class="text-gray-700 mb-2">Below are the formulas used to compute the output metrics, where all monetary inputs are converted to SHM using the current SHM price from CoinGecko.</p>
+            <ul class="list-disc pl-6 text-gray-700">
+                <li><strong>SHM Conversion:</strong>
+                    <ul class="list-circle pl-6">
+                        <li>Hardware Cost (SHM) = Hardware Investment ÷ SHM Price (in selected currency)</li>
+                        <li>VPS Cost (SHM) = Monthly VPS Costs ÷ SHM Price (in selected currency)</li>
+                    </ul>
+                </li>
+                <li><strong>Probability:</strong> 
+                    <ul class="list-circle pl-6">
+                        <li>Community: From <code>config.json</code> (e.g., 0.22)</li>
+                        <li>Custom: Custom Probability Input ÷ 100</li>
+                        <li>Weekly Validations: Weekly Validations Input ÷ 7</li>
+                    </ul>
+                </li>
+                <li><strong>Daily Rewards (SHM):</strong> Probability × Reward per Validation (from <code>config.json</code>, e.g., 40 SHM) × Number of Servers</li>
+                <li><strong>Weekly Rewards (SHM):</strong> Daily Rewards × 7</li>
+                <li><strong>Monthly Rewards (SHM):</strong> Daily Rewards × 30</li>
+                <li><strong>Annual Rewards (SHM):</strong> Daily Rewards × 365</li>
+                <li><strong>Daily Nodes Cost (SHM):</strong> (VPS Cost × Number of Servers) ÷ 30</li>
+                <li><strong>Monthly Nodes Cost (SHM):</strong> VPS Cost × Number of Servers</li>
+                <li><strong>Annual Nodes Cost (SHM):</strong> VPS Cost × 12 × Number of Servers</li>
+                <li><strong>Net Annual Profit (SHM):</strong> Annual Rewards - Annual Nodes Cost</li>
+                <li><strong>Initial Investment (SHM):</strong> (Hardware Cost × Number of Servers) + (Validator Stake × Number of Servers)</li>
+                <li><strong>Net Daily Return (%):</strong> (Daily Rewards - Daily Nodes Cost) ÷ Initial Investment × 100</li>
+                <li><strong>Net ROI (%):</strong> Net Annual Profit ÷ Initial Investment × 100</li>
+                <li><strong>Estimated APY (%):</strong> Equal to Net ROI</li>
+            </ul>
+            <p class="text-sm text-gray-500 mt-2">Note: All monetary outputs are converted to the selected currency using the current SHM price for display.</p>
+        </section>
+
+        <!-- User Guidance -->
+        <section class="mb-8">
+            <h3 class="text-xl font-semibold mb-3">How to Use the Calculator</h3>
+            <p class="text-gray-700 mb-2">Follow these steps to estimate your Shardeum node earnings:</p>
+            <ol class="list-decimal pl-6 text-gray-700">
+                <li>Enter the <strong>Number of Servers</strong> you plan to run (1–100).</li>
+                <li>Input the <strong>Monthly VPS Costs per Server</strong> in your preferred currency (USD, EUR, INR, or SHM). Use 0 if there are no costs.</li>
+                <li>Specify the <strong>Validator Stake (SHM) in Each Server</strong> (minimum 2400 SHM per server).</li>
+                <li>Enter the <strong>Hardware Investment (if applicable)</strong> per server in your preferred currency. Use 0 for VPS setups.</li>
+                <li>Choose a <strong>Daily Selection Probability</strong> option:
+                    <ul class="list-circle pl-6">
+                        <li>Select <strong>Use Community Probability</strong> to use the default value from community data.</li>
+                        <li>Choose <strong>Custom Probability (%)</strong> and enter a percentage (0–100%) based on your node’s performance.</li>
+                        <li>Select <strong>Weekly Validations per Node</strong> and enter the number of validations per week (0–7) to calculate the probability.</li>
+                    </ul>
+                </li>
+                <li>Click <strong>Calculate Earnings</strong> to view results.</li>
+                <li>Review the output metrics, including costs, rewards, total nodes, community nodes, and profitability percentages, displayed in your selected currency and SHM.</li>
+                <li>Use the bar chart to visualize Weekly and Monthly Rewards in your chosen currency.</li>
+            </ol>
+            <p class="text-gray-700 mt-2">The calculator uses real-time SHM prices from <a href="https://www.coingecko.com" class="underline">CoinGecko</a>, community data from <code>config.json</code>, and node data from the Shardeum API. Results are estimates and may vary based on network conditions and SHM price fluctuations.</p>
+        </section>
+
+        <!-- Technical Details -->
+        <section class="mb-8">
+            <h3 class="text-xl font-semibold mb-3">Technical Details</h3>
+            <p class="text-gray-700">The Shardeum Node APY Calculator is built using:</p>
+            <ul class="list-disc pl-6 text-gray-700">
+                <li><strong>HTML and Tailwind CSS:</strong> For responsive design and styling.</li>
+                <li><strong>JavaScript:</strong> For dynamic calculations and user interaction.</li>
+                <li><strong>Chart.js:</strong> To render the rewards bar chart.</li>
+                <li><strong>noUiSlider:</strong> For interactive sliders on input fields.</li>
+                <li><strong>CoinGecko API:</strong> To fetch real-time SHM prices in USD, EUR, and INR.</li>
+                <li><strong>Shardeum API:</strong> To fetch total nodes and community node counts.</li>
+                <li><strong>config.json:</strong> To store community-driven probability and reward values.</li>
+            </ul>
+            <p class="text-gray-700 mt-2">The source code is available at <a href="https://github.com/BrunoMarshall/Shardeum.live" class="underline">GitHub</a>. For questions or feedback, contact the Shardeum community at <a href="https://shardeum.org" class="underline">shardeum.org</a>.</p>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-blue-600 text-white py-4 text-center">
+        <p>© 2025 Shardeum Node APY Calculator. Powered by <a href="https://shardeum.org" class="underline">Shardeum</a>.</p>
+        <p class="mt-2">Data sourced from <a href="https://www.coingecko.com" class="underline">CoinGecko</a>.</p>
+    </footer>
+</body>
+</html>
