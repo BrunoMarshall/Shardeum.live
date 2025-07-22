@@ -1,5 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
+<<<<<<< HEAD
+=======
+<!-- About page for Shardeum Node APY Calculator, created July 2025 -->
+>>>>>>> 92adc2245178a4f1a707bd58567e602128b52cb4
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,7 +22,10 @@
             </div>
             <div>
                 <a href="index.html" class="text-white hover:underline mr-4">Home</a>
+<<<<<<< HEAD
                 <a href="apy-calculator.html" class="text-white hover:underline mr-4">Calculator</a>
+=======
+>>>>>>> 92adc2245178a4f1a707bd58567e602128b52cb4
                 <a href="about.html" class="text-white hover:underline font-semibold">About</a>
             </div>
         </div>
@@ -45,7 +52,11 @@
                 <li><strong>Hardware Investment (if applicable):</strong> The one-time cost to purchase hardware for each server in USD, EUR, INR, or SHM. Enter 0 if using VPS or rented servers.</li>
                 <li><strong>Daily Selection Probability:</strong> The probability (%) of a node being selected for validation each day. Choose from:
                     <ul class="list-circle pl-6 mt-2">
+<<<<<<< HEAD
                         <li><strong>Use Community Probability:</strong> Uses the default probability from community data (e.g., 22%), sourced from <code>config.json</code>.</li>
+=======
+                        <li><strong>Use Community Probability:</strong> Uses the default probability from community data (e.g., 55%), sourced from <code>config.json</code>.</li>
+>>>>>>> 92adc2245178a4f1a707bd58567e602128b52cb4
                         <li><strong>Custom Probability (%):</strong> Enter a custom daily selection probability (0–100%).</li>
                         <li><strong>Weekly Validations per Node:</strong> Enter the number of times your node validates per week (0–7), and the calculator computes the probability as validations ÷ 7.</li>
                     </ul>
@@ -58,8 +69,11 @@
         <section class="mb-8">
             <h3 class="text-xl font-semibold mb-3">Output Metrics</h3>
             <ul class="list-disc pl-6 text-gray-700">
+<<<<<<< HEAD
                 <li><strong>Total Nodes in Shardeum:</strong> The total number of nodes currently active in the Shardeum network, fetched from the Shardeum API.</li>
                 <li><strong>Community Available Slots Active:</strong> The number of community nodes (non-foundation nodes) active in the Shardeum network, fetched from the Shardeum API.</li>
+=======
+>>>>>>> 92adc2245178a4f1a707bd58567e602128b52cb4
                 <li><strong>Current SHM Price:</strong> The market price of SHM in USD, EUR, and INR, sourced from <a href="https://www.coingecko.com" class="underline">CoinGecko</a>.</li>
                 <li><strong>Initial Investment:</strong> Total upfront cost, including hardware investment (Number of Servers × Hardware Cost per Server) plus validator stake (Number of Servers × Validator Stake per Server), displayed in the selected currency and SHM.</li>
                 <li><strong>Daily Nodes Cost:</strong> Daily operating cost per server (Monthly VPS Costs ÷ 30) × Number of Servers, in selected currency and SHM.</li>
@@ -88,7 +102,11 @@
                 </li>
                 <li><strong>Probability:</strong> 
                     <ul class="list-circle pl-6">
+<<<<<<< HEAD
                         <li>Community: From <code>config.json</code> (e.g., 0.22)</li>
+=======
+                        <li>Community: From <code>config.json</code> (e.g., 0.55)</li>
+>>>>>>> 92adc2245178a4f1a707bd58567e602128b52cb4
                         <li>Custom: Custom Probability Input ÷ 100</li>
                         <li>Weekly Validations: Weekly Validations Input ÷ 7</li>
                     </ul>
@@ -126,10 +144,17 @@
                     </ul>
                 </li>
                 <li>Click <strong>Calculate Earnings</strong> to view results.</li>
+<<<<<<< HEAD
                 <li>Review the output metrics, including costs, rewards, total nodes, community nodes, and profitability percentages, displayed in your selected currency and SHM.</li>
                 <li>Use the bar chart to visualize Weekly and Monthly Rewards in your chosen currency.</li>
             </ol>
             <p class="text-gray-700 mt-2">The calculator uses real-time SHM prices from <a href="https://www.coingecko.com" class="underline">CoinGecko</a>, community data from <code>config.json</code>, and node data from the Shardeum API. Results are estimates and may vary based on network conditions and SHM price fluctuations.</p>
+=======
+                <li>Review the output metrics, including costs, rewards, and profitability percentages, displayed in your selected currency and SHM.</li>
+                <li>Use the bar chart to visualize Weekly and Monthly Rewards in your chosen currency.</li>
+            </ol>
+            <p class="text-gray-700 mt-2">The calculator uses real-time SHM prices from <a href="https://www.coingecko.com" class="underline">CoinGecko</a> and community data from <code>config.json</code> (probability and reward per validation). Results are estimates and may vary based on network conditions and SHM price fluctuations.</p>
+>>>>>>> 92adc2245178a4f1a707bd58567e602128b52cb4
         </section>
 
         <!-- Technical Details -->
@@ -142,7 +167,10 @@
                 <li><strong>Chart.js:</strong> To render the rewards bar chart.</li>
                 <li><strong>noUiSlider:</strong> For interactive sliders on input fields.</li>
                 <li><strong>CoinGecko API:</strong> To fetch real-time SHM prices in USD, EUR, and INR.</li>
+<<<<<<< HEAD
                 <li><strong>Shardeum API:</strong> To fetch total nodes and community node counts.</li>
+=======
+>>>>>>> 92adc2245178a4f1a707bd58567e602128b52cb4
                 <li><strong>config.json:</strong> To store community-driven probability and reward values.</li>
             </ul>
             <p class="text-gray-700 mt-2">The source code is available at <a href="https://github.com/BrunoMarshall/Shardeum.live" class="underline">GitHub</a>. For questions or feedback, contact the Shardeum community at <a href="https://shardeum.org" class="underline">shardeum.org</a>.</p>
