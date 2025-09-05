@@ -33,6 +33,9 @@ const foundationRatioSpan = document.getElementById('foundation-ratio');
 const communityRatioSpan = document.getElementById('community-ratio');
 const cycleDurationSpan = document.getElementById('cycle-duration');
 const rewardsChartCanvas = document.getElementById('rewards-chart');
+const noteProbabilitySpan = document.getElementById('note-probability');
+const noteRewardSpan = document.getElementById('note-reward');
+const visitCounterSpan = document.getElementById('visit-counter');
 
 // Initialize Sliders with Error Handling
 const sliders = [
@@ -182,6 +185,16 @@ let cachedShmPrice = null;
 let cacheTimestamp = null;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 
+// Update Visit Counter
+function updateVisitCounter() {
+    let visits = parseInt(localStorage.getItem('pageVisits') || '0');
+    visits += 1;
+    localStorage.setItem('pageVisits', visits);
+    if (visitCounterSpan) {
+        visitCounterSpan.textContent = visits;
+    }
+}
+
 // Fetch Config from JSON
 async function fetchConfig() {
     try {
@@ -189,13 +202,17 @@ async function fetchConfig() {
         if (!response.ok) throw new Error('Failed to fetch config.json');
         const data = await response.json();
         console.log('Fetched config:', data);
+        if (data.totalNodes < data.communityNodes) {
+            console.warn('Invalid config: totalNodes less than communityNodes');
+            data.communityNodes = data.totalNodes;
+        }
         return {
-            probability: data.probability || 0.55,
-            reward: data.reward || 40,
-            totalNodes: data.totalNodes || 0,
-            standbyNodes: data.standbyNodes || 0,
-            communityNodes: data.communityNodes || 0,
-            cycleDuration: data.cycleDuration || 0
+            probability: Math.min(Math.max(data.probability || 0.55, 0), 1),
+            reward: Math.max(data.reward || 40, 0),
+            totalNodes: Math.max(data.totalNodes || 0, 0),
+            standbyNodes: Math.max(data.standbyNodes || 0, 0),
+            communityNodes: Math.max(data.communityNodes || 0, 0),
+            cycleDuration: Math.max(data.cycleDuration || 0, 0)
         };
     } catch (error) {
         console.error('Error fetching config:', error);
@@ -242,7 +259,7 @@ async function calculateEarnings() {
         const nodePrice = parseFloat(nodePriceInput.value) || 0;
         const numServers = parseInt(numServersInput.value) || 1;
         const runningCosts = parseFloat(runningCostsInput.value) || 0;
-        const nodeStake = parseFloat(nodeStakeInput.value) || 2400; // Default to minimum stake
+        const nodeStake = parseFloat(nodeStakeInput.value) || 2400;
         const nodeCurrency = nodePriceCurrency.value;
         const runningCurrency = runningCostsCurrency.value;
 
@@ -258,7 +275,7 @@ async function calculateEarnings() {
         totalNodesSpan.textContent = config.totalNodes;
         standbyNodesSpan.textContent = config.standbyNodes;
         communityNodesSpan.textContent = config.communityNodes;
-        foundationNodesSpan.textContent = config.totalNodes - config.communityNodes; // Calculate Foundation Nodes
+        foundationNodesSpan.textContent = config.totalNodes - config.communityNodes;
         cycleDurationSpan.textContent = config.cycleDuration;
 
         // Calculate Foundation and Community Ratios
@@ -288,9 +305,11 @@ async function calculateEarnings() {
 
         console.log('Probability:', probability);
 
-        // Update probability and reward display
+        // Update probability, reward, and note display
         probabilitySpan.textContent = (probability * 100).toFixed(1);
         rewardSpan.textContent = config.reward.toFixed(0);
+        if (noteProbabilitySpan) noteProbabilitySpan.textContent = (probability * 100).toFixed(1);
+        if (noteRewardSpan) noteRewardSpan.textContent = config.reward.toFixed(2);
 
         // Convert inputs to SHM
         let nodePriceShm = nodePrice;
@@ -349,20 +368,20 @@ async function calculateEarnings() {
         console.log('Converted to selected currency:', { monthlyRewardsSelected, weeklyRewardsSelected, monthlyNodesCostSelected, dailyNodesCostSelected, annualNodesCostSelected, netAnnualProfitSelected });
 
         // Calculate ROI, APY, and Daily Return
-        const annualRunningCostsShm = runningCostsShm * 12 * numServers; // Total annual running costs
-        const monthlyNodesCostShm = runningCostsShm * numServers; // Monthly nodes cost
-        const dailyNodesCostShm = monthlyNodesCostShm / 30; // Daily nodes cost
+        const annualRunningCostsShm = runningCostsShm * 12 * numServers;
+        const monthlyNodesCostShm = runningCostsShm * numServers;
+        const dailyNodesCostShm = monthlyNodesCostShm / 30;
         const netAnnualProfitShm = annualRewardsShm - annualRunningCostsShm;
-        const totalInvestmentShm = (nodePriceShm * numServers) + (nodeStake * numServers); // Include stake per server
+        const totalInvestmentShm = (nodePriceShm * numServers) + (nodeStake * numServers);
         let roi, netDailyReturn;
         if (totalInvestmentShm > 0) {
-            roi = (netAnnualProfitShm / totalInvestmentShm) * 100; // ROI based on hardware and stake
-            netDailyReturn = ((dailyRewardsShm - dailyNodesCostShm) / totalInvestmentShm) * 100; // Net daily return
+            roi = (netAnnualProfitShm / totalInvestmentShm) * 100;
+            netDailyReturn = ((dailyRewardsShm - dailyNodesCostShm) / totalInvestmentShm) * 100;
         } else {
-            roi = null; // No investment or stake, ROI is undefined
-            netDailyReturn = null; // No investment, daily return is undefined
+            roi = null;
+            netDailyReturn = null;
         }
-        const apy = roi; // Simplified APY (no compounding)
+        const apy = roi;
 
         console.log('Calculations:', { roi, netDailyReturn, apy });
 
@@ -448,11 +467,14 @@ Promise.all([fetchShmPrice(), fetchConfig()]).then(([shmPrice, config]) => {
     communityRatioSpan.textContent = communityRatio;
     probabilitySpan.textContent = (config.probability * 100).toFixed(1);
     rewardSpan.textContent = config.reward.toFixed(0);
+    if (noteProbabilitySpan) noteProbabilitySpan.textContent = (config.probability * 100).toFixed(1);
+    if (noteRewardSpan) noteRewardSpan.textContent = config.reward.toFixed(2);
     customProbabilityInput.value = (config.probability * 100).toFixed(1);
     weeklyValidationsInput.value = (config.probability * 7).toFixed(1);
     if (customProbabilitySlider) customProbabilitySlider.set(config.probability * 100);
     if (weeklyValidationsSlider) weeklyValidationsSlider.set(config.probability * 7);
     console.log('Page load: SHM price and config fetched');
+    updateVisitCounter(); // Update visit counter on page load
     calculateEarnings(); // Trigger initial calculation
 }).catch(error => {
     console.error('Error on page load:', error);
