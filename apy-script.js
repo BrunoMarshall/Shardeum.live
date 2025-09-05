@@ -173,10 +173,12 @@ useCommunityProbability.addEventListener('change', toggleProbabilityInputs);
 customProbability.addEventListener('change', toggleProbabilityInputs);
 weeklyValidations.addEventListener('change', toggleProbabilityInputs);
 
-// Cache for SHM price
+// Cache for SHM price and Shardeum data
 let cachedShmPrice = null;
 let cacheTimestamp = null;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+let cachedShardeumData = null;
+let shardeumCacheTimestamp = null;
+const CACHE_DURATION = 60 * 1000; // 1 minute in milliseconds
 
 // Fetch Reward from config.json
 async function fetchConfig() {
@@ -196,8 +198,13 @@ async function fetchConfig() {
     }
 }
 
-// Fetch Shardeum Network Data
+// Fetch Shardeum Network Data with caching
 async function fetchShardeumData() {
+    const now = Date.now();
+    if (cachedShardeumData && shardeumCacheTimestamp && (now - shardeumCacheTimestamp < CACHE_DURATION)) {
+        console.log('Using cached Shardeum data:', cachedShardeumData);
+        return cachedShardeumData;
+    }
     try {
         // Fetch node list
         const nodeListResponse = await fetch('https://api.shardeum.org', {
@@ -240,16 +247,7 @@ async function fetchShardeumData() {
         // Calculate probability (assuming 6 selections per day, 4 hours each)
         const probability = desiredNodes > 0 ? Math.min(1, activeNodes / desiredNodes / 6) : 0.55;
 
-        console.log('Fetched Shardeum data:', {
-            totalNodes,
-            standbyNodes,
-            communityNodes,
-            foundationNodes,
-            cycleDuration,
-            probability
-        });
-
-        return {
+        cachedShardeumData = {
             totalNodes,
             standbyNodes,
             communityNodes,
@@ -258,6 +256,9 @@ async function fetchShardeumData() {
             probability,
             apiSuccess: true
         };
+        shardeumCacheTimestamp = now;
+        console.log('Fetched new Shardeum data:', cachedShardeumData);
+        return cachedShardeumData;
     } catch (error) {
         console.error('Error fetching Shardeum data:', error);
         // Display 0 in UI
@@ -269,7 +270,7 @@ async function fetchShardeumData() {
         foundationRatioSpan.textContent = '0';
         communityRatioSpan.textContent = '0';
         // Use fallback values for calculations, but set probability to 0
-        return {
+        cachedShardeumData = cachedShardeumData || {
             totalNodes: 255,
             standbyNodes: 415,
             communityNodes: 22,
@@ -278,6 +279,8 @@ async function fetchShardeumData() {
             probability: 0, // No rewards when API fails
             apiSuccess: false
         };
+        shardeumCacheTimestamp = now;
+        return cachedShardeumData;
     }
 }
 
@@ -339,7 +342,7 @@ async function calculateEarnings() {
 
         console.log('Config:', config, 'Shardeum Data:', shardeumData, 'SHM Price:', shmPrice);
 
-        // Update network stats (only if API succeeded)
+        // Update network stats (only if API succeeded or cache is valid)
         if (shardeumData.apiSuccess) {
             totalNodesSpan.textContent = shardeumData.totalNodes;
             standbyNodesSpan.textContent = shardeumData.standbyNodes;
