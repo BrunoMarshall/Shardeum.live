@@ -19,11 +19,12 @@ const annualNodesCostSpan = document.getElementById('annual-nodes-cost');
 const netAnnualProfitSpan = document.getElementById('net-annual-profit');
 const weeklyRewardsSpan = document.getElementById('weekly-rewards');
 const monthlyRewardsSpan = document.getElementById('monthly-rewards');
+const totalMonthlyProfitSpan = document.getElementById('total-monthly-profit');
 const netDailyReturnSpan = document.getElementById('net-daily-return');
 const netRoiSpan = document.getElementById('net-roi');
 const estimatedApySpan = document.getElementById('estimated-apy');
 const probabilitySpan = document.getElementById('probability');
-const rewardSpan = document.getElementById('node-reward'); // Updated to match HTML
+const rewardSpan = document.getElementById('node-reward');
 const totalNodesSpan = document.getElementById('total-nodes');
 const standbyNodesSpan = document.getElementById('standby-nodes');
 const communityNodesSpan = document.getElementById('community-nodes');
@@ -279,6 +280,12 @@ async function calculateEarnings() {
             probability = weeklyValidationsValue / 7;
         }
 
+        // Set probability and reward to 0 if totalNodes is 0
+        if (config.totalNodes === 0) {
+            probability = 0;
+            config.reward = 0;
+        }
+
         console.log('Probability:', probability);
 
         // Update probability and reward display
@@ -368,6 +375,7 @@ async function calculateEarnings() {
         netAnnualProfitSpan.textContent = `${currencySymbol}${netAnnualProfitSelected.toFixed(2)} ${runningCurrency} (${netAnnualProfitShm.toFixed(2)} SHM)`;
         weeklyRewardsSpan.textContent = `${currencySymbol}${weeklyRewardsSelected.toFixed(2)} ${runningCurrency} (${weeklyRewardsShm.toFixed(2)} SHM)`;
         monthlyRewardsSpan.textContent = `${currencySymbol}${monthlyRewardsSelected.toFixed(2)} ${runningCurrency} (${monthlyRewardsShm.toFixed(2)} SHM)`;
+        totalMonthlyProfitSpan.textContent = `${currencySymbol}${(monthlyRewardsSelected - monthlyNodesCostSelected).toFixed(2)} ${runningCurrency} (${(monthlyRewardsShm - monthlyNodesCostShm).toFixed(2)} SHM)`;
         netDailyReturnSpan.textContent = netDailyReturn !== null ? `${netDailyReturn.toFixed(2)}%` : 'N/A';
         netRoiSpan.textContent = roi !== null ? `${roi.toFixed(2)}%` : 'N/A';
         estimatedApySpan.textContent = apy !== null ? `${apy.toFixed(2)}%` : 'N/A';
