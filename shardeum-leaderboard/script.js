@@ -6,16 +6,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const backendUrl = 'http://173.249.43.10:3000';
 
     async function fetchValidators(period) {
-        try {
-            const response = await fetch(`${backendUrl}/validators?period=${period}`);
-            const validators = await response.json();
-            displayValidators(validators, period);
-        } catch (error) {
-            console.error('Error fetching validators:', error);
-            leaderboardDiv.innerHTML = '<p class="text-red-500">Error loading data</p>';
-            loserboardDiv.innerHTML = '<p class="text-red-500">Error loading data</p>';
-        }
+    try {
+        const response = await fetch('https://173.249.43.10:3000/validators?period=' + period, {
+            mode: 'cors'
+        });
+        if (!response.ok) throw new Error('Network response was not ok');
+        const validators = await response.json();
+        displayValidators(validators, period);
+    } catch (error) {
+        console.error('Error fetching validators:', error);
+        leaderboardDiv.innerHTML = 'Error loading data';
+        loserboardDiv.innerHTML = 'Error loading data';
     }
+}
 
     function displayValidators(validators, period) {
     const leaderboard = validators.slice(0, 10); // First 10 nodes
