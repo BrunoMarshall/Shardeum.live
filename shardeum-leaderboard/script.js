@@ -18,13 +18,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function displayValidators(validators, period) {
-        const countKey = period === 'weekly' ? 'weeklyCount' : period === 'monthly' ? 'monthlyCount' : 'allTimeCount';
-        const leaderboard = validators.sort((a, b) => b[countKey] - a[countKey]).slice(0, 10);
-        const loserboard = validators.filter(v => v[countKey] > 0).sort((a, b) => a[countKey] - b[countKey]).slice(0, 10);
+    const leaderboard = validators.slice(0, 10); // First 10 nodes
+    const loserboard = validators.slice(-10); // Last 10 nodes
 
-        leaderboardDiv.innerHTML = leaderboard.map(v => createValidatorCard(v, countKey)).join('');
-        loserboardDiv.innerHTML = loserboard.map(v => createValidatorCard(v, countKey)).join('');
-    }
+    leaderboardDiv.innerHTML = leaderboard.map(v => createValidatorCard(v, 'weeklyCount')).join('');
+    loserboardDiv.innerHTML = loserboard.map(v => createValidatorCard(v, 'weeklyCount')).join('');
+}
 
     function createValidatorCard(validator, countKey) {
         return `
