@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shardeum Validator Leaderboard & Loserboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="assets/shardeum_live_favicon.png">
+</head>
+<body class="bg-gray-100 font-sans">
+    <nav class="bg-blue-600 text-white py-4">
+        <div class="max-w-4xl mx-auto flex justify-between items-center px-6">
+            <div class="flex items-center">
+                <img src="assets/shardeum_live_logo.png" alt="Shardeum Logo" class="h-12 mr-3">
+                <h1 class="text-xl font-bold">Shardeum Validator Leaderboard</h1>
+            </div>
+            <div>
+                <a href="../index.html" class="text-white hover:underline mr-4">Home</a>
+                <a href="leaderboard.html" class="text-white hover:underline font-semibold">Leaderboard</a>
+                <a href="../about.html" class="text-white hover:underline">About</a>
+            </div>
+        </div>
+    </nav>
+    <main class="max-w-4xl mx-auto my-8 p-6 bg-white rounded-lg shadow-lg">
+        <h2 class="text-2xl font-semibold text-center mb-6">Validator Leaderboard & Loserboard</h2>
+        <p class="text-center text-gray-600 mb-4">View the most and least active validators on the Shardeum network. Update your validator's alias and avatar below.</p>
+        <div class="text-center mb-6">
+            <label class="text-gray-700 font-medium mr-2">Select Period:</label>
+            <select id="period-selector" class="p-2 border rounded">
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="all">All-Time</option>
+            </select>
+        </div>
+        <div class="mb-8">
+            <h3 class="text-xl font-semibold mb-4">Leaderboard (Most Active)</h3>
+            <div id="leaderboard" class="grid grid-cols-1 gap-4"></div>
+        </div>
+        <div class="mb-8">
+            <h3 class="text-xl font-semibold mb-4">Loserboard (Least Active)</h3>
+            <div id="loserboard" class="grid grid-cols-1 gap-4"></div>
+        </div>
+        <div class="mt-8">
+            <h3 class="text-xl font-semibold mb-4">Update Your Validator Profile</h3>
+            <form id="profile-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">Validator Identifier (IP:Port)</label>
+                    <input id="validator-identifier" type="text" placeholder="e.g., 192.168.1.1:9001" class="w-full p-2 border rounded">
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">Alias</label>
+                    <input id="validator-alias" type="text" placeholder="e.g., MyValidator" class="w-full p-2 border rounded">
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-medium mb-2">Select Avatar</label>
+                    <select id="validator-avatar" class="w-full p-2 border rounded">
+                        <option value="default-avatar.png">Default Avatar</option>
+                        <option value="avatar1.png">Avatar 1</option>
+                        <option value="avatar2.png">Avatar 2</option>
+                        <option value="avatar3.png">Avatar 3</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Update Profile</button>
+                </div>
+            </form>
+        </div>
+    </main>
+    <footer class="bg-blue-600 text-white py-4 text-center">
+        <p>© 2025 Shardeum Validator Leaderboard. Powered by <a href="https://shardeum.org" class="underline">Shardeum</a>.</p>
+        <p class="mt-2">Data sourced from <a href="https://api.shardeum.org" class="underline">Shardeum API</a>.</p>
+        <p class="mt-2">Developed from Shardeum community members to the community, for beer: <a href="https://explorer.shardeum.org/account/0x1f3d3427d5d6af7cfb6a04380292ba5af028bf08" class="underline"><code>0x1F3D3427D5D6aF7cfb6a04380292ba5AF028bf08</code></a></p>
+    </footer>
+    <script src="script.js"></script>
+</body>
+</html>
