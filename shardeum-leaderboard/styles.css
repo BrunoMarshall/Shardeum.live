@@ -11,11 +11,11 @@ body {
     border: 1px solid #e5e7eb;
     border-radius: 0.5rem;
     background-color: #f9fafb;
-    margin-bottom: 0.25rem; /* Tighter spacing for long lists */
+    margin-bottom: 0.25rem;
     overflow-x: auto;
     max-width: 100%;
     transition: background-color 0.2s;
-    text-decoration: none; /* Ensure no underline on links */
+    text-decoration: none;
     color: inherit;
 }
 
@@ -79,33 +79,35 @@ body {
     background-color: #e6f3e6;
 }
 
-/* Consistent button styling to prevent layout shifts */
 #leaderboard-btn, #loserboard-btn {
-    height: 44px; /* Fixed height matching py-2 + padding */
-    line-height: 1.5; /* Consistent text alignment */
+    height: 44px;
+    line-height: 1.5;
     display: flex;
-    align-items: center; /* Center indicator vertically */
+    align-items: center;
     justify-content: center;
 }
 
 button.active:hover {
-    background-color: #2563eb; /* Darker blue on hover for active */
+    background-color: #2563eb;
 }
 
-/* Uniform spacing for leaderboard sections - fixes double space issue */
 #leaderboard, #loserboard {
-    padding-top: 1rem !important; /* Equal top space from button bar to first card */
-    margin-top: 0 !important; /* No extra margin */
-    margin-bottom: 1.5rem !important; /* Consistent bottom space after list */
+    padding-top: 1rem !important;
+    margin-top: 0 !important;
+    margin-bottom: 1.5rem !important;
     max-height: 80vh;
     overflow-y: auto;
     padding-right: 1rem;
 }
 
-/* Ensure hidden state has no space */
 #leaderboard:empty, #loserboard:empty {
     height: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
-    display: none; /* Completely hide to avoid any residual space */
+    display: none;
+}
+
+.validator-card .alias-input,
+.validator-card .avatar-select {
+    max-width: 300px;
 }
