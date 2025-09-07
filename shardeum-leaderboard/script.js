@@ -8,9 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add blinking green light after "Leaderboard (Most Active)"
     const indicator = document.createElement('span');
     indicator.id = 'status-indicator';
-    const leaderboardTitle = document.querySelector('#leaderboard h2');
-    if (leaderboardTitle) leaderboardTitle.appendChild(indicator);
-
     setInterval(() => {
         indicator.style.backgroundColor = indicator.style.backgroundColor === 'green' ? 'transparent' : 'green';
     }, 500); // Blink every 0.5 seconds
@@ -39,12 +36,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const leaderboard = sortedValidators.slice(0, 10);
         leaderboardDiv.innerHTML = leaderboard.length ?
-            `<h2>Leaderboard (Most Active) <span id="status-indicator"></span></h2>${leaderboard.map((v, index) => createValidatorCard(v, period + 'Count', index + 1)).join('')}` :
+            `<h2 class="title">Leaderboard (Most Active) <span id="status-indicator"></span></h2>${leaderboard.map((v, index) => createValidatorCard(v, period + 'Count', index + 1)).join('')}` :
             '<p>No data available</p>';
 
         const loserboard = sortedValidators.slice(-10).reverse();
         loserboardDiv.innerHTML = loserboard.length ?
-            `<h2>Loserboard (Least Active)</h2>${loserboard.map((v, index) => createValidatorCard(v, period + 'Count', sortedValidators.length - index)).join('')}` :
+            `<h2 class="title">Loserboard (Least Active)</h2>${loserboard.map((v, index) => createValidatorCard(v, period + 'Count', sortedValidators.length - index)).join('')}` :
             '<p>No data available</p>';
     }
 
@@ -55,12 +52,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const publicKey = validator.publicKey || 'N/A';
         const truncatedAddress = publicKey.length > 10 ? `${publicKey.slice(0, 5)}…${publicKey.slice(-5)}` : publicKey;
         return `
-            <div class="validator-card">
+            <div class="validator-card ${validator.foundation ? 'foundation-node' : 'community-node'}">
                 <span class="rank">${rank}</span>
                 <img src="assets/${avatar}" alt="${validator.alias || 'Unknown'}">
-                <span><strong>Name:</strong> ${validator.alias || 'Unknown'}</span>
-                <span><strong>Address:</strong> ${truncatedAddress}</span>
-                <span><strong>Number of Activations:</strong> ${validator[countKey] || 0}</span>
+                <div class="text-container">
+                    <span><strong>Name:</strong> ${validator.alias || 'Unknown'}</span>
+                    <span><strong>Address:</strong> ${truncatedAddress}</span>
+                    <span><strong>Number of Activations:</strong> ${validator[countKey] || 0}</span>
+                </div>
                 <div class="node-info">
                     <span><strong>${nodeType}</strong></span>
                     <span><strong>IP address:</strong> ${ipAddress}</span>
