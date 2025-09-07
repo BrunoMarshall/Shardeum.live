@@ -9,13 +9,14 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentValidators = []; // Store sorted validators for toggling
     let currentPeriod = 'weekly';
 
-    // Blinking green light (appended dynamically when leaderboard is shown)
+    // Blinking green light (now appended to the active button)
     function createIndicator() {
         const indicator = document.createElement('span');
         indicator.id = 'status-indicator';
         setInterval(() => {
             indicator.style.backgroundColor = indicator.style.backgroundColor === 'green' ? 'transparent' : 'green';
         }, 500);
+        indicator.style.cssText = 'width: 10px; height: 10px; background-color: green; border-radius: 50%; margin-left: 0.5rem; display: inline-block; vertical-align: middle;';
         return indicator;
     }
 
@@ -49,32 +50,43 @@ document.addEventListener('DOMContentLoaded', () => {
         const limit = Math.min(500, currentValidators.length);
         const leaderboard = currentValidators.slice(0, limit);
         leaderboardDiv.innerHTML = leaderboard.length ?
-            `<h2 class="title">Leaderboard (Most Active) <span id="status-indicator"></span></h2>${leaderboard.map((v, index) => createValidatorCard(v, currentPeriod + 'Count', index + 1)).join('')}` :
+            `${leaderboard.map((v, index) => createValidatorCard(v, currentPeriod + 'Count', index + 1)).join('')}` :
             '<p class="text-gray-600">No validators available for this period.</p>';
-        // Ensure indicator is created if not exists
-        if (!document.getElementById('status-indicator')) {
-            const indicator = createIndicator();
-            const title = leaderboardDiv.querySelector('h2');
-            if (title) title.appendChild(indicator);
-        }
         loserboardDiv.innerHTML = ''; // Hide loserboard
+        // Update button styling and add indicator
         leaderboardBtn.classList.add('bg-blue-600', 'text-white');
         leaderboardBtn.classList.remove('bg-gray-200', 'text-gray-700');
+        leaderboardBtn.innerHTML = 'Leaderboard (Most Active)'; // Reset text
+        if (!document.getElementById('status-indicator')) {
+            const indicator = createIndicator();
+            leaderboardBtn.appendChild(indicator);
+        }
         loserboardBtn.classList.add('bg-gray-200', 'text-gray-700');
         loserboardBtn.classList.remove('bg-blue-600', 'text-white');
+        loserboardBtn.innerHTML = 'Loserboard (Least Active)';
+        if (document.getElementById('status-indicator').parentNode !== leaderboardBtn) {
+            const indicator = document.getElementById('status-indicator');
+            if (indicator) indicator.remove();
+            leaderboardBtn.appendChild(createIndicator());
+        }
     }
 
     function showLoserboard() {
         const limit = Math.min(500, currentValidators.length);
         const loserboard = currentValidators.slice(-limit).reverse();
         loserboardDiv.innerHTML = loserboard.length ?
-            `<h2 class="title">Loserboard (Least Active)</h2>${loserboard.map((v, index) => createValidatorCard(v, currentPeriod + 'Count', index + 1)).join('')}` :
+            `${loserboard.map((v, index) => createValidatorCard(v, currentPeriod + 'Count', index + 1)).join('')}` :
             '<p class="text-gray-600">No validators available for this period.</p>';
         leaderboardDiv.innerHTML = ''; // Hide leaderboard
+        // Update button styling (no indicator for loserboard)
         leaderboardBtn.classList.add('bg-gray-200', 'text-gray-700');
         leaderboardBtn.classList.remove('bg-blue-600', 'text-white');
+        leaderboardBtn.innerHTML = 'Leaderboard (Most Active)';
+        const indicator = document.getElementById('status-indicator');
+        if (indicator) indicator.remove();
         loserboardBtn.classList.add('bg-blue-600', 'text-white');
         loserboardBtn.classList.remove('bg-gray-200', 'text-gray-700');
+        loserboardBtn.innerHTML = 'Loserboard (Least Active)';
     }
 
     function createValidatorCard(validator, countKey, rank) {
