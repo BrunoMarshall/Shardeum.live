@@ -2,6 +2,13 @@ body {
     font-family: 'Inter', sans-serif;
 }
 
+h2 {
+    margin: 0.5rem 0;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+}
+
 h3 {
     margin: 0.5rem 0;
     font-size: 1.2rem;
@@ -14,13 +21,15 @@ h3 {
     border: 1px solid #e5e7eb;
     border-radius: 0.5rem;
     background-color: #f9fafb;
-    margin-bottom: 0.5rem; /* Reduced space between cards */
+    margin-bottom: 0.5rem;
+    overflow-x: auto; /* Horizontal scroll if content overflows */
+    max-width: 100%; /* Contain within parent */
 }
 
 .validator-card .rank {
     margin-right: 1rem;
     font-weight: bold;
-    min-width: 1.5rem; /* Ensure rank has space */
+    min-width: 1.5rem;
 }
 
 .validator-card img {
@@ -32,18 +41,21 @@ h3 {
 
 .validator-card span {
     margin-right: 1rem;
-    white-space: nowrap; /* Prevent wrapping within items */
+    white-space: nowrap; /* Keep items on one line */
+    overflow: hidden; /* Hide overflow */
+    text-overflow: ellipsis; /* Add ellipsis if truncated */
+    max-width: 20%; /* Limit width to prevent overflow */
 }
 
 .validator-card .node-info {
-    margin-left: auto; /* Push to the right */
+    margin-left: auto;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
 }
 
 .validator-card .node-info span {
-    margin-top: 0.25rem; /* Space between node type and IP */
+    margin-top: 0.25rem;
 }
 
 #status-indicator {
@@ -51,8 +63,5 @@ h3 {
     height: 10px;
     background-color: green;
     border-radius: 50%;
-    position: fixed;
-    top: 10px;
-    left: 10px;
-    z-index: 1000;
+    margin-left: 0.5rem;
 }
