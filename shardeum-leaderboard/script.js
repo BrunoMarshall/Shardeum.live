@@ -29,26 +29,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const leaderboard = sortedValidators.slice(0, 10);
         leaderboardDiv.innerHTML = leaderboard.length ?
-            leaderboard.map((v, index) => createValidatorCard(v, period + 'Count', index + 1)).join('') :
+            `<h3>Rank</h3>${leaderboard.map((v, index) => createValidatorCard(v, period + 'Count', index + 1)).join('')}` :
             '<p>No data available</p>';
 
         const loserboard = sortedValidators.slice(-10).reverse();
         loserboardDiv.innerHTML = loserboard.length ?
-            loserboard.map((v, index) => createValidatorCard(v, period + 'Count', sortedValidators.length - index)).join('') :
+            `<h3>Rank</h3>${loserboard.map((v, index) => createValidatorCard(v, period + 'Count', sortedValidators.length - index)).join('')}` :
             '<p>No data available</p>';
     }
 
     function createValidatorCard(validator, countKey, rank) {
         const avatar = validator.foundation ? 'foundation_validator.png' : validator.avatar || 'default-avatar.png';
         const nodeType = validator.foundation ? 'Foundation Node' : 'Community Node';
+        const ipAddress = validator.identifier || 'N/A'; // Use identifier as IP address
         return `
             <div class="validator-card">
-                <p><strong>Rank: ${rank}</strong></p>
+                <span class="rank">${rank}</span>
                 <img src="assets/${avatar}" alt="${validator.alias || 'Unknown'}">
                 <span><strong>Name:</strong> ${validator.alias || 'Unknown'}</span>
-                <span><strong>Full Address:</strong> ${validator.publicKey || 'N/A'}</span>
+                <span><strong>Address:</strong> ${validator.publicKey || 'N/A'}</span>
                 <span><strong>Number of Activations:</strong> ${validator[countKey] || 0}</span>
-                <div class="node-type"><strong>${nodeType}</strong></div>
+                <div class="node-info">
+                    <span><strong>${nodeType}</strong></span>
+                    <span><strong>IP address:</strong> ${ipAddress}</span>
+                </div>
             </div>
         `;
     }
