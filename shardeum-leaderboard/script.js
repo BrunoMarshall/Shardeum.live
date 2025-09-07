@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loserboardDiv = document.getElementById('loserboard');
     const periodSelector = document.getElementById('period-selector');
     const profileForm = document.getElementById('profile-form');
-    const backendUrl = 'https://leaderboard.shardeum.live:3000';
+    const backendUrl = 'https://leaderboard.shardeum.live:3000'; // Already updated
 
     async function fetchValidators(period) {
         try {
@@ -15,42 +15,39 @@ document.addEventListener('DOMContentLoaded', () => {
             displayValidators(validators, period);
         } catch (error) {
             console.error('Error fetching validators:', error);
-            leaderboardDiv.innerHTML = '<p>Error loading data. Please accept the certificate for https://173.249.43.10:3000 and try again.</p>';
-            loserboardDiv.innerHTML = '<p>Error loading data. Please accept the certificate for https://173.249.43.10:3000 and try again.</p>';
+            leaderboardDiv.innerHTML = '<p>Error loading data.</p>';
+            loserboardDiv.innerHTML = '<p>Error loading data.</p>';
         }
     }
 
     function displayValidators(validators, period) {
-        // Sort validators by period-specific count (descending)
         const sortedValidators = [...validators].sort((a, b) => {
             const countA = a[period + 'Count'] || 0;
             const countB = b[period + 'Count'] || 0;
             return countB - countA;
         });
 
-        // First 10 nodes for Leaderboard
         const leaderboard = sortedValidators.slice(0, 10);
-        leaderboardDiv.innerHTML = leaderboard.length ? 
-            leaderboard.map(v => createValidatorCard(v, period + 'Count')).join('') : 
+        leaderboardDiv.innerHTML = leaderboard.length ?
+            leaderboard.map(v => createValidatorCard(v, period + 'Count')).join('') :
             '<p>No data available</p>';
 
-        // Last 10 nodes for Loserboard
         const loserboard = sortedValidators.slice(-10).reverse();
-        loserboardDiv.innerHTML = loserboard.length ? 
-            loserboard.map(v => createValidatorCard(v, period + 'Count')).join('') : 
+        loserboardDiv.innerHTML = loserboard.length ?
+            loserboard.map(v => createValidatorCard(v, period + 'Count')).join('') :
             '<p>No data available</p>';
     }
 
     function createValidatorCard(validator, countKey) {
+        const avatar = validator.foundation ? 'foundation_validator.png' : validator.avatar || 'default-avatar.png';
         return `
             <div class="validator-card">
-                <img src="assets/${validator.avatar || 'default-avatar.png'}" alt="${validator.alias || 'Unknown'}">
+                <img src="assets/${avatar}" alt="${validator.alias || 'Unknown'}">
                 <div class="details">
-                    <p><strong>Alias:</strong> ${validator.alias || 'Unknown'}</p>
-                    <p><strong>Identifier:</strong> ${validator.identifier}</p>
-                    <p><strong>Public Key:</strong> ${validator.publicKey.slice(0, 8)}...</p>
-                    <p><strong>Activity Count:</strong> ${validator[countKey] || 0}</p>
-                    <p><strong>Foundation:</strong> ${validator.foundation ? 'Yes' : 'No'}</p>
+                    <p><strong>Name:</strong> ${validator.alias || 'Unknown'}</p>
+                    <p><strong>Address:</strong> ${validator.publicKey.slice(0, 8)}...</p>
+                    <p><strong>Number of Activations:</strong> ${validator[countKey] || 0}</p>
+                    <p><strong>Foundation Node:</strong> ${validator.foundation ? 'Yes' : 'No'}</p>
                 </div>
             </div>
         `;
@@ -72,10 +69,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) throw new Error(`Network response was not ok: ${response.status}`);
             const result = await response.json();
             alert(result.message || 'Profile updated successfully!');
-            fetchValidators(periodSelector.value); // Refresh data
+            fetchValidators(periodSelector.value);
         } catch (error) {
             console.error('Error updating profile:', error);
-            alert('Error updating profile. Please accept the certificate for https://173.249.43.10:3000 and try again.');
+            alert('Error updating profile.');
         }
     });
 
