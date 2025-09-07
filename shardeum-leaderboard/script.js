@@ -5,10 +5,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const profileForm = document.getElementById('profile-form');
     const backendUrl = 'https://leaderboard.shardeum.live:3000'; // Already updated
 
-    // Add blinking green light
-    const indicator = document.createElement('div');
+    // Add blinking green light after "Leaderboard (Most Active)"
+    const indicator = document.createElement('span');
     indicator.id = 'status-indicator';
-    document.body.prepend(indicator);
+    const leaderboardTitle = document.querySelector('#leaderboard h2');
+    if (leaderboardTitle) leaderboardTitle.appendChild(indicator);
+
     setInterval(() => {
         indicator.style.backgroundColor = indicator.style.backgroundColor === 'green' ? 'transparent' : 'green';
     }, 500); // Blink every 0.5 seconds
@@ -37,25 +39,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const leaderboard = sortedValidators.slice(0, 10);
         leaderboardDiv.innerHTML = leaderboard.length ?
-            `<h3>Rank</h3>${leaderboard.map((v, index) => createValidatorCard(v, period + 'Count', index + 1)).join('')}` :
+            `<h2>Leaderboard (Most Active) <span id="status-indicator"></span></h2>${leaderboard.map((v, index) => createValidatorCard(v, period + 'Count', index + 1)).join('')}` :
             '<p>No data available</p>';
 
         const loserboard = sortedValidators.slice(-10).reverse();
         loserboardDiv.innerHTML = loserboard.length ?
-            `<h3>Rank</h3>${loserboard.map((v, index) => createValidatorCard(v, period + 'Count', sortedValidators.length - index)).join('')}` :
+            `<h2>Loserboard (Least Active)</h2>${loserboard.map((v, index) => createValidatorCard(v, period + 'Count', sortedValidators.length - index)).join('')}` :
             '<p>No data available</p>';
     }
 
     function createValidatorCard(validator, countKey, rank) {
         const avatar = validator.foundation ? 'foundation_validator.png' : validator.avatar || 'default-avatar.png';
         const nodeType = validator.foundation ? 'Foundation Node' : 'Community Node';
-        const ipAddress = validator.identifier || 'N/A'; // Use identifier as IP address
+        const ipAddress = validator.identifier || 'N/A';
+        const publicKey = validator.publicKey || 'N/A';
+        const truncatedAddress = publicKey.length > 10 ? `${publicKey.slice(0, 5)}…${publicKey.slice(-5)}` : publicKey;
         return `
             <div class="validator-card">
                 <span class="rank">${rank}</span>
                 <img src="assets/${avatar}" alt="${validator.alias || 'Unknown'}">
                 <span><strong>Name:</strong> ${validator.alias || 'Unknown'}</span>
-                <span><strong>Address:</strong> ${validator.publicKey || 'N/A'}</span>
+                <span><strong>Address:</strong> ${truncatedAddress}</span>
                 <span><strong>Number of Activations:</strong> ${validator[countKey] || 0}</span>
                 <div class="node-info">
                     <span><strong>${nodeType}</strong></span>
