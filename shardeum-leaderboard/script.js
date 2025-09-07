@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchValidators(period) {
         try {
             console.log(`Fetching validators for period: ${period}`);
-            const response = await fetch(`${backendUrl}/api/validators?period=${period}`, { // Updated endpoint
+            const response = await fetch(`${backendUrl}/api/validators?period=${period}`, {
                 mode: 'cors'
             });
             if (!response.ok) throw new Error(`Network response was not ok: ${response.status}`);
@@ -96,11 +96,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const avatar = validator.foundation ? 'foundation_validator.png' : validator.avatar || 'default-avatar.png';
         const nodeType = validator.foundation ? 'Foundation Node' : 'Community Node';
         const ipAddress = validator.identifier || 'N/A';
-        const publicKey = validator.publicKey || 'N/A';
-        const truncatedAddress = publicKey.length > 10 ? `${publicKey.slice(0, 5)}…${publicKey.slice(-5)}` : publicKey;
+        const address = validator.address || 'N/A';
+        const truncatedAddress = address.length > 10 ? `${address.slice(0, 5)}…${address.slice(-5)}` : address;
         const escapedAlias = escapeHtml(validator.alias || 'Unknown');
         return `
-            <a href="https://explorer.shardeum.org/account/${encodeURIComponent(publicKey)}" target="_blank" class="validator-card ${validator.foundation ? 'foundation-node' : 'community-node'}">
+            <a href="https://explorer.shardeum.org/account/${encodeURIComponent(address)}" target="_blank" class="validator-card ${validator.foundation ? 'foundation-node' : 'community-node'}">
                 <span class="rank">${rank}</span>
                 <img src="assets/${avatar}" alt="${escapedAlias}">
                 <div class="text-container">
