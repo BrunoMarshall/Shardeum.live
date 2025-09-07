@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setInterval(() => {
             indicator.style.backgroundColor = indicator.style.backgroundColor === 'green' ? 'transparent' : 'green';
         }, 500);
-        indicator.style.cssText = 'width: 10px; height: 10px; background-color: green; border-radius: 50%; margin-left: 0.5rem; display: inline-block; vertical-align: middle;';
+        indicator.style.cssText = 'width: 10px; height: 10px; background-color: green; border-radius: 50%; margin-left: 0.5rem; display: inline-block; vertical-align: middle; line-height: 1;';
         return indicator;
     }
 
@@ -58,15 +58,15 @@ document.addEventListener('DOMContentLoaded', () => {
             `${leaderboard.map((v, index) => createValidatorCard(v, currentPeriod + 'Count', index + 1)).join('')}` :
             '<p class="text-gray-600">No validators available for this period.</p>';
         loserboardDiv.innerHTML = ''; // Hide loserboard
-        // Update button styling and add indicator
+        // Consistent button setup
+        removeIndicator();
+        leaderboardBtn.innerHTML = 'Leaderboard (Most Active)';
+        leaderboardBtn.appendChild(createIndicator());
         leaderboardBtn.classList.add('bg-blue-600', 'text-white');
         leaderboardBtn.classList.remove('bg-gray-200', 'text-gray-700');
-        leaderboardBtn.innerHTML = 'Leaderboard (Most Active)'; // Reset text
-        removeIndicator();
-        leaderboardBtn.appendChild(createIndicator());
+        loserboardBtn.innerHTML = 'Loserboard (Least Active)';
         loserboardBtn.classList.add('bg-gray-200', 'text-gray-700');
         loserboardBtn.classList.remove('bg-blue-600', 'text-white');
-        loserboardBtn.innerHTML = 'Loserboard (Least Active)';
     }
 
     function showLoserboard() {
@@ -76,15 +76,15 @@ document.addEventListener('DOMContentLoaded', () => {
             `${loserboard.map((v, index) => createValidatorCard(v, currentPeriod + 'Count', index + 1)).join('')}` :
             '<p class="text-gray-600">No validators available for this period.</p>';
         leaderboardDiv.innerHTML = ''; // Hide leaderboard
-        // Update button styling and add indicator
+        // Consistent button setup
+        removeIndicator();
+        leaderboardBtn.innerHTML = 'Leaderboard (Most Active)';
         leaderboardBtn.classList.add('bg-gray-200', 'text-gray-700');
         leaderboardBtn.classList.remove('bg-blue-600', 'text-white');
-        leaderboardBtn.innerHTML = 'Leaderboard (Most Active)';
+        loserboardBtn.innerHTML = 'Loserboard (Least Active)';
+        loserboardBtn.appendChild(createIndicator());
         loserboardBtn.classList.add('bg-blue-600', 'text-white');
         loserboardBtn.classList.remove('bg-gray-200', 'text-gray-700');
-        loserboardBtn.innerHTML = 'Loserboard (Least Active)';
-        removeIndicator();
-        loserboardBtn.appendChild(createIndicator());
     }
 
     function createValidatorCard(validator, countKey, rank) {

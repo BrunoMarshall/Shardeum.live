@@ -104,3 +104,12 @@ body {
 button.active:hover {
     background-color: #2563eb; /* Darker blue on hover for active */
 }
+
+/* Consistent button styling to prevent layout shifts */
+#leaderboard-btn, #loserboard-btn {
+    height: 44px; /* Fixed height matching py-2 + padding */
+    line-height: 1.5; /* Consistent text alignment */
+    display: flex;
+    align-items: center; /* Center indicator vertically */
+    justify-content: center;
+}
