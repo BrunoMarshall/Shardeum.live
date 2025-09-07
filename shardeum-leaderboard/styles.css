@@ -113,3 +113,16 @@ button.active:hover {
     align-items: center; /* Center indicator vertically */
     justify-content: center;
 }
+
+/* Uniform spacing for leaderboard sections */
+#leaderboard, #loserboard {
+    margin-bottom: 1.5rem; /* Matches the "perfect" space; adjust to 1rem if tighter needed */
+    padding-top: 0; /* Ensure no extra top padding */
+}
+
+/* Existing scrolling styles (keep if present) */
+#leaderboard, #loserboard {
+    max-height: 80vh;
+    overflow-y: auto;
+    padding-right: 1rem;
+}
