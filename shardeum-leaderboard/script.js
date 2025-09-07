@@ -29,25 +29,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const leaderboard = sortedValidators.slice(0, 10);
         leaderboardDiv.innerHTML = leaderboard.length ?
-            leaderboard.map(v => createValidatorCard(v, period + 'Count')).join('') :
+            leaderboard.map((v, index) => createValidatorCard(v, period + 'Count', index + 1)).join('') :
             '<p>No data available</p>';
 
         const loserboard = sortedValidators.slice(-10).reverse();
         loserboardDiv.innerHTML = loserboard.length ?
-            loserboard.map(v => createValidatorCard(v, period + 'Count')).join('') :
+            loserboard.map((v, index) => createValidatorCard(v, period + 'Count', sortedValidators.length - index)).join('') :
             '<p>No data available</p>';
     }
 
-    function createValidatorCard(validator, countKey) {
+    function createValidatorCard(validator, countKey, rank) {
         const avatar = validator.foundation ? 'foundation_validator.png' : validator.avatar || 'default-avatar.png';
+        const nodeType = validator.foundation ? 'Foundation Node' : 'Community Node';
         return `
             <div class="validator-card">
                 <img src="assets/${avatar}" alt="${validator.alias || 'Unknown'}">
                 <div class="details">
-                    <p><strong>Name:</strong> ${validator.alias || 'Unknown'}</p>
-                    <p><strong>Address:</strong> ${validator.publicKey.slice(0, 8)}...</p>
-                    <p><strong>Number of Activations:</strong> ${validator[countKey] || 0}</p>
-                    <p><strong>Foundation Node:</strong> ${validator.foundation ? 'Yes' : 'No'}</p>
+                    <p><strong>Rank:</strong> ${rank}</p>
+                    <div class="validator-table">
+                        <table>
+                            <tr>
+                                <td><strong>Name:</strong></td>
+                                <td>${validator.alias || 'Unknown'}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Address:</strong></td>
+                                <td>${validator.publicKey.slice(0, 8)}...</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Number of Activations:</strong></td>
+                                <td>${validator[countKey] || 0}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <p><strong>${nodeType}</strong></p>
                 </div>
             </div>
         `;
