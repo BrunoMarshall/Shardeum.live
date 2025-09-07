@@ -1,29 +1,25 @@
 body {
     font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
 }
 
-h2 {
+.title {
     margin: 0.5rem 0;
     font-size: 1.2rem;
-    display: flex;
-    align-items: center;
-}
-
-h3 {
-    margin: 0.5rem 0;
-    font-size: 1.2rem;
+    text-align: center; /* Center the title */
 }
 
 .validator-card {
     display: flex;
-    align-items: center;
+    align-items: flex-start; /* Align items at the top */
     padding: 0.5rem;
     border: 1px solid #e5e7eb;
     border-radius: 0.5rem;
     background-color: #f9fafb;
     margin-bottom: 0.5rem;
-    overflow-x: auto; /* Horizontal scroll if content overflows */
-    max-width: 100%; /* Contain within parent */
+    overflow-x: auto; /* Horizontal scroll if needed */
+    max-width: 100%;
 }
 
 .validator-card .rank {
@@ -39,12 +35,27 @@ h3 {
     margin-right: 1rem;
 }
 
-.validator-card span {
+.validator-card .text-container {
+    display: flex;
+    flex-direction: column; /* Stack items in two lines */
+    flex-grow: 1;
+}
+
+.validator-card .text-container span {
     margin-right: 1rem;
-    white-space: nowrap; /* Keep items on one line */
-    overflow: hidden; /* Hide overflow */
-    text-overflow: ellipsis; /* Add ellipsis if truncated */
-    max-width: 20%; /* Limit width to prevent overflow */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%; /* Allow full width within container */
+}
+
+.validator-card .text-container span:nth-child(1),
+.validator-card .text-container span:nth-child(2) {
+    display: inline-block; /* First two on one line */
+}
+
+.validator-card .text-container span:nth-child(3) {
+    display: block; /* Third on a new line */
 }
 
 .validator-card .node-info {
@@ -56,6 +67,14 @@ h3 {
 
 .validator-card .node-info span {
     margin-top: 0.25rem;
+}
+
+.foundation-node {
+    background-color: #e6f0fa; /* Very soft blue */
+}
+
+.community-node {
+    background-color: #e6f3e6; /* Very soft green */
 }
 
 #status-indicator {
