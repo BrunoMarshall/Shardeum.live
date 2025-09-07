@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loserboardDiv = document.getElementById('loserboard');
     const periodSelector = document.getElementById('period-selector');
     const profileForm = document.getElementById('profile-form');
-    const backendUrl = 'https://173.249.43.10:3000'; // Changed to HTTPS to fix Mixed Content Error
+    const backendUrl = 'https://leaderboard.shardeum.live:3000';
 
     async function fetchValidators(period) {
         try {
