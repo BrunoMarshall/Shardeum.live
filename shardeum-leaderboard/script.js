@@ -2,14 +2,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const leaderboardDiv = document.getElementById('leaderboard');
     const loserboardDiv = document.getElementById('loserboard');
     const periodSelector = document.getElementById('period-selector');
+    const leaderboardBtn = document.getElementById('leaderboard-btn');
+    const loserboardBtn = document.getElementById('loserboard-btn');
     const backendUrl = 'https://leaderboard.shardeum.live:3000';
 
-    // Blinking green light
-    const indicator = document.createElement('span');
-    indicator.id = 'status-indicator';
-    setInterval(() => {
-        indicator.style.backgroundColor = indicator.style.backgroundColor === 'green' ? 'transparent' : 'green';
-    }, 500);
+    let currentValidators = []; // Store sorted validators for toggling
+    let currentPeriod = 'weekly';
+
+    // Blinking green light (appended dynamically when leaderboard is shown)
+    function createIndicator() {
+        const indicator = document.createElement('span');
+        indicator.id = 'status-indicator';
+        setInterval(() => {
+            indicator.style.backgroundColor = indicator.style.backgroundColor === 'green' ? 'transparent' : 'green';
+        }, 500);
+        return indicator;
+    }
 
     async function fetchValidators(period) {
         try {
@@ -23,7 +31,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!Array.isArray(validators) || validators.length === 0) {
                 throw new Error('No validators returned or invalid data format');
             }
-            displayValidators(validators, period);
+            currentValidators = [...validators].sort((a, b) => {
+                const countA = a[period + 'Count'] || 0;
+                const countB = b[period + 'Count'] || 0;
+                return countB - countA;
+            });
+            currentPeriod = period;
+            showLeaderboard(); // Default to leaderboard on load/period change
         } catch (error) {
             console.error('Error fetching validators:', error);
             leaderboardDiv.innerHTML = '<p class="text-red-600">Error loading validators. Please try again later.</p>';
@@ -31,27 +45,38 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function displayValidators(validators, period) {
-        console.log('Displaying validators:', validators);
-        const sortedValidators = [...validators].sort((a, b) => {
-            const countA = a[period + 'Count'] || 0;
-            const countB = b[period + 'Count'] || 0;
-            return countB - countA;
-        });
-
-        const leaderboardLimit = Math.min(500, sortedValidators.length);
-        const leaderboard = sortedValidators.slice(0, leaderboardLimit);
-        const leaderboardNote = leaderboardLimit < 500 ? `<p class="text-gray-600 text-sm mb-2">Showing all ${leaderboardLimit} most active validators (fewer than 500 available).</p>` : `<p class="text-gray-600 text-sm mb-2">Showing top 500 most active validators.</p>`;
+    function showLeaderboard() {
+        const limit = Math.min(500, currentValidators.length);
+        const note = limit < 500 ? `<p class="text-gray-600 text-sm mb-2">Showing all ${limit} most active validators (fewer than 500 available).</p>` : `<p class="text-gray-600 text-sm mb-2">Showing top 500 most active validators.</p>`;
+        const leaderboard = currentValidators.slice(0, limit);
         leaderboardDiv.innerHTML = leaderboard.length ?
-            `<h2 class="title">Leaderboard (Most Active) <span id="status-indicator"></span></h2>${leaderboardNote}${leaderboard.map((v, index) => createValidatorCard(v, period + 'Count', index + 1)).join('')}` :
+            `<h2 class="title">Leaderboard (Most Active) ${document.getElementById('status-indicator') ? '' : ''}<span id="status-indicator"></span></h2>${note}${leaderboard.map((v, index) => createValidatorCard(v, currentPeriod + 'Count', index + 1)).join('')}` :
             '<p class="text-gray-600">No validators available for this period.</p>';
+        // Ensure indicator is created if not exists
+        if (!document.getElementById('status-indicator')) {
+            const indicator = createIndicator();
+            const title = leaderboardDiv.querySelector('h2');
+            if (title) title.appendChild(indicator);
+        }
+        loserboardDiv.innerHTML = ''; // Hide loserboard
+        leaderboardBtn.classList.add('bg-blue-600', 'text-white');
+        leaderboardBtn.classList.remove('bg-gray-200', 'text-gray-700');
+        loserboardBtn.classList.add('bg-gray-200', 'text-gray-700');
+        loserboardBtn.classList.remove('bg-blue-600', 'text-white');
+    }
 
-        const loserboardLimit = Math.min(500, sortedValidators.length);
-        const loserboard = sortedValidators.slice(-loserboardLimit).reverse();
-        const loserboardNote = loserboardLimit < 500 ? `<p class="text-gray-600 text-sm mb-2">Showing all ${loserboardLimit} least active validators (fewer than 500 available).</p>` : `<p class="text-gray-600 text-sm mb-2">Showing bottom 500 least active validators.</p>`;
+    function showLoserboard() {
+        const limit = Math.min(500, currentValidators.length);
+        const note = limit < 500 ? `<p class="text-gray-600 text-sm mb-2">Showing all ${limit} least active validators (fewer than 500 available).</p>` : `<p class="text-gray-600 text-sm mb-2">Showing bottom 500 least active validators.</p>`;
+        const loserboard = currentValidators.slice(-limit).reverse();
         loserboardDiv.innerHTML = loserboard.length ?
-            `<h2 class="title">Loserboard (Least Active)</h2>${loserboardNote}${loserboard.map((v, index) => createValidatorCard(v, period + 'Count', index + 1)).join('')}` :
+            `<h2 class="title">Loserboard (Least Active)</h2>${note}${loserboard.map((v, index) => createValidatorCard(v, currentPeriod + 'Count', index + 1)).join('')}` :
             '<p class="text-gray-600">No validators available for this period.</p>';
+        leaderboardDiv.innerHTML = ''; // Hide leaderboard
+        leaderboardBtn.classList.add('bg-gray-200', 'text-gray-700');
+        leaderboardBtn.classList.remove('bg-blue-600', 'text-white');
+        loserboardBtn.classList.add('bg-blue-600', 'text-white');
+        loserboardBtn.classList.remove('bg-gray-200', 'text-gray-700');
     }
 
     function createValidatorCard(validator, countKey, rank) {
@@ -83,9 +108,27 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
+    // Event listeners
     periodSelector.addEventListener('change', () => {
         console.log('Period changed to:', periodSelector.value);
         fetchValidators(periodSelector.value);
     });
-    fetchValidators('weekly');
+
+    leaderboardBtn.addEventListener('click', () => {
+        if (currentValidators.length > 0) {
+            showLeaderboard();
+        } else {
+            fetchValidators(currentPeriod); // Refetch if no data
+        }
+    });
+
+    loserboardBtn.addEventListener('click', () => {
+        if (currentValidators.length > 0) {
+            showLoserboard();
+        } else {
+            fetchValidators(currentPeriod); // Refetch if no data
+        }
+    });
+
+    fetchValidators('weekly'); // Initial load
 });

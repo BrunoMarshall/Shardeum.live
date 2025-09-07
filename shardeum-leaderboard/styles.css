@@ -98,4 +98,9 @@ body {
     max-height: 80vh; /* Limit height to viewport */
     overflow-y: auto; /* Vertical scroll if needed */
     padding-right: 1rem; /* Space for scrollbar */
+
+}
+
+button.active:hover {
+    background-color: #2563eb; /* Darker blue on hover for active */
 }
