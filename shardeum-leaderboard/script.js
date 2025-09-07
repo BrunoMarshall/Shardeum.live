@@ -39,14 +39,18 @@ document.addEventListener('DOMContentLoaded', () => {
             return countB - countA;
         });
 
-        const leaderboard = sortedValidators.slice(0, 10);
+        const leaderboardLimit = Math.min(500, sortedValidators.length);
+        const leaderboard = sortedValidators.slice(0, leaderboardLimit);
+        const leaderboardNote = leaderboardLimit < 500 ? `<p class="text-gray-600 text-sm mb-2">Showing all ${leaderboardLimit} most active validators (fewer than 500 available).</p>` : `<p class="text-gray-600 text-sm mb-2">Showing top 500 most active validators.</p>`;
         leaderboardDiv.innerHTML = leaderboard.length ?
-            `<h2 class="title">Leaderboard (Most Active) <span id="status-indicator"></span></h2>${leaderboard.map((v, index) => createValidatorCard(v, period + 'Count', index + 1)).join('')}` :
+            `<h2 class="title">Leaderboard (Most Active) <span id="status-indicator"></span></h2>${leaderboardNote}${leaderboard.map((v, index) => createValidatorCard(v, period + 'Count', index + 1)).join('')}` :
             '<p class="text-gray-600">No validators available for this period.</p>';
 
-        const loserboard = sortedValidators.slice(-10).reverse();
+        const loserboardLimit = Math.min(500, sortedValidators.length);
+        const loserboard = sortedValidators.slice(-loserboardLimit).reverse();
+        const loserboardNote = loserboardLimit < 500 ? `<p class="text-gray-600 text-sm mb-2">Showing all ${loserboardLimit} least active validators (fewer than 500 available).</p>` : `<p class="text-gray-600 text-sm mb-2">Showing bottom 500 least active validators.</p>`;
         loserboardDiv.innerHTML = loserboard.length ?
-            `<h2 class="title">Loserboard (Least Active)</h2>${loserboard.map((v, index) => createValidatorCard(v, period + 'Count', sortedValidators.length - index)).join('')}` :
+            `<h2 class="title">Loserboard (Least Active)</h2>${loserboardNote}${loserboard.map((v, index) => createValidatorCard(v, period + 'Count', index + 1)).join('')}` :
             '<p class="text-gray-600">No validators available for this period.</p>';
     }
 

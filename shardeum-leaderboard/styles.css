@@ -7,19 +7,27 @@ body {
 .title {
     margin: 0.5rem 0;
     font-size: 1.2rem;
-    text-align: center; /* Center the title */
+    text-align: center;
 }
 
 .validator-card {
     display: flex;
-    align-items: flex-start; /* Align items at the top */
+    align-items: flex-start;
     padding: 0.5rem;
     border: 1px solid #e5e7eb;
     border-radius: 0.5rem;
     background-color: #f9fafb;
-    margin-bottom: 0.5rem;
-    overflow-x: auto; /* Horizontal scroll if needed */
+    margin-bottom: 0.25rem; /* Tighter spacing for long lists */
+    overflow-x: auto;
     max-width: 100%;
+    transition: background-color 0.2s;
+    text-decoration: none; /* Ensure no underline on links */
+    color: inherit;
+}
+
+.validator-card:hover {
+    background-color: #e0e7ff;
+    cursor: pointer;
 }
 
 .validator-card .rank {
@@ -37,7 +45,7 @@ body {
 
 .validator-card .text-container {
     display: flex;
-    flex-direction: column; /* Stack items in two lines */
+    flex-direction: column;
     flex-grow: 1;
 }
 
@@ -46,16 +54,16 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 100%; /* Allow full width within container */
+    max-width: 100%;
 }
 
 .validator-card .text-container span:nth-child(1),
 .validator-card .text-container span:nth-child(2) {
-    display: inline-block; /* First two on one line */
+    display: inline-block;
 }
 
 .validator-card .text-container span:nth-child(3) {
-    display: block; /* Third on a new line */
+    display: block;
 }
 
 .validator-card .node-info {
@@ -70,11 +78,11 @@ body {
 }
 
 .foundation-node {
-    background-color: #e6f0fa; /* Very soft blue */
+    background-color: #e6f0fa;
 }
 
 .community-node {
-    background-color: #e6f3e6; /* Very soft green */
+    background-color: #e6f3e6;
 }
 
 #status-indicator {
@@ -83,4 +91,11 @@ body {
     background-color: green;
     border-radius: 50%;
     margin-left: 0.5rem;
+}
+
+/* Add scrolling for long leaderboards */
+#leaderboard, #loserboard {
+    max-height: 80vh; /* Limit height to viewport */
+    overflow-y: auto; /* Vertical scroll if needed */
+    padding-right: 1rem; /* Space for scrollbar */
 }
