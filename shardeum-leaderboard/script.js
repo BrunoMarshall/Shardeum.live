@@ -43,27 +43,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const nodeType = validator.foundation ? 'Foundation Node' : 'Community Node';
         return `
             <div class="validator-card">
+                <p><strong>Rank: ${rank}</strong></p>
                 <img src="assets/${avatar}" alt="${validator.alias || 'Unknown'}">
-                <div class="details">
-                    <p><strong>Rank:</strong> ${rank}</p>
-                    <div class="validator-table">
-                        <table>
-                            <tr>
-                                <td><strong>Name:</strong></td>
-                                <td>${validator.alias || 'Unknown'}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Address:</strong></td>
-                                <td>${validator.publicKey.slice(0, 8)}...</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Number of Activations:</strong></td>
-                                <td>${validator[countKey] || 0}</td>
-                            </tr>
-                        </table>
-                    </div>
-                    <p><strong>${nodeType}</strong></p>
-                </div>
+                <span><strong>Name:</strong> ${validator.alias || 'Unknown'}</span>
+                <span><strong>Full Address:</strong> ${validator.publicKey || 'N/A'}</span>
+                <span><strong>Number of Activations:</strong> ${validator[countKey] || 0}</span>
+                <div class="node-type"><strong>${nodeType}</strong></div>
             </div>
         `;
     }
