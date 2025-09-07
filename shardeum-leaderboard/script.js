@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentValidators = []; // Store sorted validators for toggling
     let currentPeriod = 'weekly';
 
-    // Blinking green light (now appended to the active button)
+    // Blinking green light (appended to the active button)
     function createIndicator() {
         const indicator = document.createElement('span');
         indicator.id = 'status-indicator';
@@ -18,6 +18,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 500);
         indicator.style.cssText = 'width: 10px; height: 10px; background-color: green; border-radius: 50%; margin-left: 0.5rem; display: inline-block; vertical-align: middle;';
         return indicator;
+    }
+
+    function removeIndicator() {
+        const indicator = document.getElementById('status-indicator');
+        if (indicator) indicator.remove();
     }
 
     async function fetchValidators(period) {
@@ -57,18 +62,11 @@ document.addEventListener('DOMContentLoaded', () => {
         leaderboardBtn.classList.add('bg-blue-600', 'text-white');
         leaderboardBtn.classList.remove('bg-gray-200', 'text-gray-700');
         leaderboardBtn.innerHTML = 'Leaderboard (Most Active)'; // Reset text
-        if (!document.getElementById('status-indicator')) {
-            const indicator = createIndicator();
-            leaderboardBtn.appendChild(indicator);
-        }
+        removeIndicator();
+        leaderboardBtn.appendChild(createIndicator());
         loserboardBtn.classList.add('bg-gray-200', 'text-gray-700');
         loserboardBtn.classList.remove('bg-blue-600', 'text-white');
         loserboardBtn.innerHTML = 'Loserboard (Least Active)';
-        if (document.getElementById('status-indicator').parentNode !== leaderboardBtn) {
-            const indicator = document.getElementById('status-indicator');
-            if (indicator) indicator.remove();
-            leaderboardBtn.appendChild(createIndicator());
-        }
     }
 
     function showLoserboard() {
@@ -78,15 +76,15 @@ document.addEventListener('DOMContentLoaded', () => {
             `${loserboard.map((v, index) => createValidatorCard(v, currentPeriod + 'Count', index + 1)).join('')}` :
             '<p class="text-gray-600">No validators available for this period.</p>';
         leaderboardDiv.innerHTML = ''; // Hide leaderboard
-        // Update button styling (no indicator for loserboard)
+        // Update button styling and add indicator
         leaderboardBtn.classList.add('bg-gray-200', 'text-gray-700');
         leaderboardBtn.classList.remove('bg-blue-600', 'text-white');
         leaderboardBtn.innerHTML = 'Leaderboard (Most Active)';
-        const indicator = document.getElementById('status-indicator');
-        if (indicator) indicator.remove();
         loserboardBtn.classList.add('bg-blue-600', 'text-white');
         loserboardBtn.classList.remove('bg-gray-200', 'text-gray-700');
         loserboardBtn.innerHTML = 'Loserboard (Least Active)';
+        removeIndicator();
+        loserboardBtn.appendChild(createIndicator());
     }
 
     function createValidatorCard(validator, countKey, rank) {
