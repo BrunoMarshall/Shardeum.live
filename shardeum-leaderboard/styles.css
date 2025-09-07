@@ -4,12 +4,6 @@ body {
     padding: 0;
 }
 
-.title {
-    margin: 0.5rem 0;
-    font-size: 1.2rem;
-    text-align: center;
-}
-
 .validator-card {
     display: flex;
     align-items: flex-start;
@@ -85,26 +79,6 @@ body {
     background-color: #e6f3e6;
 }
 
-#status-indicator {
-    width: 10px;
-    height: 10px;
-    background-color: green;
-    border-radius: 50%;
-    margin-left: 0.5rem;
-}
-
-/* Add scrolling for long leaderboards */
-#leaderboard, #loserboard {
-    max-height: 80vh; /* Limit height to viewport */
-    overflow-y: auto; /* Vertical scroll if needed */
-    padding-right: 1rem; /* Space for scrollbar */
-
-}
-
-button.active:hover {
-    background-color: #2563eb; /* Darker blue on hover for active */
-}
-
 /* Consistent button styling to prevent layout shifts */
 #leaderboard-btn, #loserboard-btn {
     height: 44px; /* Fixed height matching py-2 + padding */
@@ -114,15 +88,24 @@ button.active:hover {
     justify-content: center;
 }
 
-/* Uniform spacing for leaderboard sections */
-#leaderboard, #loserboard {
-    margin-bottom: 1.5rem; /* Matches the "perfect" space; adjust to 1rem if tighter needed */
-    padding-top: 0; /* Ensure no extra top padding */
+button.active:hover {
+    background-color: #2563eb; /* Darker blue on hover for active */
 }
 
-/* Existing scrolling styles (keep if present) */
+/* Uniform spacing for leaderboard sections - fixes double space issue */
 #leaderboard, #loserboard {
+    padding-top: 1rem !important; /* Equal top space from button bar to first card */
+    margin-top: 0 !important; /* No extra margin */
+    margin-bottom: 1.5rem !important; /* Consistent bottom space after list */
     max-height: 80vh;
     overflow-y: auto;
     padding-right: 1rem;
+}
+
+/* Ensure hidden state has no space */
+#leaderboard:empty, #loserboard:empty {
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: none; /* Completely hide to avoid any residual space */
 }
