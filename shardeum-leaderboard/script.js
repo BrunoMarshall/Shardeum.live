@@ -47,10 +47,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showLeaderboard() {
         const limit = Math.min(500, currentValidators.length);
-        const note = limit < 500 ? `<p class="text-gray-600 text-sm mb-2">Showing all ${limit} most active validators (fewer than 500 available).</p>` : `<p class="text-gray-600 text-sm mb-2">Showing top 500 most active validators.</p>`;
         const leaderboard = currentValidators.slice(0, limit);
         leaderboardDiv.innerHTML = leaderboard.length ?
-            `<h2 class="title">Leaderboard (Most Active) ${document.getElementById('status-indicator') ? '' : ''}<span id="status-indicator"></span></h2>${note}${leaderboard.map((v, index) => createValidatorCard(v, currentPeriod + 'Count', index + 1)).join('')}` :
+            `<h2 class="title">Leaderboard (Most Active) <span id="status-indicator"></span></h2>${leaderboard.map((v, index) => createValidatorCard(v, currentPeriod + 'Count', index + 1)).join('')}` :
             '<p class="text-gray-600">No validators available for this period.</p>';
         // Ensure indicator is created if not exists
         if (!document.getElementById('status-indicator')) {
@@ -67,10 +66,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showLoserboard() {
         const limit = Math.min(500, currentValidators.length);
-        const note = limit < 500 ? `<p class="text-gray-600 text-sm mb-2">Showing all ${limit} least active validators (fewer than 500 available).</p>` : `<p class="text-gray-600 text-sm mb-2">Showing bottom 500 least active validators.</p>`;
         const loserboard = currentValidators.slice(-limit).reverse();
         loserboardDiv.innerHTML = loserboard.length ?
-            `<h2 class="title">Loserboard (Least Active)</h2>${note}${loserboard.map((v, index) => createValidatorCard(v, currentPeriod + 'Count', index + 1)).join('')}` :
+            `<h2 class="title">Loserboard (Least Active)</h2>${loserboard.map((v, index) => createValidatorCard(v, currentPeriod + 'Count', index + 1)).join('')}` :
             '<p class="text-gray-600">No validators available for this period.</p>';
         leaderboardDiv.innerHTML = ''; // Hide leaderboard
         leaderboardBtn.classList.add('bg-gray-200', 'text-gray-700');
