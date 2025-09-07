@@ -5,6 +5,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const profileForm = document.getElementById('profile-form');
     const backendUrl = 'https://leaderboard.shardeum.live:3000'; // Already updated
 
+    // Add blinking green light
+    const indicator = document.createElement('div');
+    indicator.id = 'status-indicator';
+    document.body.prepend(indicator);
+    setInterval(() => {
+        indicator.style.backgroundColor = indicator.style.backgroundColor === 'green' ? 'transparent' : 'green';
+    }, 500); // Blink every 0.5 seconds
+
     async function fetchValidators(period) {
         try {
             const response = await fetch(`${backendUrl}/validators?period=${period}`, {
