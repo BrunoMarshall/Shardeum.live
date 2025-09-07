@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const validatorList = document.getElementById('validator-list');
-    const backendUrl = 'https://leaderboard.shardeum.live:3000';
+    const API_URL = 'https://leaderboard.shardeum.live/api/admin/validators'; // Updated to port 443
 
     async function fetchValidators() {
         try {
@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const response = await fetch(`${backendUrl}/api/admin/validators`, {
+            const response = await fetch(API_URL, { // Updated to use API_URL
                 headers: {
                     'Authorization': 'Basic ' + btoa(`${username}:${password}`)
                 }
@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                     try {
-                        const aliasResponse = await fetch(`${backendUrl}/api/set-alias`, {
+                        const aliasResponse = await fetch('https://leaderboard.shardeum.live/api/set-alias', { // Updated endpoint
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             },
                             body: JSON.stringify({ publicKey, alias })
                         });
-                        const avatarResponse = await fetch(`${backendUrl}/api/set-avatar`, {
+                        const avatarResponse = await fetch('https://leaderboard.shardeum.live/api/set-avatar', { // Updated endpoint
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',

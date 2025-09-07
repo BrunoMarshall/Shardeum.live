@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const periodSelector = document.getElementById('period-selector');
     const leaderboardBtn = document.getElementById('leaderboard-btn');
     const loserboardBtn = document.getElementById('loserboard-btn');
-    const backendUrl = 'https://leaderboard.shardeum.live:3000';
+    const backendUrl = 'https://leaderboard.shardeum.live'; // Updated to port 443
 
     let currentValidators = []; // Store sorted validators for toggling
     let currentPeriod = 'weekly';
@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchValidators(period) {
         try {
             console.log(`Fetching validators for period: ${period}`);
-            const response = await fetch(`${backendUrl}/validators?period=${period}`, {
+            const response = await fetch(`${backendUrl}/api/validators?period=${period}`, { // Updated endpoint
                 mode: 'cors'
             });
             if (!response.ok) throw new Error(`Network response was not ok: ${response.status}`);
