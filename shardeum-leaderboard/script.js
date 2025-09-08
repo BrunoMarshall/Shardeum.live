@@ -121,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return `
             <a href="https://explorer.shardeum.org/account/${encodeURIComponent(address)}" target="_blank" class="validator-card ${validator.foundation ? 'foundation-node' : 'community-node'}">
                 <span class="rank">${rank}</span>
-                <img src="assets/${avatar}" alt="${escapedAlias}">
+                <img src="assets/${avatar}" alt="${escapedAlias}" class="w-18 h-18">
                 <div class="text-container">
                     <span><strong>Name:</strong> ${escapedAlias}</span>
                     <span><strong>Address:</strong> ${escapeHtml(truncatedAddress)}</span>
@@ -147,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return `
             <a href="https://explorer.shardeum.org/account/${encodeURIComponent(address)}" target="_blank" class="validator-card community-node">
                 <span class="rank">${rank}</span>
-                <img src="assets/default-avatar.png" alt="Standby Node">
+                <img src="assets/default-avatar.png" alt="Standby Node" class="w-18 h-18">
                 <div class="text-container">
                     <span><strong>Name:</strong> Unknown</span>
                     <span><strong>Address:</strong> ${escapeHtml(truncatedAddress)}</span>
