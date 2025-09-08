@@ -1,142 +1,107 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const leaderboardDiv = document.getElementById('leaderboard');
-    const loserboardDiv = document.getElementById('loserboard');
-    const periodSelector = document.getElementById('period-selector');
-    const leaderboardBtn = document.getElementById('leaderboard-btn');
-    const loserboardBtn = document.getElementById('loserboard-btn');
-    const backendUrl = 'https://leaderboard.shardeum.live'; // Updated to port 443
+let currentValidators = [];
+let currentPeriod = 'weekly';
 
-    let currentValidators = []; // Store sorted validators for toggling
-    let currentPeriod = 'weekly';
-
-    // Blinking green light (appended to the active button)
-    function createIndicator() {
-        const indicator = document.createElement('span');
-        indicator.id = 'status-indicator';
-        setInterval(() => {
-            indicator.style.backgroundColor = indicator.style.backgroundColor === 'green' ? 'transparent' : 'green';
-        }, 500);
-        indicator.style.cssText = 'width: 10px; height: 10px; background-color: green; border-radius: 50%; margin-left: 0.5rem; display: inline-block; vertical-align: middle; line-height: 1;';
-        return indicator;
-    }
-
-    function removeIndicator() {
-        const indicator = document.getElementById('status-indicator');
-        if (indicator) indicator.remove();
-    }
-
-    async function fetchValidators(period) {
-        try {
-            console.log(`Fetching validators for period: ${period}`);
-            const response = await fetch(`${backendUrl}/api/validators?period=${period}`, {
-                mode: 'cors'
-            });
-            if (!response.ok) throw new Error(`Network response was not ok: ${response.status}`);
-            const validators = await response.json();
-            console.log('Validators received:', validators);
-            if (!Array.isArray(validators) || validators.length === 0) {
-                throw new Error('No validators returned or invalid data format');
-            }
-            currentValidators = [...validators].sort((a, b) => {
-                const countA = a[period + 'Count'] || 0;
-                const countB = b[period + 'Count'] || 0;
-                return countB - countA;
-            });
-            currentPeriod = period;
-            showLeaderboard(); // Default to leaderboard on load/period change
-        } catch (error) {
-            console.error('Error fetching validators:', error);
-            leaderboardDiv.innerHTML = '<p class="text-red-600">Error loading validators. Please try again later.</p>';
-            loserboardDiv.innerHTML = '<p class="text-red-600">Error loading validators. Please try again later.</p>';
+async function fetchValidators(period) {
+    console.log(`Fetching validators for period: ${period}`);
+    try {
+        const response = await fetch(`https://leaderboard.shardeum.live/api/validators?period=${period}`);
+        if (!response.ok) {
+            throw new Error(`Network response was not ok: ${response.status}`);
         }
+        const validators = await response.json();
+        console.log(`Response status: ${response.status}`);
+        console.log(`Validators received:`, validators);
+        currentValidators = [...validators].sort((a, b) => {
+            const countA = a[period + 'Count'] || 0;
+            const countB = b[period + 'Count'] || 0;
+            return countB - countA;
+        });
+        updateLeaderboard();
+        updateLoserboard();
+    } catch (error) {
+        console.error('Error fetching validators:', error.message);
     }
+}
 
-    function showLeaderboard() {
-        const limit = Math.min(500, currentValidators.length);
-        const leaderboard = currentValidators.slice(0, limit);
-        leaderboardDiv.innerHTML = leaderboard.length ?
-            `${leaderboard.map((v, index) => createValidatorCard(v, currentPeriod + 'Count', index + 1)).join('')}` :
-            '<p class="text-gray-600">No validators available for this period.</p>';
-        loserboardDiv.innerHTML = ''; // Hide loserboard
-        // Consistent button setup
-        removeIndicator();
-        leaderboardBtn.innerHTML = 'Leaderboard (Most Active)';
-        leaderboardBtn.appendChild(createIndicator());
-        leaderboardBtn.classList.add('bg-blue-600', 'text-white');
-        leaderboardBtn.classList.remove('bg-gray-200', 'text-gray-700');
-        loserboardBtn.innerHTML = 'Loserboard (Least Active)';
-        loserboardBtn.classList.add('bg-gray-200', 'text-gray-700');
-        loserboardBtn.classList.remove('bg-blue-600', 'text-white');
-    }
-
-    function showLoserboard() {
-        const limit = Math.min(500, currentValidators.length);
-        const loserboard = currentValidators.slice(-limit).reverse();
-        loserboardDiv.innerHTML = loserboard.length ?
-            `${loserboard.map((v, index) => createValidatorCard(v, currentPeriod + 'Count', index + 1)).join('')}` :
-            '<p class="text-gray-600">No validators available for this period.</p>';
-        leaderboardDiv.innerHTML = ''; // Hide leaderboard
-        // Consistent button setup
-        removeIndicator();
-        leaderboardBtn.innerHTML = 'Leaderboard (Most Active)';
-        leaderboardBtn.classList.add('bg-gray-200', 'text-gray-700');
-        leaderboardBtn.classList.remove('bg-blue-600', 'text-white');
-        loserboardBtn.innerHTML = 'Loserboard (Least Active)';
-        loserboardBtn.appendChild(createIndicator());
-        loserboardBtn.classList.add('bg-blue-600', 'text-white');
-        loserboardBtn.classList.remove('bg-gray-200', 'text-gray-700');
-    }
-
-    function createValidatorCard(validator, countKey, rank) {
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+async function fetchStandbyNodes() {
+    try {
+        const response = await fetch('https://leaderboard.shardeum.live/api/standby-nodes');
+        if (!response.ok) {
+            throw new Error(`Network response was not ok: ${response.status}`);
         }
-        const avatar = validator.foundation ? 'foundation_validator.png' : validator.avatar || 'default-avatar.png';
-        const nodeType = validator.foundation ? 'Foundation Node' : 'Community Node';
-        const ipAddress = validator.identifier || 'N/A';
-        const address = validator.address || 'N/A';
-        const truncatedAddress = address.length > 10 ? `${address.slice(0, 5)}…${address.slice(-5)}` : address;
-        const escapedAlias = escapeHtml(validator.alias || 'Unknown');
-        return `
-            <a href="https://explorer.shardeum.org/account/${encodeURIComponent(address)}" target="_blank" class="validator-card ${validator.foundation ? 'foundation-node' : 'community-node'}">
-                <span class="rank">${rank}</span>
-                <img src="assets/${avatar}" alt="${escapedAlias}">
-                <div class="text-container">
-                    <span><strong>Name:</strong> ${escapedAlias}</span>
-                    <span><strong>Address:</strong> ${escapeHtml(truncatedAddress)}</span>
-                    <span><strong>Number of Activations:</strong> ${validator[countKey] || 0}</span>
-                </div>
-                <div class="node-info">
-                    <span><strong>${nodeType}</strong></span>
-                    <span><strong>IP address:</strong> ${escapeHtml(ipAddress)}</span>
-                </div>
-            </a>
+        const standbyNodes = await response.json();
+        console.log(`Standby nodes received:`, standbyNodes);
+        return standbyNodes;
+    } catch (error) {
+        console.error('Error fetching standby nodes:', error.message);
+        return [];
+    }
+}
+
+function updateLeaderboard() {
+    const leaderboard = document.getElementById('leaderboard');
+    leaderboard.innerHTML = '<h3 class="text-xl font-semibold mb-4">Leaderboard (Most Active)</h3>';
+    const topValidators = currentValidators.slice(0, 10);
+    topValidators.forEach((validator, index) => {
+        const validatorElement = document.createElement('div');
+        validatorElement.className = 'p-4 border rounded-lg flex items-center';
+        validatorElement.innerHTML = `
+            <span class="font-bold mr-2">${index + 1}.</span>
+            <img src="${validator.avatar || 'assets/default-avatar.png'}" alt="Avatar" class="w-10 h-10 mr-4">
+            <div>
+                <p><strong>${validator.alias || validator.address.slice(0, 6) + '...' + validator.address.slice(-4)}</strong></p>
+                <p>IP: ${validator.identifier}</p>
+                <p>Number of Activations: ${validator[currentPeriod + 'Count'] || 0}</p>
+            </div>
         `;
-    }
-
-    // Event listeners
-    periodSelector.addEventListener('change', () => {
-        console.log('Period changed to:', periodSelector.value);
-        fetchValidators(periodSelector.value);
+        leaderboard.appendChild(validatorElement);
     });
+}
 
-    leaderboardBtn.addEventListener('click', () => {
-        if (currentValidators.length > 0) {
-            showLeaderboard();
-        } else {
-            fetchValidators(currentPeriod); // Refetch if no data
-        }
+function updateLoserboard() {
+    const loserboard = document.getElementById('loserboard');
+    loserboard.innerHTML = '<h3 class="text-xl font-semibold mb-4">Loserboard (Least Active)</h3>';
+    fetchStandbyNodes().then(standbyNodes => {
+        const topStandby = standbyNodes.slice(0, 10);
+        topStandby.forEach((node, index) => {
+            const nodeElement = document.createElement('div');
+            nodeElement.className = 'p-4 border rounded-lg flex items-center';
+            nodeElement.innerHTML = `
+                <span class="font-bold mr-2">${index + 1}.</span>
+                <img src="assets/default-avatar.png" alt="Avatar" class="w-10 h-10 mr-4">
+                <div>
+                    <p><strong>${node.address.slice(0, 6) + '...' + node.address.slice(-4)}</strong></p>
+                    <p>IP: ${node.identifier}</p>
+                    <p>Standby Time: ${node.standby_hours.toFixed(2)} hours (${node.standby_days} days)</p>
+                </div>
+            `;
+            loserboard.appendChild(nodeElement);
+        });
     });
+}
 
-    loserboardBtn.addEventListener('click', () => {
-        if (currentValidators.length > 0) {
-            showLoserboard();
-        } else {
-            fetchValidators(currentPeriod); // Refetch if no data
-        }
-    });
-
-    fetchValidators('weekly'); // Initial load
+document.getElementById('period-selector').addEventListener('change', (event) => {
+    currentPeriod = event.target.value;
+    fetchValidators(currentPeriod);
 });
+
+document.getElementById('leaderboard-btn').addEventListener('click', () => {
+    document.getElementById('leaderboard').style.display = 'block';
+    document.getElementById('loserboard').style.display = 'none';
+    document.getElementById('leaderboard-btn').classList.add('bg-blue-600', 'text-white');
+    document.getElementById('leaderboard-btn').classList.remove('bg-gray-200', 'text-gray-700');
+    document.getElementById('loserboard-btn').classList.add('bg-gray-200', 'text-gray-700');
+    document.getElementById('loserboard-btn').classList.remove('bg-blue-600', 'text-white');
+});
+
+document.getElementById('loserboard-btn').addEventListener('click', () => {
+    document.getElementById('leaderboard').style.display = 'none';
+    document.getElementById('loserboard').style.display = 'block';
+    document.getElementById('loserboard-btn').classList.add('bg-blue-600', 'text-white');
+    document.getElementById('loserboard-btn').classList.remove('bg-gray-200', 'text-gray-700');
+    document.getElementById('leaderboard-btn').classList.add('bg-gray-200', 'text-gray-700');
+    document.getElementById('leaderboard-btn').classList.remove('bg-blue-600', 'text-white');
+    updateLoserboard();
+});
+
+fetchValidators(currentPeriod);
