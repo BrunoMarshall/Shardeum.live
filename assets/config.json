@@ -1,8 +1,4 @@
 {
-    "probability": 0.20,
-    "reward": 40,
-    "totalNodes": 0,
-    "standbyNodes": 0,
-    "communityNodes": 0,
-    "cycleDuration": 0
+    "reward": 10
 }
+
