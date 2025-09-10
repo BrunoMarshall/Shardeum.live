@@ -222,7 +222,7 @@ async function fetchShardeumData() {
         if (!nodeListData.result) throw new Error('Invalid node list response');
         const nodes = nodeListData.result.nodes || [];
         const totalNodes = nodeListData.result.totalNodes || 255; // Fallback for calculations
-        const communityNodes = nodes.filter(node => !node.foundationNode).length || 22; // Fallback
+        const communityNodes = nodes.filter(node => !node.foundationNode).length || 0; // Fallback
         const foundationNodes = totalNodes - communityNodes || 233; // Fallback
 
         // Fetch cycle info
@@ -460,10 +460,18 @@ async function calculateEarnings() {
         netAnnualProfitSpan.textContent = `${currencySymbol}${netAnnualProfitSelected.toFixed(2)} ${runningCurrency} (${netAnnualProfitShm.toFixed(2)} SHM)`;
         weeklyRewardsSpan.textContent = `${currencySymbol}${weeklyRewardsSelected.toFixed(2)} ${runningCurrency} (${weeklyRewardsShm.toFixed(2)} SHM)`;
         monthlyRewardsSpan.textContent = `${currencySymbol}${monthlyRewardsSelected.toFixed(2)} ${runningCurrency} (${monthlyRewardsShm.toFixed(2)} SHM)`;
+
+        // Update Total Monthly Profit with conditional background
         totalMonthlyProfitSpan.textContent = `${currencySymbol}${totalMonthlyProfitSelected.toFixed(2)} ${runningCurrency} (${(monthlyRewardsShm - monthlyNodesCostShm).toFixed(2)} SHM)`;
-        netDailyReturnSpan.textContent = netDailyReturn !== null ? `${netDailyReturn.toFixed(2)}%` : 'N/A';
-        netRoiSpan.textContent = roi !== null ? `${roi.toFixed(2)}%` : 'N/A';
+        const totalMonthlyProfitParent = totalMonthlyProfitSpan.parentElement;
+        totalMonthlyProfitParent.classList.remove('bg-green-500', 'bg-red-500');
+        totalMonthlyProfitParent.classList.add(totalMonthlyProfitSelected < 0 ? 'bg-red-500' : 'bg-green-500');
+
+        // Update Estimated APY with conditional background
         estimatedApySpan.textContent = apy !== null ? `${apy.toFixed(2)}%` : 'N/A';
+        const estimatedApyParent = estimatedApySpan.parentElement;
+        estimatedApyParent.classList.remove('bg-green-500', 'bg-red-500');
+        estimatedApyParent.classList.add(apy !== null && apy < 0 ? 'bg-red-500' : 'bg-green-500');
 
         // Show results
         resultsDiv.classList.remove('hidden');
