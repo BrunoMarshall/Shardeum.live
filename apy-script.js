@@ -32,8 +32,9 @@ const foundationNodesSpan = document.getElementById('foundation-nodes');
 const foundationRatioSpan = document.getElementById('foundation-ratio');
 const communityRatioSpan = document.getElementById('community-ratio');
 const cycleDurationSpan = document.getElementById('cycle-duration');
+const dailyChanceSpan = document.getElementById('daily-chance'); // New field for daily chance
 const rewardsChartCanvas = document.getElementById('rewards-chart');
-const visitCounterSpan = document.getElementById('visit-counter'); // Add this to your HTML
+const visitCounterSpan = document.getElementById('visit-counter');
 
 // Initialize Sliders with Error Handling
 const sliders = [
@@ -269,6 +270,7 @@ async function fetchShardeumData() {
         cycleDurationSpan.textContent = '0';
         foundationRatioSpan.textContent = '0';
         communityRatioSpan.textContent = '0';
+        dailyChanceSpan.textContent = '0'; // Initialize new field on error
         // Use fallback values for calculations, but set probability to 0
         cachedShardeumData = cachedShardeumData || {
             totalNodes: 255,
@@ -354,6 +356,7 @@ async function calculateEarnings() {
             const communityRatio = totalNodes > 0 ? ((shardeumData.communityNodes / totalNodes) * 100).toFixed(1) : 0;
             foundationRatioSpan.textContent = foundationRatio;
             communityRatioSpan.textContent = communityRatio;
+            dailyChanceSpan.textContent = (shardeumData.probability * 100).toFixed(1); // Update new field
         }
 
         // Determine probability
@@ -372,6 +375,7 @@ async function calculateEarnings() {
         // Update probability and reward display
         probabilitySpan.textContent = (probability * 100).toFixed(1);
         rewardSpan.textContent = parseFloat(config.reward).toFixed(0); // Ensure reward is a number
+        dailyChanceSpan.textContent = (probability * 100).toFixed(1); // Update new field with calculated probability
 
         // Convert inputs to SHM
         let nodePriceShm = nodePrice;
@@ -536,6 +540,7 @@ Promise.all([fetchShmPrice(), fetchConfig(), fetchShardeumData()]).then(([shmPri
         cycleDurationSpan.textContent = '0';
         foundationRatioSpan.textContent = '0';
         communityRatioSpan.textContent = '0';
+        dailyChanceSpan.textContent = '0'; // Initialize new field on error
         resultsDiv.innerHTML = '<p class="text-red-500 text-center">Error loading network data. Calculations reflect server costs only.</p>';
         resultsDiv.classList.remove('hidden');
     } else {
@@ -549,6 +554,7 @@ Promise.all([fetchShmPrice(), fetchConfig(), fetchShardeumData()]).then(([shmPri
         const communityRatio = totalNodes > 0 ? ((shardeumData.communityNodes / totalNodes) * 100).toFixed(1) : 0;
         foundationRatioSpan.textContent = foundationRatio;
         communityRatioSpan.textContent = communityRatio;
+        dailyChanceSpan.textContent = (shardeumData.probability * 100).toFixed(1); // Initialize new field
     }
     probabilitySpan.textContent = (shardeumData.probability * 100).toFixed(1);
     rewardSpan.textContent = parseFloat(config.reward).toFixed(0);
@@ -568,6 +574,7 @@ Promise.all([fetchShmPrice(), fetchConfig(), fetchShardeumData()]).then(([shmPri
     cycleDurationSpan.textContent = '0';
     foundationRatioSpan.textContent = '0';
     communityRatioSpan.textContent = '0';
+    dailyChanceSpan.textContent = '0'; // Initialize new field on error
     resultsDiv.innerHTML = '<p class="text-red-500 text-center">Error loading network data. Calculations reflect server costs only.</p>';
     resultsDiv.classList.remove('hidden');
     updateVisitCounter(); // Update visit counter even on error
