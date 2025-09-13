@@ -73,11 +73,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showLeaderboard() {
-        const limit = Math.min(500, currentValidators.length);
-        const leaderboard = currentValidators.slice(0, limit);
+        const communityValidators = currentValidators.filter(v => !v.foundation); // Show only community nodes
+        const limit = Math.min(2000, communityValidators.length); // Changed to 2000
+        const leaderboard = communityValidators.slice(0, limit);
         leaderboardDiv.innerHTML = leaderboard.length ?
             `${leaderboard.map((v, index) => createValidatorCard(v, currentPeriod + 'Count', index + 1)).join('')}` :
-            '<p class="text-gray-600">No validators available for this period.</p>';
+            '<p class="text-gray-600">No community validators available for this period.</p>';
         loserboardDiv.innerHTML = '';
         removeIndicator();
         leaderboardBtn.innerHTML = 'Leaderboard (Most Active)';
@@ -90,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showLoserboard() {
-        const limit = Math.min(500, currentStandbyNodes.length);
+        const limit = Math.min(2000, currentStandbyNodes.length); // Changed to 2000
         const loserboard = currentStandbyNodes.slice(0, limit);
         loserboardDiv.innerHTML = loserboard.length ?
             `${loserboard.map((n, index) => createStandbyNodeCard(n, index + 1)).join('')}` :
@@ -112,14 +113,14 @@ document.addEventListener('DOMContentLoaded', () => {
             div.textContent = text;
             return div.innerHTML;
         }
-        const avatar = validator.foundation ? 'foundation_validator.png' : validator.avatar || 'default-avatar.png';
-        const nodeType = validator.foundation ? 'Foundation Node' : 'Community Node';
+        const avatar = validator.avatar || 'default-avatar.png'; // Community nodes only, no foundation check needed
+        const nodeType = 'Community Node'; // Always community node
         const ipAddress = validator.identifier || 'N/A';
         const address = validator.address || 'N/A';
         const truncatedAddress = address.length > 10 ? `${address.slice(0, 5)}…${address.slice(-5)}` : address;
         const escapedAlias = escapeHtml(validator.alias || 'Unknown');
         return `
-            <a href="https://explorer.shardeum.org/account/${encodeURIComponent(address)}" target="_blank" class="validator-card ${validator.foundation ? 'foundation-node' : 'community-node'}">
+            <a href="https://explorer.shardeum.org/account/${encodeURIComponent(address)}" target="_blank" class="validator-card community-node">
                 <span class="rank">${rank}</span>
                 <img src="assets/${avatar}" alt="${escapedAlias}" class="w-12 h-12">
                 <div class="text-container">
