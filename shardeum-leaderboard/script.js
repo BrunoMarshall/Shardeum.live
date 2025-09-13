@@ -76,10 +76,26 @@ document.addEventListener('DOMContentLoaded', () => {
         const communityValidators = currentValidators.filter(v => !v.foundation); // Show only community nodes
         const limit = Math.min(2000, communityValidators.length); // Changed to 2000
         const leaderboard = communityValidators.slice(0, limit);
-        leaderboardDiv.innerHTML = leaderboard.length ?
-            `${leaderboard.map((v, index) => createValidatorCard(v, currentPeriod + 'Count', index + 1)).join('')}` :
-            '<p class="text-gray-600">No community validators available for this period.</p>';
+        
+        // Clear previous content
+        while (leaderboardDiv.firstChild) {
+            leaderboardDiv.removeChild(leaderboardDiv.firstChild);
+        }
         loserboardDiv.innerHTML = '';
+
+        if (leaderboard.length === 0) {
+            const noData = document.createElement('p');
+            noData.className = 'text-gray-600';
+            noData.textContent = 'No community validators available for this period.';
+            leaderboardDiv.appendChild(noData);
+            return;
+        }
+
+        leaderboard.forEach((v, index) => {
+            const card = createValidatorCard(v, currentPeriod + 'Count', index + 1);
+            leaderboardDiv.appendChild(card);
+        });
+
         removeIndicator();
         leaderboardBtn.innerHTML = 'Leaderboard (Most Active)';
         leaderboardBtn.appendChild(createIndicator());
@@ -93,10 +109,26 @@ document.addEventListener('DOMContentLoaded', () => {
     function showLoserboard() {
         const limit = Math.min(2000, currentStandbyNodes.length); // Changed to 2000
         const loserboard = currentStandbyNodes.slice(0, limit);
-        loserboardDiv.innerHTML = loserboard.length ?
-            `${loserboard.map((n, index) => createStandbyNodeCard(n, index + 1)).join('')}` :
-            '<p class="text-gray-600">No standby nodes available.</p>';
+
+        // Clear previous content
+        while (loserboardDiv.firstChild) {
+            loserboardDiv.removeChild(loserboardDiv.firstChild);
+        }
         leaderboardDiv.innerHTML = '';
+
+        if (loserboard.length === 0) {
+            const noData = document.createElement('p');
+            noData.className = 'text-gray-600';
+            noData.textContent = 'No standby nodes available.';
+            loserboardDiv.appendChild(noData);
+            return;
+        }
+
+        loserboard.forEach((n, index) => {
+            const card = createStandbyNodeCard(n, index + 1);
+            loserboardDiv.appendChild(card);
+        });
+
         removeIndicator();
         leaderboardBtn.innerHTML = 'Leaderboard (Most Active)';
         leaderboardBtn.classList.add('bg-gray-200', 'text-gray-700');
@@ -108,32 +140,82 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function createValidatorCard(validator, countKey, rank) {
+        console.log(`Validator ${validator.address}: ${countKey} = ${validator[countKey]}`); // Debug log
+        
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
-        const avatar = validator.avatar || 'default-avatar.png'; // Community nodes only, no foundation check needed
-        const nodeType = 'Community Node'; // Always community node
+
+        const avatar = validator.avatar || 'default-avatar.png';
+        const nodeType = 'Community Node';
         const ipAddress = validator.identifier || 'N/A';
         const address = validator.address || 'N/A';
         const truncatedAddress = address.length > 10 ? `${address.slice(0, 5)}…${address.slice(-5)}` : address;
         const escapedAlias = escapeHtml(validator.alias || 'Unknown');
-        return `
-            <a href="https://explorer.shardeum.org/account/${encodeURIComponent(address)}" target="_blank" class="validator-card community-node">
-                <span class="rank">${rank}</span>
-                <img src="assets/${avatar}" alt="${escapedAlias}" class="w-12 h-12">
-                <div class="text-container">
-                    <span><strong>Name:</strong> ${escapedAlias}</span>
-                    <span><strong>Address:</strong> ${escapeHtml(truncatedAddress)}</span>
-                    <span><strong>Number of Activations:</strong> ${validator[countKey] || 0}</span>
-                </div>
-                <div class="node-info">
-                    <span><strong>${nodeType}</strong></span>
-                    <span><strong>IP address:</strong> ${escapeHtml(ipAddress)}</span>
-                </div>
-            </a>
-        `;
+
+        const card = document.createElement('a');
+        card.href = `https://explorer.shardeum.org/account/${encodeURIComponent(address)}`;
+        card.target = '_blank';
+        card.className = 'validator-card community-node';
+
+        const rankSpan = document.createElement('span');
+        rankSpan.className = 'rank';
+        rankSpan.textContent = rank;
+        card.appendChild(rankSpan);
+
+        const img = document.createElement('img');
+        img.src = `assets/${avatar}`;
+        img.alt = escapedAlias;
+        img.className = 'w-12 h-12';
+        card.appendChild(img);
+
+        const textContainer = document.createElement('div');
+        textContainer.className = 'text-container';
+
+        const nameSpan = document.createElement('span');
+        const nameStrong = document.createElement('strong');
+        nameStrong.textContent = 'Name: ';
+        nameSpan.appendChild(nameStrong);
+        nameSpan.appendChild(document.createTextNode(escapedAlias));
+        textContainer.appendChild(nameSpan);
+
+        const addressSpan = document.createElement('span');
+        const addressStrong = document.createElement('strong');
+        addressStrong.textContent = 'Address: ';
+        addressSpan.appendChild(addressStrong);
+        addressSpan.appendChild(document.createTextNode(truncatedAddress));
+        textContainer.appendChild(addressSpan);
+
+        const countSpan = document.createElement('span');
+        const countStrong = document.createElement('strong');
+        countStrong.textContent = 'Number of Activations: ';
+        countSpan.appendChild(countStrong);
+        countSpan.appendChild(document.createTextNode(validator[countKey] || 0));
+        textContainer.appendChild(countSpan);
+
+        card.appendChild(textContainer);
+
+        const nodeInfo = document.createElement('div');
+        nodeInfo.className = 'node-info';
+
+        const typeSpan = document.createElement('span');
+        const typeStrong = document.createElement('strong');
+        typeStrong.textContent = nodeType;
+        typeSpan.appendChild(typeStrong);
+        nodeInfo.appendChild(typeSpan);
+
+        const ipSpan = document.createElement('span');
+        const ipStrong = document.createElement('strong');
+        ipStrong.textContent = 'IP address: ';
+        ipSpan.appendChild(ipStrong);
+        ipSpan.appendChild(document.createTextNode(escapeHtml(ipAddress)));
+        nodeInfo.appendChild(ipSpan);
+
+        card.appendChild(nodeInfo);
+
+        return card;
     }
 
     function createStandbyNodeCard(node, rank) {
@@ -142,24 +224,72 @@ document.addEventListener('DOMContentLoaded', () => {
             div.textContent = text;
             return div.innerHTML;
         }
+
         const ipAddress = node.identifier || 'N/A';
         const address = node.address || 'N/A';
         const truncatedAddress = address.length > 10 ? `${address.slice(0, 5)}…${address.slice(-5)}` : address;
-        return `
-            <a href="https://explorer.shardeum.org/account/${encodeURIComponent(address)}" target="_blank" class="validator-card community-node">
-                <span class="rank">${rank}</span>
-                <img src="assets/default-avatar.png" alt="Standby Node" class="w-12 h-12">
-                <div class="text-container">
-                    <span><strong>Name:</strong> Unknown</span>
-                    <span><strong>Address:</strong> ${escapeHtml(truncatedAddress)}</span>
-                    <span><strong>Standby Time:</strong> ${node.standby_hours.toFixed(2)} hours (${node.standby_days} days)</span>
-                </div>
-                <div class="node-info">
-                    <span><strong>Community Node</strong></span>
-                    <span><strong>IP address:</strong> ${escapeHtml(ipAddress)}</span>
-                </div>
-            </a>
-        `;
+
+        const card = document.createElement('a');
+        card.href = `https://explorer.shardeum.org/account/${encodeURIComponent(address)}`;
+        card.target = '_blank';
+        card.className = 'validator-card community-node';
+
+        const rankSpan = document.createElement('span');
+        rankSpan.className = 'rank';
+        rankSpan.textContent = rank;
+        card.appendChild(rankSpan);
+
+        const img = document.createElement('img');
+        img.src = 'assets/default-avatar.png';
+        img.alt = 'Standby Node';
+        img.className = 'w-12 h-12';
+        card.appendChild(img);
+
+        const textContainer = document.createElement('div');
+        textContainer.className = 'text-container';
+
+        const nameSpan = document.createElement('span');
+        const nameStrong = document.createElement('strong');
+        nameStrong.textContent = 'Name: ';
+        nameSpan.appendChild(nameStrong);
+        nameSpan.appendChild(document.createTextNode('Unknown'));
+        textContainer.appendChild(nameSpan);
+
+        const addressSpan = document.createElement('span');
+        const addressStrong = document.createElement('strong');
+        addressStrong.textContent = 'Address: ';
+        addressSpan.appendChild(addressStrong);
+        addressSpan.appendChild(document.createTextNode(truncatedAddress));
+        textContainer.appendChild(addressSpan);
+
+        const standbySpan = document.createElement('span');
+        const standbyStrong = document.createElement('strong');
+        standbyStrong.textContent = 'Standby Time: ';
+        standbySpan.appendChild(standbyStrong);
+        standbySpan.appendChild(document.createTextNode(`${node.standby_hours.toFixed(2)} hours (${node.standby_days} days)`));
+        textContainer.appendChild(standbySpan);
+
+        card.appendChild(textContainer);
+
+        const nodeInfo = document.createElement('div');
+        nodeInfo.className = 'node-info';
+
+        const typeSpan = document.createElement('span');
+        const typeStrong = document.createElement('strong');
+        typeStrong.textContent = 'Community Node';
+        typeSpan.appendChild(typeStrong);
+        nodeInfo.appendChild(typeSpan);
+
+        const ipSpan = document.createElement('span');
+        const ipStrong = document.createElement('strong');
+        ipStrong.textContent = 'IP address: ';
+        ipSpan.appendChild(ipStrong);
+        ipSpan.appendChild(document.createTextNode(escapeHtml(ipAddress)));
+        nodeInfo.appendChild(ipSpan);
+
+        card.appendChild(nodeInfo);
+
+        return card;
     }
 
     periodSelector.addEventListener('change', () => {
