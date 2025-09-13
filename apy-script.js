@@ -43,8 +43,8 @@ const sliders = [
     { id: 'num-servers-slider', instance: null, config: { start: 1, connect: 'lower', range: { min: 1, max: 100 }, step: 1 } },
     { id: 'running-costs-slider', instance: null, config: { start: 0, connect: 'lower', range: { min: 0, max: 50 }, step: 0.5 } },
     { id: 'node-stake-slider', instance: null, config: { start: 2400, connect: 'lower', range: { min: 2400, max: 100000 }, step: 100 } },
-    { id: 'custom-probability-slider', instance: null, config: { start: 0, connect: 'lower', range: { min: 0, max: 100 }, step: 0.1 } }, // Start at 0, set dynamically
-    { id: 'weekly-validations-slider', instance: null, config: { start: 0, connect: 'lower', range: { min: 0, max: 7 }, step: 0.1 } } // Start at 0, set dynamically
+    { id: 'custom-probability-slider', instance: null, config: { start: 0, connect: 'lower', range: { min: 0, max: 100 }, step: 0.1 } },
+    { id: 'weekly-validations-slider', instance: null, config: { start: 0, connect: 'lower', range: { min: 0, max: 7 }, step: 0.1 } }
 ];
 
 sliders.forEach(slider => {
@@ -95,14 +95,26 @@ if (nodeStakeSlider) {
 }
 if (customProbabilitySlider) {
     customProbabilitySlider.on('update', (values) => {
-        customProbabilityInput.value = parseFloat(values[0]).toFixed(1);
-        if (customProbability.checked) calculateEarnings();
+        const value = parseFloat(values[0]);
+        if (value >= 0 && value <= 100) {
+            customProbabilityInput.value = value.toFixed(1);
+            console.log(`Custom Probability Slider updated: ${value}%`);
+            if (customProbability.checked) calculateEarnings();
+        } else {
+            console.warn(`Invalid Custom Probability value: ${value}`);
+        }
     });
 }
 if (weeklyValidationsSlider) {
     weeklyValidationsSlider.on('update', (values) => {
-        weeklyValidationsInput.value = parseFloat(values[0]).toFixed(1);
-        if (weeklyValidations.checked) calculateEarnings();
+        const value = parseFloat(values[0]);
+        if (value >= 0 && value <= 7) {
+            weeklyValidationsInput.value = value.toFixed(1);
+            console.log(`Weekly Validations Slider updated: ${value}`);
+            if (weeklyValidations.checked) calculateEarnings();
+        } else {
+            console.warn(`Invalid Weekly Validations value: ${value}`);
+        }
     });
 }
 
@@ -136,16 +148,22 @@ nodeStakeInput.addEventListener('input', () => {
 });
 customProbabilityInput.addEventListener('input', () => {
     const value = parseFloat(customProbabilityInput.value);
-    if (!isNaN(value) && customProbabilitySlider) {
+    if (!isNaN(value) && value >= 0 && value <= 100 && customProbabilitySlider) {
         customProbabilitySlider.set(value);
+        console.log(`Custom Probability Input updated: ${value}%`);
         if (customProbability.checked) calculateEarnings();
+    } else {
+        console.warn(`Invalid Custom Probability input: ${value}`);
     }
 });
 weeklyValidationsInput.addEventListener('input', () => {
     const value = parseFloat(weeklyValidationsInput.value);
-    if (!isNaN(value) && weeklyValidationsSlider) {
+    if (!isNaN(value) && value >= 0 && value <= 7 && weeklyValidationsSlider) {
         weeklyValidationsSlider.set(value);
+        console.log(`Weekly Validations Input updated: ${value}`);
         if (weeklyValidations.checked) calculateEarnings();
+    } else {
+        console.warn(`Invalid Weekly Validations input: ${value}`);
     }
 });
 
@@ -156,17 +174,33 @@ function toggleProbabilityInputs() {
     const customProbabilitySlider = document.getElementById('custom-probability-slider');
     const weeklyValidationsSlider = document.getElementById('weekly-validations-slider');
 
+    // Hide and disable all inputs and sliders
     customProbabilityInput.classList.add('hidden');
     weeklyValidationsInput.classList.add('hidden');
     customProbabilitySlider.classList.add('hidden');
     weeklyValidationsSlider.classList.add('hidden');
+    customProbabilityInput.disabled = true;
+    weeklyValidationsInput.disabled = true;
+    if (customProbabilitySlider.noUiSlider) customProbabilitySlider.noUiSlider.disable();
+    if (weeklyValidationsSlider.noUiSlider) weeklyValidationsSlider.noUiSlider.disable();
 
+    // Show and enable based on selected radio button
     if (customProbability.checked) {
         customProbabilityInput.classList.remove('hidden');
         customProbabilitySlider.classList.remove('hidden');
+        customProbabilityInput.disabled = false;
+        if (customProbabilitySlider.noUiSlider) customProbabilitySlider.noUiSlider.enable();
+        console.log('Custom Probability input and slider enabled');
     } else if (weeklyValidations.checked) {
         weeklyValidationsInput.classList.remove('hidden');
         weeklyValidationsSlider.classList.remove('hidden');
+        weeklyValidationsInput.disabled = false;
+        if (weeklyValidationsSlider.noUiSlider) weeklyValidationsSlider.noUiSlider.enable();
+        console.log('Weekly Validations input and slider enabled');
+    } else {
+        // Default to Community Probability if none selected
+        useCommunityProbability.checked = true;
+        console.log('Defaulted to Community Probability');
     }
     calculateEarnings();
 }
@@ -392,12 +426,6 @@ async function calculateEarnings() {
         dailyChanceSpan.textContent = (probability * 100).toFixed(1);
         dailyChanceDaysSpan.textContent = probability > 0 ? `approx. ${(1 / probability).toFixed(1)} days` : 'N/A';
 
-        // Set slider defaults to fetched probability
-        if (customProbabilitySlider) customProbabilitySlider.set(shardeumData.probability * 100);
-        if (weeklyValidationsSlider) weeklyValidationsSlider.set(shardeumData.probability * 7);
-        customProbabilityInput.value = (shardeumData.probability * 100).toFixed(1);
-        weeklyValidationsInput.value = (shardeumData.probability * 7).toFixed(1);
-
         // Convert inputs to SHM
         let nodePriceShm = nodePrice;
         let runningCostsShm = runningCosts;
@@ -485,11 +513,11 @@ async function calculateEarnings() {
         netAnnualProfitSpan.textContent = `${currencySymbol}${netAnnualProfitSelected.toFixed(2)} ${runningCurrency} (${netAnnualProfitShm.toFixed(2)} SHM)`;
         weeklyRewardsSpan.textContent = `${currencySymbol}${weeklyRewardsSelected.toFixed(2)} ${runningCurrency} (${weeklyRewardsShm.toFixed(2)} SHM)`;
         monthlyRewardsSpan.textContent = `${currencySymbol}${monthlyRewardsSelected.toFixed(2)} ${runningCurrency} (${monthlyRewardsShm.toFixed(2)} SHM)`;
-        netDailyReturnSpan.textContent = netDailyReturn !== null ? `${netDailyReturn.toFixed(2)}%` : 'N/A'; // Display Net Daily Return
-        netRoiSpan.textContent = roi !== null ? `${roi.toFixed(2)}%` : 'N/A'; // Display Net ROI
+        netDailyReturnSpan.textContent = netDailyReturn !== null ? `${netDailyReturn.toFixed(2)}%` : 'N/A';
+        netRoiSpan.textContent = roi !== null ? `${roi.toFixed(2)}%` : 'N/A';
+        totalMonthlyProfitSpan.textContent = `${currencySymbol}${totalMonthlyProfitSelected.toFixed(2)} ${runningCurrency} (${(monthlyRewardsShm - monthlyNodesCostShm).toFixed(2)} SHM)`;
 
         // Update Total Monthly Profit with conditional background
-        totalMonthlyProfitSpan.textContent = `${currencySymbol}${totalMonthlyProfitSelected.toFixed(2)} ${runningCurrency} (${(monthlyRewardsShm - monthlyNodesCostShm).toFixed(2)} SHM)`;
         const totalMonthlyProfitParent = totalMonthlyProfitSpan.parentElement;
         totalMonthlyProfitParent.classList.remove('bg-green-500', 'bg-red-500');
         totalMonthlyProfitParent.classList.add(totalMonthlyProfitSelected < 0 ? 'bg-red-500' : 'bg-green-500');
@@ -583,12 +611,14 @@ Promise.all([fetchShmPrice(), fetchConfig(), fetchShardeumData()]).then(([shmPri
     }
     probabilitySpan.textContent = (shardeumData.probability * 100).toFixed(1);
     rewardSpan.textContent = parseFloat(config.reward).toFixed(0); // Reward per active hour
+    // Set initial input values only on page load
     customProbabilityInput.value = (shardeumData.probability * 100).toFixed(1);
     weeklyValidationsInput.value = (shardeumData.probability * 7).toFixed(1);
     if (customProbabilitySlider) customProbabilitySlider.set(shardeumData.probability * 100);
     if (weeklyValidationsSlider) weeklyValidationsSlider.set(shardeumData.probability * 7);
     console.log('Page load: SHM price, config, and Shardeum data fetched');
     updateVisitCounter(); // Update visit counter on page load
+    toggleProbabilityInputs(); // Ensure correct initial state
     calculateEarnings();
 }).catch(error => {
     console.error('Error on page load:', error);
@@ -604,6 +634,7 @@ Promise.all([fetchShmPrice(), fetchConfig(), fetchShardeumData()]).then(([shmPri
     resultsDiv.innerHTML = '<p class="text-red-500 text-center">Error loading network data. Calculations reflect server costs only.</p>';
     resultsDiv.classList.remove('hidden');
     updateVisitCounter(); // Update visit counter even on error
+    toggleProbabilityInputs(); // Ensure correct initial state
     calculateEarnings();
 });
 
