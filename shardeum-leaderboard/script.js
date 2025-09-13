@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('script.js loaded'); // Debug log to confirm script execution
     const leaderboardDiv = document.getElementById('leaderboard');
     const loserboardDiv = document.getElementById('loserboard');
     const periodSelector = document.getElementById('period-selector');
@@ -11,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Blinking green light using CSS animation
     function createIndicator() {
+        console.log('Creating indicator with CSS animation'); // Debug log
         const indicator = document.createElement('span');
         indicator.id = 'status-indicator';
         indicator.style.cssText = `
@@ -48,13 +50,21 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             if (!response.ok) throw new Error(`Network response was not ok: ${response.status}`);
             const validators = await response.json();
-            console.log('Validators received:', validators);
+            console.log('Validators received:', validators.map(v => ({
+                address: v.address,
+                foundation: v.foundation,
+                [`${period}_count`]: v[`${period}_count`],
+                weekly_count: v.weekly_count, // Log all possible count fields
+                daily_count: v.daily_count,
+                monthly_count: v.monthly_count,
+                all_count: v.all_count
+            })));
             if (!Array.isArray(validators) || validators.length === 0) {
                 throw new Error('No validators returned or invalid data format');
             }
             currentValidators = [...validators].sort((a, b) => {
-                const countA = a[period + 'Count'] || 0;
-                const countB = b[period + 'Count'] || 0;
+                const countA = a[`${period}_count`] || 0;
+                const countB = b[`${period}_count`] || 0;
                 return countB - countA; // Descending for leaderboard
             });
             currentPeriod = period;
@@ -89,9 +99,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showLeaderboard() {
         const communityValidators = currentValidators.filter(v => !v.foundation); // Show only community nodes
-        const limit = Math.min(2000, communityValidators.length); // Changed to 2000
+        const limit = Math.min(2000, communityValidators.length); // Limit to 2000
         const leaderboard = communityValidators.slice(0, limit);
         
+        console.log('Showing leaderboard with', leaderboard.length, 'community validators:', 
+            leaderboard.map(v => ({ address: v.address, [`${currentPeriod}_count`]: v[`${currentPeriod}_count`] })));
+
         // Clear previous content
         while (leaderboardDiv.firstChild) {
             leaderboardDiv.removeChild(leaderboardDiv.firstChild);
@@ -107,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         leaderboard.forEach((v, index) => {
-            const card = createValidatorCard(v, currentPeriod + 'Count', index + 1);
+            const card = createValidatorCard(v, `${currentPeriod}_count`, index + 1);
             leaderboardDiv.appendChild(card);
         });
 
@@ -122,8 +135,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showLoserboard() {
-        const limit = Math.min(2000, currentStandbyNodes.length); // Changed to 2000
+        const limit = Math.min(2000, currentStandbyNodes.length); // Limit to 2000
         const loserboard = currentStandbyNodes.slice(0, limit);
+
+        console.log('Showing loserboard with', loserboard.length, 'standby nodes');
 
         // Clear previous content
         while (loserboardDiv.firstChild) {
@@ -159,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         function escapeHtml(text) {
             const div = document.createElement('div');
-            div.textContent = text;
+            div.textContent = text || '';
             return div.innerHTML;
         }
 
@@ -236,7 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function createStandbyNodeCard(node, rank) {
         function escapeHtml(text) {
             const div = document.createElement('div');
-            div.textContent = text;
+            div.textContent = text || '';
             return div.innerHTML;
         }
 
