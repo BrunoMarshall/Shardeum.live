@@ -485,6 +485,8 @@ async function calculateEarnings() {
         netAnnualProfitSpan.textContent = `${currencySymbol}${netAnnualProfitSelected.toFixed(2)} ${runningCurrency} (${netAnnualProfitShm.toFixed(2)} SHM)`;
         weeklyRewardsSpan.textContent = `${currencySymbol}${weeklyRewardsSelected.toFixed(2)} ${runningCurrency} (${weeklyRewardsShm.toFixed(2)} SHM)`;
         monthlyRewardsSpan.textContent = `${currencySymbol}${monthlyRewardsSelected.toFixed(2)} ${runningCurrency} (${monthlyRewardsShm.toFixed(2)} SHM)`;
+        netDailyReturnSpan.textContent = netDailyReturn !== null ? `${netDailyReturn.toFixed(2)}%` : 'N/A'; // Display Net Daily Return
+        netRoiSpan.textContent = roi !== null ? `${roi.toFixed(2)}%` : 'N/A'; // Display Net ROI
 
         // Update Total Monthly Profit with conditional background
         totalMonthlyProfitSpan.textContent = `${currencySymbol}${totalMonthlyProfitSelected.toFixed(2)} ${runningCurrency} (${(monthlyRewardsShm - monthlyNodesCostShm).toFixed(2)} SHM)`;
