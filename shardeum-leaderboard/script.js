@@ -9,14 +9,29 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentStandbyNodes = [];
     let currentPeriod = 'weekly';
 
-    // Blinking green light
+    // Blinking green light using CSS animation
     function createIndicator() {
         const indicator = document.createElement('span');
         indicator.id = 'status-indicator';
-        setInterval(() => {
-            indicator.style.backgroundColor = indicator.style.backgroundColor === 'green' ? 'transparent' : 'green';
-        }, 500);
-        indicator.style.cssText = 'width: 10px; height: 10px; background-color: green; border-radius: 50%; margin-left: 0.5rem; display: inline-block; vertical-align: middle; line-height: 1;';
+        indicator.style.cssText = `
+            width: 10px;
+            height: 10px;
+            background-color: green;
+            border-radius: 50%;
+            margin-left: 0.5rem;
+            display: inline-block;
+            vertical-align: middle;
+            animation: blink 1s infinite;
+        `;
+        // Inject CSS keyframes for blinking
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = `
+            @keyframes blink {
+                0%, 50% { background-color: green; }
+                51%, 100% { background-color: transparent; }
+            }
+        `;
+        document.head.appendChild(styleSheet);
         return indicator;
     }
 
