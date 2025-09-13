@@ -43,8 +43,8 @@ const sliders = [
     { id: 'num-servers-slider', instance: null, config: { start: 1, connect: 'lower', range: { min: 1, max: 100 }, step: 1 } },
     { id: 'running-costs-slider', instance: null, config: { start: 0, connect: 'lower', range: { min: 0, max: 50 }, step: 0.5 } },
     { id: 'node-stake-slider', instance: null, config: { start: 2400, connect: 'lower', range: { min: 2400, max: 100000 }, step: 100 } },
-    { id: 'custom-probability-slider', instance: null, config: { start: 27.4, connect: 'lower', range: { min: 0, max: 100 }, step: 0.1 } },
-    { id: 'weekly-validations-slider', instance: null, config: { start: 1.92, connect: 'lower', range: { min: 0, max: 7 }, step: 0.1 } }
+    { id: 'custom-probability-slider', instance: null, config: { start: 0, connect: 'lower', range: { min: 0, max: 100 }, step: 0.1 } }, // Start at 0, set dynamically
+    { id: 'weekly-validations-slider', instance: null, config: { start: 0, connect: 'lower', range: { min: 0, max: 7 }, step: 0.1 } } // Start at 0, set dynamically
 ];
 
 sliders.forEach(slider => {
@@ -190,12 +190,12 @@ async function fetchConfig() {
         const data = await response.json();
         console.log('Fetched config:', data);
         return {
-            reward: parseFloat(data.reward) || 40 // Ensure reward is a number
+            reward: parseFloat(data.reward) || 10 // Ensure reward is a number, fallback to 10 SHM per hour
         };
     } catch (error) {
         console.error('Error fetching config:', error);
         return {
-            reward: 40 // Default reward: 40 SHM per 4-hour active period
+            reward: 10 // Default reward: 10 SHM per hour
         };
     }
 }
@@ -248,19 +248,14 @@ async function fetchShardeumData() {
         const communitySlots = cycleInfoData.result.cycleInfo?.nodes?.communityActive || (activeNodes - foundationNodes) || 22; // Fetched or calculated
 
         // Calculate community validator daily probability
-        // UPDATE: Clarified rotation calculation
         const cyclesPerDay = 86400 / cycleDuration; // Number of 60-second cycles in a day (e.g., 86,400 / 60 = 1,440)
         const activePeriodCycles = 14400 / cycleDuration; // Number of cycles in a 4-hour active period (e.g., 14,400 / 60 = 240)
         const rotationsPerDay = (cyclesPerDay / activePeriodCycles) * communitySlots; // Daily rotations = (cycles per day / cycles per active period) * community slots (e.g., (1,440 / 240) * 22 = 132)
         const pPerRotation = standbyNodes > 0 ? 1 / standbyNodes : 0; // Probability of being selected per rotation (e.g., 1 / 412)
         const pNotSelectedPerDay = Math.pow(1 - pPerRotation, rotationsPerDay); // Probability of not being selected across all daily rotations
         const probability = standbyNodes > 0 ? 1 - pNotSelectedPerDay : 0.2742; // Daily probability (e.g., 27.42% for 412 standby, 22 slots)
-        // UPDATE: Calculate 4-hour probability for debugging
-        const rotationsPer4Hours = communitySlots; // Rotations per 4-hour period = community slots (e.g., 22)
-        const pNotSelectedPer4Hours = Math.pow(1 - pPerRotation, rotationsPer4Hours); // Probability of not being selected in 4 hours
-        const probabilityPer4Hours = standbyNodes > 0 ? 1 - pNotSelectedPer4Hours : 0.052; // 4-hour probability (e.g., ~5.2%)
 
-        console.log('Probability calculations:', { rotationsPerDay, probability, probabilityPer4Hours });
+        console.log('Probability calculations:', { rotationsPerDay, probability });
 
         cachedShardeumData = {
             totalNodes,
@@ -270,7 +265,6 @@ async function fetchShardeumData() {
             cycleDuration,
             communitySlots,
             probability,
-            probabilityPer4Hours, // UPDATE: Added for clarity
             apiSuccess: true
         };
         shardeumCacheTimestamp = now;
@@ -297,7 +291,6 @@ async function fetchShardeumData() {
             cycleDuration: 60,
             communitySlots: 22,
             probability: 0.2742,
-            probabilityPer4Hours: 0.052, // UPDATE: Added fallback
             apiSuccess: false
         };
         shardeumCacheTimestamp = now;
@@ -317,7 +310,7 @@ async function fetchShmPrice() {
         if (!response.ok) throw new Error(`Failed to fetch SHM price: ${response.status}`);
         const data = await response.json();
         cachedShmPrice = {
-            usd: data.shardeum?.usd || 0.06, // Fallback to current price
+            usd: data.shardeum?.usd || 0.06,
             eur: data.shardeum?.eur || 0.05,
             inr: data.shardeum?.inr || 5.47
         };
@@ -344,9 +337,7 @@ function updateVisitCounter() {
 }
 
 // Calculate Earnings
-// UPDATE: Corrected note in comments
-// Note: Based on a 27.4% daily chance of being selected (approximately 5.2% per 4-hour selection, 6 periods daily),
-// with a reward of 40 SHM per active slot per server for a 4-hour active period. Values may change based on network parameters.
+// Note: Based on a dynamically calculated daily chance of being selected, fetched from Shardeum API or fallback (~27.4% with 412 standby nodes, 22 community slots, 4-hour active period, 6 periods daily), with a reward of 40 SHM per 4-hour active period (10 SHM/hour). Values may change.
 async function calculateEarnings() {
     console.log('Starting calculateEarnings');
     try {
@@ -366,7 +357,7 @@ async function calculateEarnings() {
 
         console.log('Config:', config, 'Shardeum Data:', shardeumData, 'SHM Price:', shmPrice);
 
-        // Update network stats (only if API succeeded or cache is valid)
+        // Update network stats
         if (shardeumData.apiSuccess) {
             totalNodesSpan.textContent = shardeumData.totalNodes;
             standbyNodesSpan.textContent = shardeumData.standbyNodes;
@@ -380,11 +371,6 @@ async function calculateEarnings() {
             communityRatioSpan.textContent = communityRatio;
             dailyChanceSpan.textContent = (shardeumData.probability * 100).toFixed(1);
             dailyChanceDaysSpan.textContent = shardeumData.probability > 0 ? `approx. ${(1 / shardeumData.probability).toFixed(1)} days` : 'N/A';
-            // UPDATE: Optionally display 4-hour probability in UI (if element exists)
-            const probability4HourSpan = document.getElementById('probability-4hour');
-            if (probability4HourSpan) {
-                probability4HourSpan.textContent = (shardeumData.probabilityPer4Hours * 100).toFixed(1);
-            }
         }
 
         // Determine probability
@@ -402,9 +388,15 @@ async function calculateEarnings() {
 
         // Update probability and reward display
         probabilitySpan.textContent = (probability * 100).toFixed(1);
-        rewardSpan.textContent = parseFloat(config.reward).toFixed(0); // Reward for 4-hour active period
+        rewardSpan.textContent = parseFloat(config.reward * 4).toFixed(0); // Reward for 4-hour active period (10 SHM/hour * 4)
         dailyChanceSpan.textContent = (probability * 100).toFixed(1);
         dailyChanceDaysSpan.textContent = probability > 0 ? `approx. ${(1 / probability).toFixed(1)} days` : 'N/A';
+
+        // Set slider defaults to fetched probability
+        if (customProbabilitySlider) customProbabilitySlider.set(shardeumData.probability * 100);
+        if (weeklyValidationsSlider) weeklyValidationsSlider.set(shardeumData.probability * 7);
+        customProbabilityInput.value = (shardeumData.probability * 100).toFixed(1);
+        weeklyValidationsInput.value = (shardeumData.probability * 7).toFixed(1);
 
         // Convert inputs to SHM
         let nodePriceShm = nodePrice;
@@ -419,8 +411,7 @@ async function calculateEarnings() {
         console.log('Converted to SHM:', { nodePriceShm, runningCostsShm });
 
         // Calculate rewards (per server, multiplied by number of servers, 40 SHM per 4-hour active period)
-        // UPDATE: Clarified reward as 40 SHM per 4-hour active period, not hourly
-        const dailyRewardsShm = probability * config.reward * numServers; // Expected daily rewards = P(selected) * reward * servers
+        const dailyRewardsShm = probability * (config.reward * 4) * numServers; // Expected daily rewards = P(selected) * (10 SHM/hour * 4) * servers
         const weeklyRewardsShm = dailyRewardsShm * 7;
         const monthlyRewardsShm = dailyRewardsShm * 30;
         const annualRewardsShm = dailyRewardsShm * 365;
@@ -587,14 +578,9 @@ Promise.all([fetchShmPrice(), fetchConfig(), fetchShardeumData()]).then(([shmPri
         communityRatioSpan.textContent = communityRatio;
         dailyChanceSpan.textContent = (shardeumData.probability * 100).toFixed(1);
         dailyChanceDaysSpan.textContent = shardeumData.probability > 0 ? `approx. ${(1 / shardeumData.probability).toFixed(1)} days` : 'N/A';
-        // UPDATE: Optionally display 4-hour probability in UI (if element exists)
-        const probability4HourSpan = document.getElementById('probability-4hour');
-        if (probability4HourSpan) {
-            probability4HourSpan.textContent = (shardeumData.probabilityPer4Hours * 100).toFixed(1);
-        }
     }
     probabilitySpan.textContent = (shardeumData.probability * 100).toFixed(1);
-    rewardSpan.textContent = parseFloat(config.reward).toFixed(0);
+    rewardSpan.textContent = parseFloat(config.reward * 4).toFixed(0); // Reward for 4-hour active period
     customProbabilityInput.value = (shardeumData.probability * 100).toFixed(1);
     weeklyValidationsInput.value = (shardeumData.probability * 7).toFixed(1);
     if (customProbabilitySlider) customProbabilitySlider.set(shardeumData.probability * 100);
