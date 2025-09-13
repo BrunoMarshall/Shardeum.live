@@ -33,7 +33,7 @@ const foundationRatioSpan = document.getElementById('foundation-ratio');
 const communityRatioSpan = document.getElementById('community-ratio');
 const cycleDurationSpan = document.getElementById('cycle-duration');
 const dailyChanceSpan = document.getElementById('daily-chance');
-const dailyChanceDaysSpan = document.getElementById('daily-chance-days'); // New field for average days
+const dailyChanceDaysSpan = document.getElementById('daily-chance-days');
 const rewardsChartCanvas = document.getElementById('rewards-chart');
 const visitCounterSpan = document.getElementById('visit-counter');
 
@@ -43,8 +43,8 @@ const sliders = [
     { id: 'num-servers-slider', instance: null, config: { start: 1, connect: 'lower', range: { min: 1, max: 100 }, step: 1 } },
     { id: 'running-costs-slider', instance: null, config: { start: 0, connect: 'lower', range: { min: 0, max: 50 }, step: 0.5 } },
     { id: 'node-stake-slider', instance: null, config: { start: 2400, connect: 'lower', range: { min: 2400, max: 100000 }, step: 100 } },
-    { id: 'custom-probability-slider', instance: null, config: { start: 55, connect: 'lower', range: { min: 0, max: 100 }, step: 0.1 } },
-    { id: 'weekly-validations-slider', instance: null, config: { start: 3.85, connect: 'lower', range: { min: 0, max: 7 }, step: 0.1 } }
+    { id: 'custom-probability-slider', instance: null, config: { start: 27.4, connect: 'lower', range: { min: 0, max: 100 }, step: 0.1 } },
+    { id: 'weekly-validations-slider', instance: null, config: { start: 1.92, connect: 'lower', range: { min: 0, max: 7 }, step: 0.1 } }
 ];
 
 sliders.forEach(slider => {
@@ -223,7 +223,7 @@ async function fetchShardeumData() {
         const nodeListData = await nodeListResponse.json();
         if (!nodeListData.result) throw new Error('Invalid node list response');
         const nodes = nodeListData.result.nodes || [];
-        const totalNodes = nodeListData.result.totalNodes || 255; // Fallback for calculations
+        const totalNodes = nodeListData.result.totalNodes || 255; // Fallback
         const communityNodes = nodes.filter(node => !node.foundationNode).length || 0; // Fallback
         const foundationNodes = totalNodes - communityNodes || 233; // Fallback
 
@@ -242,12 +242,18 @@ async function fetchShardeumData() {
         const cycleInfoData = await cycleInfoResponse.json();
         if (!cycleInfoData.result) throw new Error('Invalid cycle info response');
         const cycleDuration = cycleInfoData.result.cycleInfo?.duration || 60; // Fallback
-        const standbyNodes = cycleInfoData.result.cycleInfo?.nodes?.standby || 415; // Fallback
+        const standbyNodes = cycleInfoData.result.cycleInfo?.nodes?.standby || 412; // Fallback
         const activeNodes = cycleInfoData.result.cycleInfo?.nodes?.active || totalNodes;
         const desiredNodes = cycleInfoData.result.cycleInfo?.nodes?.desired || totalNodes;
+        const communitySlots = cycleInfoData.result.cycleInfo?.nodes?.communityActive || (activeNodes - foundationNodes) || 22; // Fetched or calculated
 
-        // Calculate probability (assuming 6 selections per day, 4 hours each)
-        const probability = desiredNodes > 0 ? Math.min(1, activeNodes / desiredNodes / 6) : 0.55;
+        // Calculate community validator daily probability
+        const cyclesPerDay = 86400 / cycleDuration; // e.g., 1440 for 60s
+        const activePeriodCycles = 14400 / cycleDuration; // 4 hours = 14400s / 60s = 240 cycles
+        const rotationsPerDay = (cyclesPerDay / activePeriodCycles) * communitySlots; // e.g., (1440 / 240) * 22 = 132
+        const pPerRotation = standbyNodes > 0 ? 1 / standbyNodes : 0; // e.g., 1 / 412
+        const pNotSelectedPerDay = Math.pow(1 - pPerRotation, rotationsPerDay); // e.g., (1 - 1/412)^132
+        const probability = standbyNodes > 0 ? 1 - pNotSelectedPerDay : 0.2742; // Fallback to calculated value
 
         cachedShardeumData = {
             totalNodes,
@@ -255,6 +261,7 @@ async function fetchShardeumData() {
             communityNodes,
             foundationNodes,
             cycleDuration,
+            communitySlots,
             probability,
             apiSuccess: true
         };
@@ -272,15 +279,16 @@ async function fetchShardeumData() {
         foundationRatioSpan.textContent = '0';
         communityRatioSpan.textContent = '0';
         dailyChanceSpan.textContent = '0';
-        dailyChanceDaysSpan.textContent = 'N/A'; // Initialize new field on error
-        // Use fallback values for calculations, but set probability to 0
+        dailyChanceDaysSpan.textContent = 'N/A';
+        // Use fallback values for calculations
         cachedShardeumData = cachedShardeumData || {
             totalNodes: 255,
-            standbyNodes: 415,
+            standbyNodes: 412,
             communityNodes: 22,
             foundationNodes: 233,
             cycleDuration: 60,
-            probability: 0, // No rewards when API fails
+            communitySlots: 22,
+            probability: 0.2742, // Fallback to calculated value
             apiSuccess: false
         };
         shardeumCacheTimestamp = now;
@@ -501,7 +509,7 @@ async function calculateEarnings() {
                     datasets: [{
                         label: `Financials (${runningCurrency})`,
                         data: [weeklyRewardsSelected, monthlyRewardsSelected, totalMonthlyProfitSelected],
-                        backgroundColor: ['#2563eb', '#1e40af', '#4b0082'] // Added color for Total Monthly Profit
+                        backgroundColor: ['#2563eb', '#1e40af', '#4b0082']
                     }]
                 },
                 options: {
@@ -545,7 +553,7 @@ Promise.all([fetchShmPrice(), fetchConfig(), fetchShardeumData()]).then(([shmPri
         foundationRatioSpan.textContent = '0';
         communityRatioSpan.textContent = '0';
         dailyChanceSpan.textContent = '0';
-        dailyChanceDaysSpan.textContent = 'N/A'; // Initialize new field on error
+        dailyChanceDaysSpan.textContent = 'N/A';
         resultsDiv.innerHTML = '<p class="text-red-500 text-center">Error loading network data. Calculations reflect server costs only.</p>';
         resultsDiv.classList.remove('hidden');
     } else {
@@ -581,7 +589,7 @@ Promise.all([fetchShmPrice(), fetchConfig(), fetchShardeumData()]).then(([shmPri
     foundationRatioSpan.textContent = '0';
     communityRatioSpan.textContent = '0';
     dailyChanceSpan.textContent = '0';
-    dailyChanceDaysSpan.textContent = 'N/A'; // Initialize new field on error
+    dailyChanceDaysSpan.textContent = 'N/A';
     resultsDiv.innerHTML = '<p class="text-red-500 text-center">Error loading network data. Calculations reflect server costs only.</p>';
     resultsDiv.classList.remove('hidden');
     updateVisitCounter(); // Update visit counter even on error
