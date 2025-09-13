@@ -337,7 +337,7 @@ function updateVisitCounter() {
 }
 
 // Calculate Earnings
-// Note: Based on a dynamically calculated daily chance of being selected, fetched from Shardeum API or fallback (~27.4% with 412 standby nodes, 22 community slots, 4-hour active period, 6 periods daily), with a reward of 40 SHM per 4-hour active period (10 SHM/hour). Values may change.
+// Note: Based on a dynamically calculated daily chance of being selected, fetched from Shardeum API or fallback (~27.4% with 412 standby nodes, 22 community slots, 4-hour active period, 6 periods daily), with a reward of 10 SHM per active hour (40 SHM per 4-hour active period). Values may change.
 async function calculateEarnings() {
     console.log('Starting calculateEarnings');
     try {
@@ -388,7 +388,7 @@ async function calculateEarnings() {
 
         // Update probability and reward display
         probabilitySpan.textContent = (probability * 100).toFixed(1);
-        rewardSpan.textContent = parseFloat(config.reward * 4).toFixed(0); // Reward for 4-hour active period (10 SHM/hour * 4)
+        rewardSpan.textContent = parseFloat(config.reward).toFixed(0); // Reward per active hour
         dailyChanceSpan.textContent = (probability * 100).toFixed(1);
         dailyChanceDaysSpan.textContent = probability > 0 ? `approx. ${(1 / probability).toFixed(1)} days` : 'N/A';
 
@@ -580,7 +580,7 @@ Promise.all([fetchShmPrice(), fetchConfig(), fetchShardeumData()]).then(([shmPri
         dailyChanceDaysSpan.textContent = shardeumData.probability > 0 ? `approx. ${(1 / shardeumData.probability).toFixed(1)} days` : 'N/A';
     }
     probabilitySpan.textContent = (shardeumData.probability * 100).toFixed(1);
-    rewardSpan.textContent = parseFloat(config.reward * 4).toFixed(0); // Reward for 4-hour active period
+    rewardSpan.textContent = parseFloat(config.reward).toFixed(0); // Reward per active hour
     customProbabilityInput.value = (shardeumData.probability * 100).toFixed(1);
     weeklyValidationsInput.value = (shardeumData.probability * 7).toFixed(1);
     if (customProbabilitySlider) customProbabilitySlider.set(shardeumData.probability * 100);
