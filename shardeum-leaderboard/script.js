@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
         indicator.style.cssText = `
             width: 10px;
             height: 10px;
-            background-color: green;
+            background-color: #4CAF50;
             border-radius: 50%;
             margin-left: 0.5rem;
             display: inline-block;
@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const styleSheet = document.createElement('style');
         styleSheet.textContent = `
             @keyframes blink {
-                0%, 50% { background-color: green; }
+                0%, 50% { background-color: #4CAF50; }
                 51%, 100% { background-color: transparent; }
             }
         `;
@@ -252,26 +252,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const card = document.createElement('a');
         card.href = `https://explorer.shardeum.org/account/${encodeURIComponent(address)}`;
         card.target = '_blank';
-        card.className = 'validator-card community-node';
+        card.className = 'validator-card block bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 p-4 flex items-start space-x-4 community-node';
+
+        // Left Section: Rank, Avatar, Name, Address, Activations
+        const leftContainer = document.createElement('div');
+        leftContainer.className = 'flex-shrink-0 text-center';
 
         const rankSpan = document.createElement('span');
-        rankSpan.className = 'rank';
-        rankSpan.textContent = rank;
-        card.appendChild(rankSpan);
+        rankSpan.className = 'text-xl font-bold text-gray-700 mb-2 block';
+        rankSpan.textContent = `#${rank}`;
+        leftContainer.appendChild(rankSpan);
 
         const img = document.createElement('img');
         img.src = `assets/${avatar}`;
         img.alt = escapedAlias;
-        img.className = 'w-12 h-12';
-        card.appendChild(img);
+        img.className = 'w-16 h-16 rounded-full object-cover mb-2 border-2 border-green-500';
+        leftContainer.appendChild(img);
 
-        const leftContainer = document.createElement('div');
-        leftContainer.className = 'left-container flex flex-col';
         const nameSpan = document.createElement('span');
         const nameStrong = document.createElement('strong');
         nameStrong.textContent = 'Name: ';
         nameSpan.appendChild(nameStrong);
         nameSpan.appendChild(document.createTextNode(escapedAlias));
+        nameSpan.className = 'text-sm text-gray-600 block mb-1';
         leftContainer.appendChild(nameSpan);
 
         const addressSpan = document.createElement('span');
@@ -279,24 +282,29 @@ document.addEventListener('DOMContentLoaded', () => {
         addressStrong.textContent = 'Address: ';
         addressSpan.appendChild(addressStrong);
         addressSpan.appendChild(document.createTextNode(truncatedAddress));
+        addressSpan.className = 'text-sm text-gray-600 block mb-1';
         leftContainer.appendChild(addressSpan);
 
         const countSpan = document.createElement('span');
         const countStrong = document.createElement('strong');
-        countStrong.textContent = 'Number of Activations: ';
+        countStrong.textContent = 'Activations: ';
         countSpan.appendChild(countStrong);
         countSpan.appendChild(document.createTextNode(validator[countKey] || 0));
+        countSpan.className = 'text-sm text-gray-600 block';
         leftContainer.appendChild(countSpan);
 
         card.appendChild(leftContainer);
 
+        // Right Section: Status, Nominator, Reward, Stake, Start, End, Penalty
         const rightContainer = document.createElement('div');
-        rightContainer.className = 'right-container flex flex-col';
+        rightContainer.className = 'flex-grow';
+
         const statusSpan = document.createElement('span');
         const statusStrong = document.createElement('strong');
-        statusStrong.textContent = 'Node Status: ';
+        statusStrong.textContent = 'Status: ';
         statusSpan.appendChild(statusStrong);
         statusSpan.appendChild(document.createTextNode(validator.status || 'N/A'));
+        statusSpan.className = 'text-sm text-gray-700 block mb-1';
         rightContainer.appendChild(statusSpan);
 
         const nominatorSpan = document.createElement('span');
@@ -304,34 +312,39 @@ document.addEventListener('DOMContentLoaded', () => {
         nominatorStrong.textContent = 'Nominator: ';
         nominatorSpan.appendChild(nominatorStrong);
         nominatorSpan.appendChild(document.createTextNode(truncatedNominator));
+        nominatorSpan.className = 'text-sm text-gray-700 block mb-1';
         rightContainer.appendChild(nominatorSpan);
 
         const rewardSpan = document.createElement('span');
         const rewardStrong = document.createElement('strong');
-        rewardStrong.textContent = 'Current Reward: ';
+        rewardStrong.textContent = 'Reward: ';
         rewardSpan.appendChild(rewardStrong);
         rewardSpan.appendChild(document.createTextNode(formatSHM(validator.reward, 1)));
+        rewardSpan.className = 'text-sm text-gray-700 block mb-1';
         rightContainer.appendChild(rewardSpan);
 
         const stakeSpan = document.createElement('span');
         const stakeStrong = document.createElement('strong');
-        stakeStrong.textContent = 'Staked Amount: ';
+        stakeStrong.textContent = 'Stake: ';
         stakeSpan.appendChild(stakeStrong);
         stakeSpan.appendChild(document.createTextNode(formatSHM(validator.stake_lock, 0)));
+        stakeSpan.className = 'text-sm text-gray-700 block mb-1';
         rightContainer.appendChild(stakeSpan);
 
         const rewardStartSpan = document.createElement('span');
         const rewardStartStrong = document.createElement('strong');
-        rewardStartStrong.textContent = 'Reward Start: ';
+        rewardStartStrong.textContent = 'Start: ';
         rewardStartSpan.appendChild(rewardStartStrong);
         rewardStartSpan.appendChild(document.createTextNode(formatTimestamp(validator.reward_start_time)));
+        rewardStartSpan.className = 'text-sm text-gray-700 block mb-1';
         rightContainer.appendChild(rewardStartSpan);
 
         const rewardEndSpan = document.createElement('span');
         const rewardEndStrong = document.createElement('strong');
-        rewardEndStrong.textContent = 'Reward End: ';
+        rewardEndStrong.textContent = 'End: ';
         rewardEndSpan.appendChild(rewardEndStrong);
         rewardEndSpan.appendChild(document.createTextNode(formatTimestamp(validator.reward_end_time)));
+        rewardEndSpan.className = 'text-sm text-gray-700 block mb-1';
         rightContainer.appendChild(rewardEndSpan);
 
         const penaltySpan = document.createElement('span');
@@ -339,19 +352,17 @@ document.addEventListener('DOMContentLoaded', () => {
         penaltyStrong.textContent = 'Penalty: ';
         penaltySpan.appendChild(penaltyStrong);
         penaltySpan.appendChild(document.createTextNode(formatSHM(validator.penalty, 0)));
+        penaltySpan.className = 'text-sm text-gray-700 block mb-1';
         rightContainer.appendChild(penaltySpan);
 
         card.appendChild(rightContainer);
 
+        // Bottom Section: IP Address
         const nodeInfo = document.createElement('div');
-        nodeInfo.className = 'node-info flex justify-end';
+        nodeInfo.className = 'mt-2 text-right text-sm text-gray-500';
         const ipSpan = document.createElement('span');
-        const ipStrong = document.createElement('strong');
-        ipStrong.textContent = 'IP address: ';
-        ipSpan.appendChild(ipStrong);
-        ipSpan.appendChild(document.createTextNode(escapeHtml(ipAddress)));
+        ipSpan.textContent = `IP: ${escapeHtml(ipAddress)}`;
         nodeInfo.appendChild(ipSpan);
-
         card.appendChild(nodeInfo);
 
         return card;
@@ -371,27 +382,28 @@ document.addEventListener('DOMContentLoaded', () => {
         const card = document.createElement('a');
         card.href = `https://explorer.shardeum.org/account/${encodeURIComponent(address)}`;
         card.target = '_blank';
-        card.className = 'validator-card community-node';
+        card.className = 'validator-card block bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 p-4 flex items-start space-x-4 community-node';
 
         const rankSpan = document.createElement('span');
-        rankSpan.className = 'rank';
-        rankSpan.textContent = rank;
+        rankSpan.className = 'text-xl font-bold text-gray-700 mb-2 block';
+        rankSpan.textContent = `#${rank}`;
         card.appendChild(rankSpan);
 
         const img = document.createElement('img');
         img.src = 'assets/default-avatar.png';
         img.alt = 'Standby Node';
-        img.className = 'w-12 h-12';
+        img.className = 'w-16 h-16 rounded-full object-cover mb-2 border-2 border-green-500';
         card.appendChild(img);
 
         const textContainer = document.createElement('div');
-        textContainer.className = 'text-container';
+        textContainer.className = 'flex-grow';
 
         const nameSpan = document.createElement('span');
         const nameStrong = document.createElement('strong');
         nameStrong.textContent = 'Name: ';
         nameSpan.appendChild(nameStrong);
         nameSpan.appendChild(document.createTextNode('Unknown'));
+        nameSpan.className = 'text-sm text-gray-600 block mb-1';
         textContainer.appendChild(nameSpan);
 
         const addressSpan = document.createElement('span');
@@ -399,6 +411,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addressStrong.textContent = 'Address: ';
         addressSpan.appendChild(addressStrong);
         addressSpan.appendChild(document.createTextNode(truncatedAddress));
+        addressSpan.className = 'text-sm text-gray-600 block mb-1';
         textContainer.appendChild(addressSpan);
 
         const standbySpan = document.createElement('span');
@@ -406,26 +419,16 @@ document.addEventListener('DOMContentLoaded', () => {
         standbyStrong.textContent = 'Standby Time: ';
         standbySpan.appendChild(standbyStrong);
         standbySpan.appendChild(document.createTextNode(`${node.standby_hours.toFixed(2)} hours (${node.standby_days} days)`));
+        standbySpan.className = 'text-sm text-gray-600 block';
         textContainer.appendChild(standbySpan);
 
         card.appendChild(textContainer);
 
         const nodeInfo = document.createElement('div');
-        nodeInfo.className = 'node-info';
-
-        const typeSpan = document.createElement('span');
-        const typeStrong = document.createElement('strong');
-        typeStrong.textContent = 'Community Node';
-        typeSpan.appendChild(typeStrong);
-        nodeInfo.appendChild(typeSpan);
-
+        nodeInfo.className = 'mt-2 text-right text-sm text-gray-500';
         const ipSpan = document.createElement('span');
-        const ipStrong = document.createElement('strong');
-        ipStrong.textContent = 'IP address: ';
-        ipSpan.appendChild(ipStrong);
-        ipSpan.appendChild(document.createTextNode(escapeHtml(ipAddress)));
+        ipSpan.textContent = `IP: ${escapeHtml(ipAddress)}`;
         nodeInfo.appendChild(ipSpan);
-
         card.appendChild(nodeInfo);
 
         return card;
