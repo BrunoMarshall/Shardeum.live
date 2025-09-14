@@ -265,90 +265,86 @@ document.addEventListener('DOMContentLoaded', () => {
         img.className = 'w-12 h-12';
         card.appendChild(img);
 
-        const textContainer = document.createElement('div');
-        textContainer.className = 'text-container';
-
+        const leftContainer = document.createElement('div');
+        leftContainer.className = 'left-container flex flex-col';
         const nameSpan = document.createElement('span');
         const nameStrong = document.createElement('strong');
         nameStrong.textContent = 'Name: ';
         nameSpan.appendChild(nameStrong);
         nameSpan.appendChild(document.createTextNode(escapedAlias));
-        textContainer.appendChild(nameSpan);
+        leftContainer.appendChild(nameSpan);
 
         const addressSpan = document.createElement('span');
         const addressStrong = document.createElement('strong');
         addressStrong.textContent = 'Address: ';
         addressSpan.appendChild(addressStrong);
         addressSpan.appendChild(document.createTextNode(truncatedAddress));
-        textContainer.appendChild(addressSpan);
+        leftContainer.appendChild(addressSpan);
 
         const countSpan = document.createElement('span');
         const countStrong = document.createElement('strong');
         countStrong.textContent = 'Number of Activations: ';
         countSpan.appendChild(countStrong);
         countSpan.appendChild(document.createTextNode(validator[countKey] || 0));
-        textContainer.appendChild(countSpan);
+        leftContainer.appendChild(countSpan);
 
+        card.appendChild(leftContainer);
+
+        const rightContainer = document.createElement('div');
+        rightContainer.className = 'right-container flex flex-col';
         const statusSpan = document.createElement('span');
         const statusStrong = document.createElement('strong');
         statusStrong.textContent = 'Node Status: ';
         statusSpan.appendChild(statusStrong);
         statusSpan.appendChild(document.createTextNode(validator.status || 'N/A'));
-        textContainer.appendChild(statusSpan);
+        rightContainer.appendChild(statusSpan);
 
         const nominatorSpan = document.createElement('span');
         const nominatorStrong = document.createElement('strong');
         nominatorStrong.textContent = 'Nominator: ';
         nominatorSpan.appendChild(nominatorStrong);
         nominatorSpan.appendChild(document.createTextNode(truncatedNominator));
-        textContainer.appendChild(nominatorSpan);
+        rightContainer.appendChild(nominatorSpan);
 
         const rewardSpan = document.createElement('span');
         const rewardStrong = document.createElement('strong');
         rewardStrong.textContent = 'Current Reward: ';
         rewardSpan.appendChild(rewardStrong);
         rewardSpan.appendChild(document.createTextNode(formatSHM(validator.reward, 1)));
-        textContainer.appendChild(rewardSpan);
+        rightContainer.appendChild(rewardSpan);
 
         const stakeSpan = document.createElement('span');
         const stakeStrong = document.createElement('strong');
         stakeStrong.textContent = 'Staked Amount: ';
         stakeSpan.appendChild(stakeStrong);
         stakeSpan.appendChild(document.createTextNode(formatSHM(validator.stake_lock, 0)));
-        textContainer.appendChild(stakeSpan);
+        rightContainer.appendChild(stakeSpan);
 
         const rewardStartSpan = document.createElement('span');
         const rewardStartStrong = document.createElement('strong');
         rewardStartStrong.textContent = 'Reward Start: ';
         rewardStartSpan.appendChild(rewardStartStrong);
         rewardStartSpan.appendChild(document.createTextNode(formatTimestamp(validator.reward_start_time)));
-        textContainer.appendChild(rewardStartSpan);
+        rightContainer.appendChild(rewardStartSpan);
 
         const rewardEndSpan = document.createElement('span');
         const rewardEndStrong = document.createElement('strong');
         rewardEndStrong.textContent = 'Reward End: ';
         rewardEndSpan.appendChild(rewardEndStrong);
         rewardEndSpan.appendChild(document.createTextNode(formatTimestamp(validator.reward_end_time)));
-        textContainer.appendChild(rewardEndSpan);
+        rightContainer.appendChild(rewardEndSpan);
 
         const penaltySpan = document.createElement('span');
         const penaltyStrong = document.createElement('strong');
         penaltyStrong.textContent = 'Penalty: ';
         penaltySpan.appendChild(penaltyStrong);
         penaltySpan.appendChild(document.createTextNode(formatSHM(validator.penalty, 0)));
-        textContainer.appendChild(penaltySpan);
+        rightContainer.appendChild(penaltySpan);
 
-        card.appendChild(textContainer);
+        card.appendChild(rightContainer);
 
         const nodeInfo = document.createElement('div');
-        nodeInfo.className = 'node-info';
-
-        const typeSpan = document.createElement('span');
-        const typeStrong = document.createElement('strong');
-        typeStrong.textContent = nodeType;
-        typeSpan.appendChild(typeStrong);
-        nodeInfo.appendChild(typeSpan);
-
+        nodeInfo.className = 'node-info flex justify-end';
         const ipSpan = document.createElement('span');
         const ipStrong = document.createElement('strong');
         ipStrong.textContent = 'IP address: ';
