@@ -43,70 +43,116 @@ document.addEventListener('DOMContentLoaded', () => {
     // Convert BigInt-like string to SHM (assuming 18 decimals)
     function formatSHM(value) {
         try {
-            const num = BigInt(value) / BigInt(10**18);
-            return `${num} SHM`;
-        } catch {
+            if (!value || value === '0' || value === '' || value === null || value === undefined) {
+                console.log(`formatSHM: Invalid or zero value: ${value}`);
+                return '0 SHM';
+            }
+            const num = BigInt(String(value));
+            const shm = num / BigInt(10**18);
+            const result = `${shm.toString()} SHM`;
+            console.log(`formatSHM: Input: ${value}, Output: ${result}`);
+            return result;
+        } catch (error) {
+            console.error(`formatSHM: Error formatting value: ${value}`, error);
             return 'N/A';
         }
     }
 
     // Convert timestamp to readable date
     function formatTimestamp(timestamp) {
-        if (!timestamp) return 'N/A';
-        return new Date(Number(timestamp)).toLocaleString('en-US', {
-            dateStyle: 'short',
-            timeStyle: 'short'
-        });
+        if (!timestamp || timestamp === 0 || timestamp === '0' || timestamp === null) {
+            console.log(`formatTimestamp: Invalid timestamp: ${timestamp}`);
+            return 'N/A';
+        }
+        try {
+            const date = new Date(Number(timestamp) * 1000);
+            const result = date.toLocaleString('en-US', {
+                dateStyle: 'short',
+                timeStyle: 'short',
+                timeZone: 'UTC'
+            });
+            console.log(`formatTimestamp: Input: ${timestamp}, Output: ${result}`);
+            return result;
+        } catch (error) {
+            console.error(`formatTimestamp: Error formatting timestamp: ${timestamp}`, error);
+            return 'N/A';
+        }
     }
 
     async function fetchValidatorDetails(address) {
         try {
             const response = await fetch(`https://explorer.shardeum.org/api/account?address=${encodeURIComponent(address)}&accountType=9`, {
-                mode: 'cors'
+                mode: 'cors',
+                headers: { 'User-Agent': 'Shardeum-Leaderboard/1.0' }
             });
-            if (!response.ok) throw new Error(`Failed to fetch validator details for ${address}`);
+            if (!response.ok) throw new Error(`Failed to fetch validator details for ${address}: ${response.status}`);
             const data = await response.json();
+            console.log(`fetchValidatorDetails: Raw data for ${address}:`, data);
             if (data.success && data.accounts && data.accounts[0]) {
-                return data.accounts[0].account;
+                const account = data.accounts[0].account;
+                const recentActivity = account.nodeAccountStats?.history?.some(entry => {
+                    const endTime = entry.e || 0;
+                    const nowSeconds = Math.floor(Date.now() / 1000);
+                    return endTime > (nowSeconds - 24 * 60 * 60); // Within 24 hours
+                });
+                const details = {
+                    status: recentActivity ? 'Active' : 'Inactive',
+                    nominator: account.nominator || 'N/A',
+                    reward: account.reward?.value || '0',
+                    stakeLock: account.stakeLock?.value || '0',
+                    rewardStartTime: account.rewardStartTime || 0,
+                    rewardEndTime: account.rewardEndTime || 0,
+                    penalty: account.penalty?.value || '0'
+                };
+                console.log(`fetchValidatorDetails: Processed details for ${address}:`, details);
+                return details;
             }
+            console.warn(`fetchValidatorDetails: No valid account data for ${address}`);
             return null;
         } catch (error) {
-            console.error(`Error fetching validator details for ${address}:`, error);
+            console.error(`fetchValidatorDetails: Error fetching details for ${address}:`, error);
             return null;
         }
     }
 
     async function fetchValidators(period) {
         try {
-            console.log(`Fetching validators for period: ${period}`);
+            console.log(`fetchValidators: Fetching validators for period: ${period}`);
             const response = await fetch(`${backendUrl}/api/validators?period=${period}`, {
-                mode: 'cors'
+                mode: 'cors',
+                headers: { 'User-Agent': 'Shardeum-Leaderboard/1.0' }
             });
-            if (!response.ok) throw new Error(`Network response was not ok: ${response.status}`);
+            if (!response.ok) throw new Error(`fetchValidators: Network response was not ok: ${response.status}`);
             let validators = await response.json();
-            console.log('Validators received:', validators.map(v => ({
+            console.log(`fetchValidators: Validators received from backend:`, validators.map(v => ({
                 address: v.address,
                 foundation: v.foundation,
-                [`${period}count`]: v[`${period}count`]
+                [`${period}count`]: v[`${period}count`],
+                status: v.status,
+                stake_lock: v.stake_lock
             })));
 
-            // Fetch additional details for each validator
+            // Fallback to explorer API if backend data is missing or invalid
             validators = await Promise.all(validators.map(async (v) => {
-                const details = await fetchValidatorDetails(v.address);
-                return {
-                    ...v,
-                    status: details?.nodeAccountStats?.isShardeumRun ? 'Active' : 'Inactive',
-                    nominator: details?.nominator || 'N/A',
-                    reward: details?.reward?.value || '0',
-                    stakeLock: details?.stakeLock?.value || '0',
-                    rewardStartTime: details?.rewardStartTime || 0,
-                    rewardEndTime: details?.rewardEndTime || 0,
-                    penalty: details?.penalty?.value || '0'
-                };
+                if (!v.status || v.status === 'Inactive' || !v.stake_lock || v.stake_lock === '0' || v.stake_lock === null) {
+                    console.log(`fetchValidators: Fetching fallback data for ${v.address}`);
+                    const details = await fetchValidatorDetails(v.address);
+                    return {
+                        ...v,
+                        status: details?.status || v.status || 'Inactive',
+                        nominator: details?.nominator || v.nominator || 'N/A',
+                        reward: details?.reward || v.reward || '0',
+                        stake_lock: details?.stakeLock || v.stake_lock || '0',
+                        reward_start_time: details?.rewardStartTime || v.reward_start_time || 0,
+                        reward_end_time: details?.rewardEndTime || v.reward_end_time || 0,
+                        penalty: details?.penalty || v.penalty || '0'
+                    };
+                }
+                return v;
             }));
 
             if (!Array.isArray(validators) || validators.length === 0) {
-                throw new Error('No validators returned or invalid data format');
+                throw new Error('fetchValidators: No validators returned or invalid data format');
             }
             currentValidators = [...validators].sort((a, b) => {
                 const countA = a[`${period}count`] || 0;
@@ -116,7 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentPeriod = period;
             showLeaderboard();
         } catch (error) {
-            console.error('Error fetching validators:', error);
+            console.error('fetchValidators: Error fetching validators:', error);
             leaderboardDiv.innerHTML = '<p class="text-red-600">Error loading validators. Please try again later.</p>';
             loserboardDiv.innerHTML = '';
         }
@@ -124,20 +170,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function fetchStandbyNodes() {
         try {
-            console.log('Fetching standby nodes');
+            console.log('fetchStandbyNodes: Fetching standby nodes');
             const response = await fetch(`${backendUrl}/api/standby-nodes`, {
-                mode: 'cors'
+                mode: 'cors',
+                headers: { 'User-Agent': 'Shardeum-Leaderboard/1.0' }
             });
-            if (!response.ok) throw new Error(`Network response was not ok: ${response.status}`);
+            if (!response.ok) throw new Error(`fetchStandbyNodes: Network response was not ok: ${response.status}`);
             const standbyNodes = await response.json();
-            console.log('Standby nodes received:', standbyNodes);
+            console.log('fetchStandbyNodes: Standby nodes received:', standbyNodes);
             if (!Array.isArray(standbyNodes) || standbyNodes.length === 0) {
-                throw new Error('No standby nodes returned or invalid data format');
+                throw new Error('fetchStandbyNodes: No standby nodes returned or invalid data format');
             }
             currentStandbyNodes = [...standbyNodes].sort((a, b) => b.standby_hours - a.standby_hours);
             showLoserboard();
         } catch (error) {
-            console.error('Error fetching standby nodes:', error);
+            console.error('fetchStandbyNodes: Error fetching standby nodes:', error);
             loserboardDiv.innerHTML = '<p class="text-red-600">Error loading loserboard. Please try again later.</p>';
             leaderboardDiv.innerHTML = '';
         }
@@ -148,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const limit = Math.min(2000, communityValidators.length);
         const leaderboard = communityValidators.slice(0, limit);
 
-        console.log('Showing leaderboard with', leaderboard.length, 'community validators');
+        console.log('showLeaderboard: Showing leaderboard with', leaderboard.length, 'community validators');
 
         while (leaderboardDiv.firstChild) {
             leaderboardDiv.removeChild(leaderboardDiv.firstChild);
@@ -182,7 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const limit = Math.min(2000, currentStandbyNodes.length);
         const loserboard = currentStandbyNodes.slice(0, limit);
 
-        console.log('Showing loserboard with', loserboard.length, 'standby nodes');
+        console.log('showLoserboard: Showing loserboard with', loserboard.length, 'standby nodes');
 
         while (loserboardDiv.firstChild) {
             loserboardDiv.removeChild(loserboardDiv.firstChild);
@@ -213,7 +260,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function createValidatorCard(validator, countKey, rank) {
-        console.log(`Validator ${validator.address}: ${countKey} = ${validator[countKey]}`);
+        console.log(`createValidatorCard: Creating card for validator ${validator.address}:`, {
+            [countKey]: validator[countKey],
+            status: validator.status,
+            stake_lock: validator.stake_lock,
+            formatted_stake: formatSHM(validator.stake_lock),
+            reward: validator.reward,
+            nominator: validator.nominator,
+            reward_start_time: validator.reward_start_time,
+            formatted_start_time: formatTimestamp(validator.reward_start_time),
+            reward_end_time: validator.reward_end_time,
+            penalty: validator.penalty
+        });
 
         function escapeHtml(text) {
             const div = document.createElement('div');
@@ -295,21 +353,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const stakeStrong = document.createElement('strong');
         stakeStrong.textContent = 'Staked Amount: ';
         stakeSpan.appendChild(stakeStrong);
-        stakeSpan.appendChild(document.createTextNode(formatSHM(validator.stakeLock)));
+        stakeSpan.appendChild(document.createTextNode(formatSHM(validator.stake_lock)));
         textContainer.appendChild(stakeSpan);
 
         const rewardStartSpan = document.createElement('span');
         const rewardStartStrong = document.createElement('strong');
         rewardStartStrong.textContent = 'Reward Start: ';
         rewardStartSpan.appendChild(rewardStartStrong);
-        rewardStartSpan.appendChild(document.createTextNode(formatTimestamp(validator.rewardStartTime)));
+        rewardStartSpan.appendChild(document.createTextNode(formatTimestamp(validator.reward_start_time)));
         textContainer.appendChild(rewardStartSpan);
 
         const rewardEndSpan = document.createElement('span');
         const rewardEndStrong = document.createElement('strong');
         rewardEndStrong.textContent = 'Reward End: ';
         rewardEndSpan.appendChild(rewardEndStrong);
-        rewardEndSpan.appendChild(document.createTextNode(formatTimestamp(validator.rewardEndTime)));
+        rewardEndSpan.appendChild(document.createTextNode(formatTimestamp(validator.reward_end_time)));
         textContainer.appendChild(rewardEndSpan);
 
         const penaltySpan = document.createElement('span');
@@ -417,11 +475,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     periodSelector.addEventListener('change', () => {
-        console.log('Period changed to:', periodSelector.value);
+        console.log('periodSelector: Period changed to:', periodSelector.value);
         fetchValidators(periodSelector.value);
     });
 
     leaderboardBtn.addEventListener('click', () => {
+        console.log('leaderboardBtn: Clicked');
         if (currentValidators.length > 0) {
             showLeaderboard();
         } else {
@@ -430,6 +489,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     loserboardBtn.addEventListener('click', () => {
+        console.log('loserboardBtn: Clicked');
         if (currentStandbyNodes.length > 0) {
             showLoserboard();
         } else {
