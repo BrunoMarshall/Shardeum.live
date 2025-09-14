@@ -7,11 +7,11 @@ body {
 .validator-card {
     display: flex;
     align-items: flex-start;
-    padding: 0.5rem;
+    padding: 1rem;
     border: 1px solid #e5e7eb;
     border-radius: 0.5rem;
     background-color: #f9fafb;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.5rem;
     overflow-x: auto;
     max-width: 100%;
     transition: background-color 0.2s;
@@ -27,12 +27,13 @@ body {
 .validator-card .rank {
     margin-right: 1rem;
     font-weight: bold;
-    min-width: 1.5rem;
+    min-width: 2rem;
+    font-size: 1.1rem;
 }
 
 .validator-card img {
-    width: 72px;
-    height: 72px;
+    width: 64px;
+    height: 64px;
     border-radius: 50%;
     margin-right: 1rem;
 }
@@ -41,23 +42,15 @@ body {
     display: flex;
     flex-direction: column;
     flex-grow: 1;
+    min-width: 300px;
 }
 
 .validator-card .text-container span {
-    margin-right: 1rem;
+    margin-bottom: 0.25rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 100%;
-}
-
-.validator-card .text-container span:nth-child(1),
-.validator-card .text-container span:nth-child(2) {
-    display: inline-block;
-}
-
-.validator-card .text-container span:nth-child(3) {
-    display: block;
 }
 
 .validator-card .node-info {
@@ -65,6 +58,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
+    min-width: 150px;
 }
 
 .validator-card .node-info span {
