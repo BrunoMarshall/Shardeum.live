@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Convert timestamp to readable UTC date with 4-hour cycle adjustment for Reward End
+    // Convert timestamp to readable UTC date
     function formatTimestamp(timestamp) {
         if (!timestamp || timestamp === 0 || timestamp === '0' || timestamp === null) {
             console.log(`formatTimestamp: Invalid timestamp: ${timestamp}`);
@@ -276,13 +276,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const avatar = validator.avatar || 'default-avatar.png';
-        const nodeType = 'Community Node';
         const ipAddress = validator.identifier || 'N/A';
         const address = validator.address || 'N/A';
         const truncatedAddress = address.length > 10 ? `${address.slice(0, 5)}…${address.slice(-5)}` : address;
         const nominator = validator.nominator || 'N/A';
         const truncatedNominator = nominator.length > 10 ? `${nominator.slice(0, 5)}…${nominator.slice(-5)}` : nominator;
-        const escapedAlias = escapeHtml(validator.alias || 'Unknown');
+        const escapedAlias = escapeHtml(validator.alias || ''); // Empty string if no alias
 
         const card = document.createElement('a');
         card.href = `https://explorer.shardeum.org/account/${encodeURIComponent(address)}`;
@@ -297,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const img = document.createElement('img');
         img.src = `assets/${avatar}`;
         img.alt = escapedAlias;
-        img.className = 'w-12 h-12';
+        img.className = 'w-24 h-24'; // Increased to double (96px)
         card.appendChild(img);
 
         const textContainer = document.createElement('div');
@@ -316,6 +315,10 @@ document.addEventListener('DOMContentLoaded', () => {
         addressSpan.appendChild(addressStrong);
         addressSpan.appendChild(document.createTextNode(truncatedAddress));
         textContainer.appendChild(addressSpan);
+
+        const ipSpan = document.createElement('span');
+        ipSpan.appendChild(document.createTextNode(`IP: ${escapeHtml(ipAddress)}`)); // Moved IP below address
+        textContainer.appendChild(ipSpan);
 
         const countSpan = document.createElement('span');
         const countStrong = document.createElement('strong');
@@ -363,7 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const rewardEndStrong = document.createElement('strong');
         rewardEndStrong.textContent = 'Reward End: ';
         rewardEndSpan.appendChild(rewardEndStrong);
-        rewardEndSpan.appendChild(document.createTextNode(calculateRewardEnd(validator.reward_start_time))); // Use calculated end time
+        rewardEndSpan.appendChild(document.createTextNode(calculateRewardEnd(validator.reward_start_time)));
         textContainer.appendChild(rewardEndSpan);
 
         const penaltySpan = document.createElement('span');
@@ -378,18 +381,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const nodeInfo = document.createElement('div');
         nodeInfo.className = 'node-info';
 
-        const typeSpan = document.createElement('span');
-        const typeStrong = document.createElement('strong');
-        typeStrong.textContent = nodeType;
-        typeSpan.appendChild(typeStrong);
-        nodeInfo.appendChild(typeSpan);
-
-        const ipSpan = document.createElement('span');
-        const ipStrong = document.createElement('strong');
-        ipStrong.textContent = 'IP address: ';
-        ipSpan.appendChild(ipStrong);
-        ipSpan.appendChild(document.createTextNode(escapeHtml(ipAddress)));
-        nodeInfo.appendChild(ipSpan);
+        const ipSpanNodeInfo = document.createElement('span'); // Empty nodeInfo for now
+        nodeInfo.appendChild(ipSpanNodeInfo);
 
         card.appendChild(nodeInfo);
 
@@ -420,7 +413,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const img = document.createElement('img');
         img.src = 'assets/default-avatar.png';
         img.alt = 'Standby Node';
-        img.className = 'w-12 h-12';
+        img.className = 'w-24 h-24'; // Increased to double (96px)
         card.appendChild(img);
 
         const textContainer = document.createElement('div');
@@ -430,7 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const nameStrong = document.createElement('strong');
         nameStrong.textContent = 'Name: ';
         nameSpan.appendChild(nameStrong);
-        nameSpan.appendChild(document.createTextNode('Unknown'));
+        nameSpan.appendChild(document.createTextNode('')); // Empty field
         textContainer.appendChild(nameSpan);
 
         const addressSpan = document.createElement('span');
@@ -439,6 +432,10 @@ document.addEventListener('DOMContentLoaded', () => {
         addressSpan.appendChild(addressStrong);
         addressSpan.appendChild(document.createTextNode(truncatedAddress));
         textContainer.appendChild(addressSpan);
+
+        const ipSpan = document.createElement('span');
+        ipSpan.appendChild(document.createTextNode(`IP: ${escapeHtml(ipAddress)}`)); // Moved IP below address
+        textContainer.appendChild(ipSpan);
 
         const standbySpan = document.createElement('span');
         const standbyStrong = document.createElement('strong');
@@ -452,18 +449,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const nodeInfo = document.createElement('div');
         nodeInfo.className = 'node-info';
 
-        const typeSpan = document.createElement('span');
-        const typeStrong = document.createElement('strong');
-        typeStrong.textContent = 'Community Node';
-        typeSpan.appendChild(typeStrong);
-        nodeInfo.appendChild(typeSpan);
-
-        const ipSpan = document.createElement('span');
-        const ipStrong = document.createElement('strong');
-        ipStrong.textContent = 'IP address: ';
-        ipSpan.appendChild(ipStrong);
-        ipSpan.appendChild(document.createTextNode(escapeHtml(ipAddress)));
-        nodeInfo.appendChild(ipSpan);
+        const ipSpanNodeInfo = document.createElement('span'); // Empty nodeInfo for now
+        nodeInfo.appendChild(ipSpanNodeInfo);
 
         card.appendChild(nodeInfo);
 
