@@ -40,29 +40,29 @@ document.addEventListener('DOMContentLoaded', () => {
         if (indicator) indicator.remove();
     }
 
-    // Convert BigInt-like string to SHM (assuming 18 decimals)
+    // Convert hexadecimal wei to SHM (1 SHM = 10^18 wei)
     function formatSHM(value) {
         try {
             if (!value || value === '0' || value === '' || value === null || value === undefined) {
                 console.log(`formatSHM: Invalid or zero value: ${value}`);
                 return '0 SHM';
             }
-            const num = BigInt(String(value));
-            const shm = num / BigInt(10**18);
-            const result = `${shm.toString()} SHM`;
+            const num = parseInt(value, 16); // Parse hex string to decimal
+            const shm = num / 1e18; // Divide by 10^18 for SHM
+            const result = `${shm.toFixed(10)} SHM`; // Format to 10 decimals
             console.log(`formatSHM: Input: ${value}, Output: ${result}`);
             return result;
         } catch (error) {
             console.error(`formatSHM: Error formatting value: ${value}`, error);
-            return 'N/A';
+            return '0 SHM';
         }
     }
 
-    // Convert timestamp to readable date
+    // Convert timestamp to readable UTC date
     function formatTimestamp(timestamp) {
         if (!timestamp || timestamp === 0 || timestamp === '0' || timestamp === null) {
             console.log(`formatTimestamp: Invalid timestamp: ${timestamp}`);
-            return 'N/A';
+            return '0'; // Return '0' for null or invalid
         }
         try {
             const date = new Date(Number(timestamp) * 1000);
@@ -70,48 +70,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 dateStyle: 'short',
                 timeStyle: 'short',
                 timeZone: 'UTC'
-            });
+            }).replace(',', ''); // Remove comma
             console.log(`formatTimestamp: Input: ${timestamp}, Output: ${result}`);
             return result;
         } catch (error) {
             console.error(`formatTimestamp: Error formatting timestamp: ${timestamp}`, error);
-            return 'N/A';
-        }
-    }
-
-    async function fetchValidatorDetails(address) {
-        try {
-            const response = await fetch(`https://explorer.shardeum.org/api/account?address=${encodeURIComponent(address)}&accountType=9`, {
-                mode: 'cors',
-                headers: { 'User-Agent': 'Shardeum-Leaderboard/1.0' }
-            });
-            if (!response.ok) throw new Error(`Failed to fetch validator details for ${address}: ${response.status}`);
-            const data = await response.json();
-            console.log(`fetchValidatorDetails: Raw data for ${address}:`, data);
-            if (data.success && data.accounts && data.accounts[0]) {
-                const account = data.accounts[0].account;
-                const recentActivity = account.nodeAccountStats?.history?.some(entry => {
-                    const endTime = entry.e || 0;
-                    const nowSeconds = Math.floor(Date.now() / 1000);
-                    return endTime > (nowSeconds - 24 * 60 * 60); // Within 24 hours
-                });
-                const details = {
-                    status: recentActivity ? 'Active' : 'Inactive',
-                    nominator: account.nominator || 'N/A',
-                    reward: account.reward?.value || '0',
-                    stakeLock: account.stakeLock?.value || '0',
-                    rewardStartTime: account.rewardStartTime || 0,
-                    rewardEndTime: account.rewardEndTime || 0,
-                    penalty: account.penalty?.value || '0'
-                };
-                console.log(`fetchValidatorDetails: Processed details for ${address}:`, details);
-                return details;
-            }
-            console.warn(`fetchValidatorDetails: No valid account data for ${address}`);
-            return null;
-        } catch (error) {
-            console.error(`fetchValidatorDetails: Error fetching details for ${address}:`, error);
-            return null;
+            return '0';
         }
     }
 
@@ -123,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'User-Agent': 'Shardeum-Leaderboard/1.0' }
             });
             if (!response.ok) throw new Error(`fetchValidators: Network response was not ok: ${response.status}`);
-            let validators = await response.json();
+            const validators = await response.json();
             console.log(`fetchValidators: Validators received from backend:`, validators.map(v => ({
                 address: v.address,
                 foundation: v.foundation,
@@ -131,25 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 status: v.status,
                 stake_lock: v.stake_lock
             })));
-
-            // Fallback to explorer API if backend data is missing or invalid
-            validators = await Promise.all(validators.map(async (v) => {
-                if (!v.status || v.status === 'Inactive' || !v.stake_lock || v.stake_lock === '0' || v.stake_lock === null) {
-                    console.log(`fetchValidators: Fetching fallback data for ${v.address}`);
-                    const details = await fetchValidatorDetails(v.address);
-                    return {
-                        ...v,
-                        status: details?.status || v.status || 'Inactive',
-                        nominator: details?.nominator || v.nominator || 'N/A',
-                        reward: details?.reward || v.reward || '0',
-                        stake_lock: details?.stakeLock || v.stake_lock || '0',
-                        reward_start_time: details?.rewardStartTime || v.reward_start_time || 0,
-                        reward_end_time: details?.rewardEndTime || v.reward_end_time || 0,
-                        penalty: details?.penalty || v.penalty || '0'
-                    };
-                }
-                return v;
-            }));
 
             if (!Array.isArray(validators) || validators.length === 0) {
                 throw new Error('fetchValidators: No validators returned or invalid data format');
