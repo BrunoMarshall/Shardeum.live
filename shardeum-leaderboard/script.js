@@ -282,13 +282,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const truncatedAddress = address.length > 10 ? `${address.slice(0, 5)}…${address.slice(-5)}` : address;
         const nominator = validator.nominator || 'N/A';
         const truncatedNominator = nominator.length > 10 ? `${nominator.slice(0, 5)}…${nominator.slice(-5)}` : nominator;
-        const escapedAlias = escapeHtml(validator.alias || ''); // Changed from 'Unknown' to empty string
+        const escapedAlias = escapeHtml(validator.alias || ''); // Empty if no alias
 
         const card = document.createElement('a');
         card.href = `https://explorer.shardeum.org/account/${encodeURIComponent(address)}`;
         card.target = '_blank';
         card.className = 'validator-card community-node';
 
+        // Move rank above avatar
         const rankSpan = document.createElement('span');
         rankSpan.className = 'rank';
         rankSpan.textContent = rank;
@@ -412,6 +413,7 @@ document.addEventListener('DOMContentLoaded', () => {
         card.target = '_blank';
         card.className = 'validator-card community-node';
 
+        // Move rank above avatar
         const rankSpan = document.createElement('span');
         rankSpan.className = 'rank';
         rankSpan.textContent = rank;
@@ -430,7 +432,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const nameStrong = document.createElement('strong');
         nameStrong.textContent = 'Name: ';
         nameSpan.appendChild(nameStrong);
-        nameSpan.appendChild(document.createTextNode('')); // Changed from 'Unknown' to empty string
+        nameSpan.appendChild(document.createTextNode('')); // Empty if no alias
         textContainer.appendChild(nameSpan);
 
         const addressSpan = document.createElement('span');
