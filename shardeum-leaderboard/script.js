@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Convert hexadecimal wei to SHM (1 SHM = 10^18 wei)
-    function formatSHM(value) {
+    function formatSHM(value, decimals = 10) {
         try {
             if (!value || value === '0' || value === '' || value === null || value === undefined) {
                 console.log(`formatSHM: Invalid or zero value: ${value}`);
@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const num = parseInt(value, 16); // Parse hex string to decimal
             const shm = num / 1e18; // Divide by 10^18 for SHM
-            const result = `${shm.toFixed(10)} SHM`; // Format to 10 decimals
+            const result = `${shm.toFixed(decimals)} SHM`;
             console.log(`formatSHM: Input: ${value}, Output: ${result}`);
             return result;
         } catch (error) {
@@ -66,13 +66,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         try {
             const date = new Date(Number(timestamp) * 1000);
-            const result = date.toLocaleString('en-US', {
-                dateStyle: 'short',
-                timeStyle: 'short',
-                timeZone: 'UTC'
-            }).replace(',', ''); // Remove comma
-            console.log(`formatTimestamp: Input: ${timestamp}, Output: ${result}`);
-            return result;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Set to start of today in UTC
+            const isToday = date.toDateString() === today.toDateString();
+            if (isToday) {
+                const result = date.toLocaleString('en-US', {
+                    timeZone: 'UTC',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                }).replace(',', '') + ' UTC';
+                console.log(`formatTimestamp: Input: ${timestamp}, Output: Today at ${result}`);
+                return `Today at ${result}`;
+            } else {
+                const result = date.toLocaleString('en-US', {
+                    dateStyle: 'short',
+                    timeStyle: 'short',
+                    timeZone: 'UTC'
+                }).replace(',', '');
+                console.log(`formatTimestamp: Input: ${timestamp}, Output: ${result}`);
+                return result;
+            }
         } catch (error) {
             console.error(`formatTimestamp: Error formatting timestamp: ${timestamp}`, error);
             return '0';
@@ -209,12 +223,14 @@ document.addEventListener('DOMContentLoaded', () => {
             [countKey]: validator[countKey],
             status: validator.status,
             stake_lock: validator.stake_lock,
-            formatted_stake: formatSHM(validator.stake_lock),
+            formatted_stake: formatSHM(validator.stake_lock, 0),
             reward: validator.reward,
+            formatted_reward: formatSHM(validator.reward, 1),
             nominator: validator.nominator,
             reward_start_time: validator.reward_start_time,
             formatted_start_time: formatTimestamp(validator.reward_start_time),
             reward_end_time: validator.reward_end_time,
+            formatted_end_time: formatTimestamp(validator.reward_end_time),
             penalty: validator.penalty
         });
 
@@ -291,14 +307,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const rewardStrong = document.createElement('strong');
         rewardStrong.textContent = 'Current Reward: ';
         rewardSpan.appendChild(rewardStrong);
-        rewardSpan.appendChild(document.createTextNode(formatSHM(validator.reward)));
+        rewardSpan.appendChild(document.createTextNode(formatSHM(validator.reward, 1)));
         textContainer.appendChild(rewardSpan);
 
         const stakeSpan = document.createElement('span');
         const stakeStrong = document.createElement('strong');
         stakeStrong.textContent = 'Staked Amount: ';
         stakeSpan.appendChild(stakeStrong);
-        stakeSpan.appendChild(document.createTextNode(formatSHM(validator.stake_lock)));
+        stakeSpan.appendChild(document.createTextNode(formatSHM(validator.stake_lock, 0)));
         textContainer.appendChild(stakeSpan);
 
         const rewardStartSpan = document.createElement('span');
@@ -319,7 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const penaltyStrong = document.createElement('strong');
         penaltyStrong.textContent = 'Penalty: ';
         penaltySpan.appendChild(penaltyStrong);
-        penaltySpan.appendChild(document.createTextNode(formatSHM(validator.penalty)));
+        penaltySpan.appendChild(document.createTextNode(formatSHM(validator.penalty, 0)));
         textContainer.appendChild(penaltySpan);
 
         card.appendChild(textContainer);
