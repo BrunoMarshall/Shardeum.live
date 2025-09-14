@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
         indicator.style.cssText = `
             width: 10px;
             height: 10px;
-            background-color: #4CAF50;
+            background-color: green;
             border-radius: 50%;
             margin-left: 0.5rem;
             display: inline-block;
@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const styleSheet = document.createElement('style');
         styleSheet.textContent = `
             @keyframes blink {
-                0%, 50% { background-color: #4CAF50; }
+                0%, 50% { background-color: green; }
                 51%, 100% { background-color: transparent; }
             }
         `;
@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Convert timestamp to readable UTC date
+    // Convert timestamp to readable UTC date with 4-hour cycle adjustment for Reward End
     function formatTimestamp(timestamp) {
         if (!timestamp || timestamp === 0 || timestamp === '0' || timestamp === null) {
             console.log(`formatTimestamp: Invalid timestamp: ${timestamp}`);
@@ -89,6 +89,41 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error(`formatTimestamp: Error formatting timestamp: ${timestamp}`, error);
+            return '0';
+        }
+    }
+
+    // Adjusted function to calculate Reward End with 4-hour cycle
+    function calculateRewardEnd(startTimestamp) {
+        if (!startTimestamp || startTimestamp === 0 || startTimestamp === '0' || startTimestamp === null) {
+            return '0';
+        }
+        try {
+            const startDate = new Date(Number(startTimestamp) * 1000);
+            const endDate = new Date(startDate.getTime() + 4 * 60 * 60 * 1000); // Add 4 hours
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Set to start of today in UTC
+            const isToday = endDate.toDateString() === today.toDateString();
+            if (isToday) {
+                const result = endDate.toLocaleString('en-US', {
+                    timeZone: 'UTC',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                }).replace(',', '') + ' UTC';
+                console.log(`calculateRewardEnd: Input: ${startTimestamp}, Output: Today at ${result}`);
+                return `Today at ${result}`;
+            } else {
+                const result = endDate.toLocaleString('en-US', {
+                    dateStyle: 'short',
+                    timeStyle: 'short',
+                    timeZone: 'UTC'
+                }).replace(',', '');
+                console.log(`calculateRewardEnd: Input: ${startTimestamp}, Output: ${result}`);
+                return result;
+            }
+        } catch (error) {
+            console.error(`calculateRewardEnd: Error calculating end time from ${startTimestamp}`, error);
             return '0';
         }
     }
@@ -241,107 +276,122 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const avatar = validator.avatar || 'default-avatar.png';
+        const nodeType = 'Community Node';
         const ipAddress = validator.identifier || 'N/A';
         const address = validator.address || 'N/A';
         const truncatedAddress = address.length > 10 ? `${address.slice(0, 5)}…${address.slice(-5)}` : address;
         const nominator = validator.nominator || 'N/A';
         const truncatedNominator = nominator.length > 10 ? `${nominator.slice(0, 5)}…${nominator.slice(-5)}` : nominator;
-        const escapedAlias = escapeHtml(validator.alias || '');
+        const escapedAlias = escapeHtml(validator.alias || 'Unknown');
 
         const card = document.createElement('a');
         card.href = `https://explorer.shardeum.org/account/${encodeURIComponent(address)}`;
         card.target = '_blank';
-        card.className = 'validator-card block bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 p-4 flex items-start space-x-4 community-node';
-
-        // Column 1: Ranking, Avatar, Name
-        const col1 = document.createElement('div');
-        col1.className = 'flex-shrink-0 text-center w-1/4';
+        card.className = 'validator-card community-node';
 
         const rankSpan = document.createElement('span');
-        rankSpan.className = 'text-xl font-bold text-gray-700 mb-2 block';
-        rankSpan.textContent = `#${rank}`;
-        col1.appendChild(rankSpan);
+        rankSpan.className = 'rank';
+        rankSpan.textContent = rank;
+        card.appendChild(rankSpan);
 
         const img = document.createElement('img');
         img.src = `assets/${avatar}`;
-        img.alt = escapedAlias || 'Validator';
-        img.className = 'w-16 h-16 rounded-full object-cover mb-2'; // Removed border-green-500
-        col1.appendChild(img);
+        img.alt = escapedAlias;
+        img.className = 'w-12 h-12';
+        card.appendChild(img);
+
+        const textContainer = document.createElement('div');
+        textContainer.className = 'text-container';
 
         const nameSpan = document.createElement('span');
-        nameSpan.className = 'text-sm text-gray-600 block';
-        nameSpan.textContent = escapedAlias || 'Unnamed';
-        col1.appendChild(nameSpan);
-
-        card.appendChild(col1);
-
-        // Column 2: Address, Number of Activations, Node Status
-        const col2 = document.createElement('div');
-        col2.className = 'w-1/4';
+        const nameStrong = document.createElement('strong');
+        nameStrong.textContent = 'Name: ';
+        nameSpan.appendChild(nameStrong);
+        nameSpan.appendChild(document.createTextNode(escapedAlias));
+        textContainer.appendChild(nameSpan);
 
         const addressSpan = document.createElement('span');
-        addressSpan.className = 'text-sm text-gray-700 block mb-1';
-        addressSpan.textContent = truncatedAddress;
-        col2.appendChild(addressSpan);
+        const addressStrong = document.createElement('strong');
+        addressStrong.textContent = 'Address: ';
+        addressSpan.appendChild(addressStrong);
+        addressSpan.appendChild(document.createTextNode(truncatedAddress));
+        textContainer.appendChild(addressSpan);
 
         const countSpan = document.createElement('span');
-        countSpan.className = 'text-sm text-gray-700 block mb-1';
-        countSpan.textContent = `Activations: ${validator[countKey] || 0}`;
-        col2.appendChild(countSpan);
+        const countStrong = document.createElement('strong');
+        countStrong.textContent = 'Number of Activations: ';
+        countSpan.appendChild(countStrong);
+        countSpan.appendChild(document.createTextNode(validator[countKey] || 0));
+        textContainer.appendChild(countSpan);
 
         const statusSpan = document.createElement('span');
-        statusSpan.className = 'text-sm text-gray-700 block';
-        statusSpan.textContent = `Status: ${validator.status || 'N/A'}`;
-        col2.appendChild(statusSpan);
-
-        card.appendChild(col2);
-
-        // Column 3: Nominator, Current Reward, Staked Amount
-        const col3 = document.createElement('div');
-        col3.className = 'w-1/4';
+        const statusStrong = document.createElement('strong');
+        statusStrong.textContent = 'Node Status: ';
+        statusSpan.appendChild(statusStrong);
+        statusSpan.appendChild(document.createTextNode(validator.status || 'N/A'));
+        textContainer.appendChild(statusSpan);
 
         const nominatorSpan = document.createElement('span');
-        nominatorSpan.className = 'text-sm text-gray-700 block mb-1';
-        nominatorSpan.textContent = `Nominator: ${truncatedNominator}`;
-        col3.appendChild(nominatorSpan);
+        const nominatorStrong = document.createElement('strong');
+        nominatorStrong.textContent = 'Nominator: ';
+        nominatorSpan.appendChild(nominatorStrong);
+        nominatorSpan.appendChild(document.createTextNode(truncatedNominator));
+        textContainer.appendChild(nominatorSpan);
 
         const rewardSpan = document.createElement('span');
-        rewardSpan.className = 'text-sm text-gray-700 block mb-1';
-        rewardSpan.textContent = `Reward: ${formatSHM(validator.reward, 1)}`;
-        col3.appendChild(rewardSpan);
+        const rewardStrong = document.createElement('strong');
+        rewardStrong.textContent = 'Current Reward: ';
+        rewardSpan.appendChild(rewardStrong);
+        rewardSpan.appendChild(document.createTextNode(formatSHM(validator.reward, 1)));
+        textContainer.appendChild(rewardSpan);
 
         const stakeSpan = document.createElement('span');
-        stakeSpan.className = 'text-sm text-gray-700 block';
-        stakeSpan.textContent = `Stake: ${formatSHM(validator.stake_lock, 0)}`;
-        col3.appendChild(stakeSpan);
-
-        card.appendChild(col3);
-
-        // Column 4: Reward Start, Reward End, Penalty, IP Address
-        const col4 = document.createElement('div');
-        col4.className = 'w-1/4';
+        const stakeStrong = document.createElement('strong');
+        stakeStrong.textContent = 'Staked Amount: ';
+        stakeSpan.appendChild(stakeStrong);
+        stakeSpan.appendChild(document.createTextNode(formatSHM(validator.stake_lock, 0)));
+        textContainer.appendChild(stakeSpan);
 
         const rewardStartSpan = document.createElement('span');
-        rewardStartSpan.className = 'text-sm text-gray-700 block mb-1';
-        rewardStartSpan.textContent = `Start: ${formatTimestamp(validator.reward_start_time)}`;
-        col4.appendChild(rewardStartSpan);
+        const rewardStartStrong = document.createElement('strong');
+        rewardStartStrong.textContent = 'Reward Start: ';
+        rewardStartSpan.appendChild(rewardStartStrong);
+        rewardStartSpan.appendChild(document.createTextNode(formatTimestamp(validator.reward_start_time)));
+        textContainer.appendChild(rewardStartSpan);
 
         const rewardEndSpan = document.createElement('span');
-        rewardEndSpan.className = 'text-sm text-gray-700 block mb-1';
-        rewardEndSpan.textContent = `End: ${formatTimestamp(validator.reward_end_time)}`;
-        col4.appendChild(rewardEndSpan);
+        const rewardEndStrong = document.createElement('strong');
+        rewardEndStrong.textContent = 'Reward End: ';
+        rewardEndSpan.appendChild(rewardEndStrong);
+        rewardEndSpan.appendChild(document.createTextNode(calculateRewardEnd(validator.reward_start_time))); // Use calculated end time
+        textContainer.appendChild(rewardEndSpan);
 
         const penaltySpan = document.createElement('span');
-        penaltySpan.className = 'text-sm text-gray-700 block mb-1';
-        penaltySpan.textContent = `Penalty: ${formatSHM(validator.penalty, 0)}`;
-        col4.appendChild(penaltySpan);
+        const penaltyStrong = document.createElement('strong');
+        penaltyStrong.textContent = 'Penalty: ';
+        penaltySpan.appendChild(penaltyStrong);
+        penaltySpan.appendChild(document.createTextNode(formatSHM(validator.penalty, 0)));
+        textContainer.appendChild(penaltySpan);
+
+        card.appendChild(textContainer);
+
+        const nodeInfo = document.createElement('div');
+        nodeInfo.className = 'node-info';
+
+        const typeSpan = document.createElement('span');
+        const typeStrong = document.createElement('strong');
+        typeStrong.textContent = nodeType;
+        typeSpan.appendChild(typeStrong);
+        nodeInfo.appendChild(typeSpan);
 
         const ipSpan = document.createElement('span');
-        ipSpan.className = 'text-sm text-gray-500 block';
-        ipSpan.textContent = `IP: ${escapeHtml(ipAddress)}`;
-        col4.appendChild(ipSpan);
+        const ipStrong = document.createElement('strong');
+        ipStrong.textContent = 'IP address: ';
+        ipSpan.appendChild(ipStrong);
+        ipSpan.appendChild(document.createTextNode(escapeHtml(ipAddress)));
+        nodeInfo.appendChild(ipSpan);
 
-        card.appendChild(col4);
+        card.appendChild(nodeInfo);
 
         return card;
     }
@@ -360,28 +410,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const card = document.createElement('a');
         card.href = `https://explorer.shardeum.org/account/${encodeURIComponent(address)}`;
         card.target = '_blank';
-        card.className = 'validator-card block bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 p-4 flex items-start space-x-4 community-node';
+        card.className = 'validator-card community-node';
 
         const rankSpan = document.createElement('span');
-        rankSpan.className = 'text-xl font-bold text-gray-700 mb-2 block';
-        rankSpan.textContent = `#${rank}`;
+        rankSpan.className = 'rank';
+        rankSpan.textContent = rank;
         card.appendChild(rankSpan);
 
         const img = document.createElement('img');
         img.src = 'assets/default-avatar.png';
         img.alt = 'Standby Node';
-        img.className = 'w-16 h-16 rounded-full object-cover mb-2'; // Removed border-green-500
+        img.className = 'w-12 h-12';
         card.appendChild(img);
 
         const textContainer = document.createElement('div');
-        textContainer.className = 'flex-grow';
+        textContainer.className = 'text-container';
 
         const nameSpan = document.createElement('span');
         const nameStrong = document.createElement('strong');
         nameStrong.textContent = 'Name: ';
         nameSpan.appendChild(nameStrong);
         nameSpan.appendChild(document.createTextNode('Unknown'));
-        nameSpan.className = 'text-sm text-gray-600 block mb-1';
         textContainer.appendChild(nameSpan);
 
         const addressSpan = document.createElement('span');
@@ -389,7 +438,6 @@ document.addEventListener('DOMContentLoaded', () => {
         addressStrong.textContent = 'Address: ';
         addressSpan.appendChild(addressStrong);
         addressSpan.appendChild(document.createTextNode(truncatedAddress));
-        addressSpan.className = 'text-sm text-gray-600 block mb-1';
         textContainer.appendChild(addressSpan);
 
         const standbySpan = document.createElement('span');
@@ -397,16 +445,26 @@ document.addEventListener('DOMContentLoaded', () => {
         standbyStrong.textContent = 'Standby Time: ';
         standbySpan.appendChild(standbyStrong);
         standbySpan.appendChild(document.createTextNode(`${node.standby_hours.toFixed(2)} hours (${node.standby_days} days)`));
-        standbySpan.className = 'text-sm text-gray-600 block';
         textContainer.appendChild(standbySpan);
 
         card.appendChild(textContainer);
 
         const nodeInfo = document.createElement('div');
-        nodeInfo.className = 'mt-2 text-right text-sm text-gray-500';
+        nodeInfo.className = 'node-info';
+
+        const typeSpan = document.createElement('span');
+        const typeStrong = document.createElement('strong');
+        typeStrong.textContent = 'Community Node';
+        typeSpan.appendChild(typeStrong);
+        nodeInfo.appendChild(typeSpan);
+
         const ipSpan = document.createElement('span');
-        ipSpan.textContent = `IP: ${escapeHtml(ipAddress)}`;
+        const ipStrong = document.createElement('strong');
+        ipStrong.textContent = 'IP address: ';
+        ipSpan.appendChild(ipStrong);
+        ipSpan.appendChild(document.createTextNode(escapeHtml(ipAddress)));
         nodeInfo.appendChild(ipSpan);
+
         card.appendChild(nodeInfo);
 
         return card;
