@@ -10,18 +10,18 @@ body {
     padding: 1rem;
     border: 1px solid #e5e7eb;
     border-radius: 0.5rem;
-    background-color: #ffffff; /* White base, overridden from #f9fafb */
+    background-color: #ffffff;
     margin-bottom: 0.5rem;
     overflow-x: auto;
     max-width: 100%;
-    transition: box-shadow 0.2s; /* Changed from background-color to shadow */
+    transition: box-shadow 0.2s;
     text-decoration: none;
     color: inherit;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Subtle default shadow */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .validator-card:hover {
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Enhanced shadow on hover */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     cursor: pointer;
 }
 
@@ -29,8 +29,8 @@ body {
     margin-right: 1rem;
     font-weight: bold;
     min-width: 2rem;
-    font-size: 1.25rem; /* Slightly larger for emphasis */
-    color: #374151; /* Gray-700 */
+    font-size: 1.25rem;
+    color: #374151;
 }
 
 .validator-card img {
@@ -38,31 +38,20 @@ body {
     height: 64px;
     border-radius: 50%;
     margin-right: 1rem;
-    border: 2px solid #4CAF50; /* Green border for avatar */
-    object-fit: cover;
+    object-fit: cover; /* Removed border styling */
 }
 
-.validator-card .left-container,
-.validator-card .right-container {
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-    min-width: 0; /* Allow shrinking */
+.validator-card div[class^="col"] {
+    width: 25%; /* 1/4 for 4 columns */
+    padding: 0 0.5rem; /* Internal padding for columns */
 }
 
-.validator-card .left-container {
-    flex-shrink: 0;
+.validator-card .col1 {
     text-align: center;
-    align-items: center;
+    flex-shrink: 0;
 }
 
-.validator-card .right-container {
-    flex-grow: 1;
-    padding-left: 1rem; /* Space between left and right */
-}
-
-.validator-card .left-container span,
-.validator-card .right-container span {
+.validator-card span {
     margin-bottom: 0.25rem;
     white-space: nowrap;
     overflow: hidden;
@@ -70,24 +59,15 @@ body {
     max-width: 100%;
 }
 
-.validator-card .left-container span {
-    color: #6b7280; /* Gray-600 for labels and values */
+.validator-card .col1 span,
+.validator-card .col2 span,
+.validator-card .col3 span,
+.validator-card .col4 span {
+    color: #374151; /* Gray-700 for main content */
 }
 
-.validator-card .right-container span {
-    color: #374151; /* Gray-700 for key info */
-}
-
-.validator-card .left-container strong,
-.validator-card .right-container strong {
-    font-weight: 600; /* Slightly bold for labels */
-}
-
-.validator-card .node-info {
-    margin-top: 0.5rem;
-    text-align: right;
-    font-size: 0.875rem; /* Smaller for IP */
-    color: #6b7280; /* Gray-500 equivalent */
+.validator-card .col4 span:last-child {
+    color: #6b7280; /* Gray-500 for IP */
 }
 
 .foundation-node {
@@ -95,7 +75,7 @@ body {
 }
 
 .community-node {
-    background-color: #e6f3e6; /* Retained green tint for community nodes */
+    background-color: #e6f3e6;
 }
 
 #leaderboard-btn, #loserboard-btn {
