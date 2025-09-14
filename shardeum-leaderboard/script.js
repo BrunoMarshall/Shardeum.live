@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('script.js loaded'); // Debug log to confirm script execution
+    console.log('script.js loaded');
     const leaderboardDiv = document.getElementById('leaderboard');
     const loserboardDiv = document.getElementById('loserboard');
     const periodSelector = document.getElementById('period-selector');
@@ -10,9 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentStandbyNodes = [];
     let currentPeriod = 'weekly';
 
-    // Blinking green light using CSS animation
     function createIndicator() {
-        console.log('Creating indicator with CSS animation'); // Debug log
+        console.log('Creating indicator with CSS animation');
         const indicator = document.createElement('span');
         indicator.id = 'status-indicator';
         indicator.style.cssText = `
@@ -25,7 +24,6 @@ document.addEventListener('DOMContentLoaded', () => {
             vertical-align: middle;
             animation: blink 1s infinite;
         `;
-        // Inject CSS keyframes for blinking
         const styleSheet = document.createElement('style');
         styleSheet.textContent = `
             @keyframes blink {
@@ -42,6 +40,42 @@ document.addEventListener('DOMContentLoaded', () => {
         if (indicator) indicator.remove();
     }
 
+    // Convert BigInt-like string to SHM (assuming 18 decimals)
+    function formatSHM(value) {
+        try {
+            const num = BigInt(value) / BigInt(10**18);
+            return `${num} SHM`;
+        } catch {
+            return 'N/A';
+        }
+    }
+
+    // Convert timestamp to readable date
+    function formatTimestamp(timestamp) {
+        if (!timestamp) return 'N/A';
+        return new Date(Number(timestamp)).toLocaleString('en-US', {
+            dateStyle: 'short',
+            timeStyle: 'short'
+        });
+    }
+
+    async function fetchValidatorDetails(address) {
+        try {
+            const response = await fetch(`https://explorer.shardeum.org/api/account?address=${encodeURIComponent(address)}&accountType=9`, {
+                mode: 'cors'
+            });
+            if (!response.ok) throw new Error(`Failed to fetch validator details for ${address}`);
+            const data = await response.json();
+            if (data.success && data.accounts && data.accounts[0]) {
+                return data.accounts[0].account;
+            }
+            return null;
+        } catch (error) {
+            console.error(`Error fetching validator details for ${address}:`, error);
+            return null;
+        }
+    }
+
     async function fetchValidators(period) {
         try {
             console.log(`Fetching validators for period: ${period}`);
@@ -49,23 +83,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 mode: 'cors'
             });
             if (!response.ok) throw new Error(`Network response was not ok: ${response.status}`);
-            const validators = await response.json();
+            let validators = await response.json();
             console.log('Validators received:', validators.map(v => ({
                 address: v.address,
                 foundation: v.foundation,
-                [`${period}count`]: v[`${period}count`],
-                weeklycount: v.weeklycount, // Log all possible count fields
-                dailycount: v.dailycount,
-                monthlycount: v.monthlycount,
-                allcount: v.allcount
+                [`${period}count`]: v[`${period}count`]
             })));
+
+            // Fetch additional details for each validator
+            validators = await Promise.all(validators.map(async (v) => {
+                const details = await fetchValidatorDetails(v.address);
+                return {
+                    ...v,
+                    status: details?.nodeAccountStats?.isShardeumRun ? 'Active' : 'Inactive',
+                    nominator: details?.nominator || 'N/A',
+                    reward: details?.reward?.value || '0',
+                    stakeLock: details?.stakeLock?.value || '0',
+                    rewardStartTime: details?.rewardStartTime || 0,
+                    rewardEndTime: details?.rewardEndTime || 0,
+                    penalty: details?.penalty?.value || '0'
+                };
+            }));
+
             if (!Array.isArray(validators) || validators.length === 0) {
                 throw new Error('No validators returned or invalid data format');
             }
             currentValidators = [...validators].sort((a, b) => {
                 const countA = a[`${period}count`] || 0;
                 const countB = b[`${period}count`] || 0;
-                return countB - countA; // Descending for leaderboard
+                return countB - countA;
             });
             currentPeriod = period;
             showLeaderboard();
@@ -88,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!Array.isArray(standbyNodes) || standbyNodes.length === 0) {
                 throw new Error('No standby nodes returned or invalid data format');
             }
-            currentStandbyNodes = [...standbyNodes].sort((a, b) => b.standby_hours - a.standby_hours); // Descending by standby time
+            currentStandbyNodes = [...standbyNodes].sort((a, b) => b.standby_hours - a.standby_hours);
             showLoserboard();
         } catch (error) {
             console.error('Error fetching standby nodes:', error);
@@ -98,14 +144,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showLeaderboard() {
-        const communityValidators = currentValidators.filter(v => !v.foundation); // Show only community nodes
-        const limit = Math.min(2000, communityValidators.length); // Limit to 2000
+        const communityValidators = currentValidators.filter(v => !v.foundation);
+        const limit = Math.min(2000, communityValidators.length);
         const leaderboard = communityValidators.slice(0, limit);
-        
-        console.log('Showing leaderboard with', leaderboard.length, 'community validators:', 
-            leaderboard.map(v => ({ address: v.address, [`${currentPeriod}count`]: v[`${currentPeriod}count`] })));
 
-        // Clear previous content
+        console.log('Showing leaderboard with', leaderboard.length, 'community validators');
+
         while (leaderboardDiv.firstChild) {
             leaderboardDiv.removeChild(leaderboardDiv.firstChild);
         }
@@ -135,12 +179,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showLoserboard() {
-        const limit = Math.min(2000, currentStandbyNodes.length); // Limit to 2000
+        const limit = Math.min(2000, currentStandbyNodes.length);
         const loserboard = currentStandbyNodes.slice(0, limit);
 
         console.log('Showing loserboard with', loserboard.length, 'standby nodes');
 
-        // Clear previous content
         while (loserboardDiv.firstChild) {
             loserboardDiv.removeChild(loserboardDiv.firstChild);
         }
@@ -170,8 +213,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function createValidatorCard(validator, countKey, rank) {
-        console.log(`Validator ${validator.address}: ${countKey} = ${validator[countKey]}`); // Debug log
-        
+        console.log(`Validator ${validator.address}: ${countKey} = ${validator[countKey]}`);
+
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text || '';
@@ -183,6 +226,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const ipAddress = validator.identifier || 'N/A';
         const address = validator.address || 'N/A';
         const truncatedAddress = address.length > 10 ? `${address.slice(0, 5)}…${address.slice(-5)}` : address;
+        const nominator = validator.nominator || 'N/A';
+        const truncatedNominator = nominator.length > 10 ? `${nominator.slice(0, 5)}…${nominator.slice(-5)}` : nominator;
         const escapedAlias = escapeHtml(validator.alias || 'Unknown');
 
         const card = document.createElement('a');
@@ -224,6 +269,55 @@ document.addEventListener('DOMContentLoaded', () => {
         countSpan.appendChild(countStrong);
         countSpan.appendChild(document.createTextNode(validator[countKey] || 0));
         textContainer.appendChild(countSpan);
+
+        const statusSpan = document.createElement('span');
+        const statusStrong = document.createElement('strong');
+        statusStrong.textContent = 'Node Status: ';
+        statusSpan.appendChild(statusStrong);
+        statusSpan.appendChild(document.createTextNode(validator.status || 'N/A'));
+        textContainer.appendChild(statusSpan);
+
+        const nominatorSpan = document.createElement('span');
+        const nominatorStrong = document.createElement('strong');
+        nominatorStrong.textContent = 'Nominator: ';
+        nominatorSpan.appendChild(nominatorStrong);
+        nominatorSpan.appendChild(document.createTextNode(truncatedNominator));
+        textContainer.appendChild(nominatorSpan);
+
+        const rewardSpan = document.createElement('span');
+        const rewardStrong = document.createElement('strong');
+        rewardStrong.textContent = 'Current Reward: ';
+        rewardSpan.appendChild(rewardStrong);
+        rewardSpan.appendChild(document.createTextNode(formatSHM(validator.reward)));
+        textContainer.appendChild(rewardSpan);
+
+        const stakeSpan = document.createElement('span');
+        const stakeStrong = document.createElement('strong');
+        stakeStrong.textContent = 'Staked Amount: ';
+        stakeSpan.appendChild(stakeStrong);
+        stakeSpan.appendChild(document.createTextNode(formatSHM(validator.stakeLock)));
+        textContainer.appendChild(stakeSpan);
+
+        const rewardStartSpan = document.createElement('span');
+        const rewardStartStrong = document.createElement('strong');
+        rewardStartStrong.textContent = 'Reward Start: ';
+        rewardStartSpan.appendChild(rewardStartStrong);
+        rewardStartSpan.appendChild(document.createTextNode(formatTimestamp(validator.rewardStartTime)));
+        textContainer.appendChild(rewardStartSpan);
+
+        const rewardEndSpan = document.createElement('span');
+        const rewardEndStrong = document.createElement('strong');
+        rewardEndStrong.textContent = 'Reward End: ';
+        rewardEndSpan.appendChild(rewardEndStrong);
+        rewardEndSpan.appendChild(document.createTextNode(formatTimestamp(validator.rewardEndTime)));
+        textContainer.appendChild(rewardEndSpan);
+
+        const penaltySpan = document.createElement('span');
+        const penaltyStrong = document.createElement('strong');
+        penaltyStrong.textContent = 'Penalty: ';
+        penaltySpan.appendChild(penaltyStrong);
+        penaltySpan.appendChild(document.createTextNode(formatSHM(validator.penalty)));
+        textContainer.appendChild(penaltySpan);
 
         card.appendChild(textContainer);
 
