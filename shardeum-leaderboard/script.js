@@ -59,73 +59,50 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Convert timestamp to readable UTC date with 4-hour cycle adjustment for Reward End
+    // Convert timestamp to readable UTC and CET date
     function formatTimestamp(timestamp) {
         if (!timestamp || timestamp === 0 || timestamp === '0' || timestamp === null) {
             console.log(`formatTimestamp: Invalid timestamp: ${timestamp}`);
-            return '0'; // Return '0' for null or invalid
+            return 'N/A';
         }
         try {
-            const date = new Date(Number(timestamp) * 1000);
+            const date = new Date(Number(timestamp) * 1000); // Convert seconds to milliseconds
             const today = new Date();
             today.setHours(0, 0, 0, 0); // Set to start of today in UTC
             const isToday = date.toDateString() === today.toDateString();
-            if (isToday) {
-                const result = date.toLocaleString('en-US', {
-                    timeZone: 'UTC',
-                    hour: 'numeric',
-                    minute: '2-digit',
-                    hour12: true
-                }).replace(',', '') + ' UTC';
-                console.log(`formatTimestamp: Input: ${timestamp}, Output: Today at ${result}`);
-                return `Today at ${result}`;
-            } else {
-                const result = date.toLocaleString('en-US', {
-                    dateStyle: 'short',
-                    timeStyle: 'short',
-                    timeZone: 'UTC'
-                }).replace(',', '');
-                console.log(`formatTimestamp: Input: ${timestamp}, Output: ${result}`);
-                return result;
-            }
+
+            // UTC time
+            const utcOptions = {
+                timeZone: 'UTC',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            };
+            const utcTime = date.toLocaleString('en-US', utcOptions).replace(',', '');
+
+            // CET time (using Europe/Berlin for CET/CEST handling)
+            const cetOptions = {
+                timeZone: 'Europe/Berlin',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            };
+            const cetTime = date.toLocaleString('en-US', cetOptions).replace(',', '');
+
+            // Date prefix (Today or short date)
+            const datePrefix = isToday
+                ? 'Today'
+                : date.toLocaleString('en-US', {
+                      dateStyle: 'short',
+                      timeZone: 'UTC'
+                  }).replace(',', '');
+
+            const result = `${datePrefix} at ${utcTime} UTC (${cetTime} CET)`;
+            console.log(`formatTimestamp: Input: ${timestamp}, Output: ${result}`);
+            return result;
         } catch (error) {
             console.error(`formatTimestamp: Error formatting timestamp: ${timestamp}`, error);
-            return '0';
-        }
-    }
-
-    // Adjusted function to calculate Reward End with 4-hour cycle
-    function calculateRewardEnd(startTimestamp) {
-        if (!startTimestamp || startTimestamp === 0 || startTimestamp === '0' || startTimestamp === null) {
-            return '0';
-        }
-        try {
-            const startDate = new Date(Number(startTimestamp) * 1000);
-            const endDate = new Date(startDate.getTime() + 4 * 60 * 60 * 1000); // Add 4 hours
-            const today = new Date();
-            today.setHours(0, 0, 0, 0); // Set to start of today in UTC
-            const isToday = endDate.toDateString() === today.toDateString();
-            if (isToday) {
-                const result = endDate.toLocaleString('en-US', {
-                    timeZone: 'UTC',
-                    hour: 'numeric',
-                    minute: '2-digit',
-                    hour12: true
-                }).replace(',', '') + ' UTC';
-                console.log(`calculateRewardEnd: Input: ${startTimestamp}, Output: Today at ${result}`);
-                return `Today at ${result}`;
-            } else {
-                const result = endDate.toLocaleString('en-US', {
-                    dateStyle: 'short',
-                    timeStyle: 'short',
-                    timeZone: 'UTC'
-                }).replace(',', '');
-                console.log(`calculateRewardEnd: Input: ${startTimestamp}, Output: ${result}`);
-                return result;
-            }
-        } catch (error) {
-            console.error(`calculateRewardEnd: Error calculating end time from ${startTimestamp}`, error);
-            return '0';
+            return 'N/A';
         }
     }
 
@@ -369,7 +346,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const rewardEndStrong = document.createElement('strong');
         rewardEndStrong.textContent = 'Reward End: ';
         rewardEndSpan.appendChild(rewardEndStrong);
-        rewardEndSpan.appendChild(document.createTextNode(calculateRewardEnd(validator.reward_start_time)));
+        rewardEndSpan.appendChild(document.createTextNode(formatTimestamp(validator.reward_end_time)));
         textContainer.appendChild(rewardEndSpan);
 
         const penaltySpan = document.createElement('span');
