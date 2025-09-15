@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentValidators = [];
     let currentStandbyNodes = [];
     let currentPeriod = 'weekly';
+    let activeTab = 'leaderboard';
 
     function createIndicator() {
         console.log('Creating indicator with CSS animation');
@@ -140,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log(`fetchValidators: Validators received from backend:`, validators.map(v => ({
                 address: v.address,
                 foundation: v.foundation,
-                [`${period}count`]: v[`${period}count`],
+                [`${period}_count`]: v[`${period}_count`],
                 status: v.status,
                 stake_lock: v.stake_lock
             })));
@@ -149,8 +150,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error('fetchValidators: No validators returned or invalid data format');
             }
             currentValidators = [...validators].sort((a, b) => {
-                const countA = a[`${period}count`] || 0;
-                const countB = b[`${period}count`] || 0;
+                const countA = a[`${period}_count`] || 0;
+                const countB = b[`${period}_count`] || 0;
                 return countB - countA;
             });
             currentPeriod = period;
@@ -185,6 +186,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showLeaderboard() {
+        activeTab = 'leaderboard';
+        periodSelector.disabled = false;
         const communityValidators = currentValidators.filter(v => !v.foundation);
         const limit = Math.min(2000, communityValidators.length);
         const leaderboard = communityValidators.slice(0, limit);
@@ -205,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         leaderboard.forEach((v, index) => {
-            const card = createValidatorCard(v, `${currentPeriod}count`, index + 1);
+            const card = createValidatorCard(v, `${currentPeriod}_count`, index + 1);
             leaderboardDiv.appendChild(card);
         });
 
@@ -220,6 +223,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showLoserboard() {
+        activeTab = 'loserboard';
+        periodSelector.disabled = true;
         const limit = Math.min(2000, currentStandbyNodes.length);
         const loserboard = currentStandbyNodes.slice(0, limit);
 
@@ -446,7 +451,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const standbyStrong = document.createElement('strong');
         standbyStrong.textContent = 'Standby Time: ';
         standbySpan.appendChild(standbyStrong);
-        standbySpan.appendChild(document.createTextNode(`${node.standby_hours.toFixed(2)} hours (${node.standby_days} days)`));
+        standbySpan.appendChild(document.createTextNode(`${node.standby_hours.toFixed(2)} hours (${node.standby_days.toFixed(0)} days)`));
         textContainer.appendChild(standbySpan);
 
         card.appendChild(textContainer);
@@ -473,8 +478,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     periodSelector.addEventListener('change', () => {
-        console.log('periodSelector: Period changed to:', periodSelector.value);
-        fetchValidators(periodSelector.value);
+        if (activeTab === 'leaderboard') {
+            console.log('periodSelector: Period changed to:', periodSelector.value);
+            fetchValidators(periodSelector.value);
+        }
     });
 
     leaderboardBtn.addEventListener('click', () => {
