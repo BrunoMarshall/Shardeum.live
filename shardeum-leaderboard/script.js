@@ -2,13 +2,13 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('script.js loaded');
     const leaderboardDiv = document.getElementById('leaderboard');
     const loserboardDiv = document.getElementById('loserboard');
-    const periodSelector = document.getElementById('period-selector');
     const leaderboardBtn = document.getElementById('leaderboard-btn');
     const loserboardBtn = document.getElementById('loserboard-btn');
     const backendUrl = 'https://leaderboard.shardeum.live';
     let currentValidators = [];
     let currentStandbyNodes = [];
     let currentPeriod = 'weekly';
+    let currentFilter = 'default'; // New: Track current filter ('default', 'stake', 'reward', 'status')
     let activeTab = 'leaderboard';
 
     function createIndicator() {
@@ -56,6 +56,19 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error(`formatSHM: Error formatting value: ${value}`, error);
             return '0 SHM';
+        }
+    }
+
+    // Convert hex to number for sorting
+    function parseSHM(value) {
+        try {
+            if (!value || value === '0' || value === '' || value === null || value === undefined) {
+                return 0;
+            }
+            return parseInt(value, 16) / 1e18; // Convert hex to SHM
+        } catch (error) {
+            console.error(`parseSHM: Error parsing value: ${value}`, error);
+            return 0;
         }
     }
 
@@ -126,11 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!Array.isArray(validators) || validators.length === 0) {
                 throw new Error('fetchValidators: No validators returned or invalid data format');
             }
-            currentValidators = [...validators].sort((a, b) => {
-                const countA = a[`${period}_count`] || 0;
-                const countB = b[`${period}_count`] || 0;
-                return countB - countA;
-            });
+            currentValidators = [...validators];
             currentPeriod = period;
             showLeaderboard();
         } catch (error) {
@@ -164,13 +173,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showLeaderboard() {
         activeTab = 'leaderboard';
-        periodSelector.disabled = false;
         const communityValidators = currentValidators.filter(v => !v.foundation);
         const limit = Math.min(2000, communityValidators.length);
-        const leaderboard = communityValidators.slice(0, limit);
+        let leaderboard = communityValidators.slice(0, limit);
 
-        console.log('showLeaderboard: Showing leaderboard with', leaderboard.length, 'community validators');
+        // Apply sorting based on currentFilter
+        if (currentFilter === 'stake') {
+            leaderboard.sort((a, b) => parseSHM(b.stake_lock) - parseSHM(a.stake_lock));
+        } else if (currentFilter === 'reward') {
+            leaderboard.sort((a, b) => parseSHM(b.reward) - parseSHM(a.reward));
+        } else if (currentFilter === 'status') {
+            leaderboard.sort((a, b) => {
+                const statusA = a.status === 'Active' ? 1 : 0;
+                const statusB = b.status === 'Active' ? 1 : 0;
+                if (statusA !== statusB) return statusB - statusA;
+                return (b[`${currentPeriod}_count`] || 0) - (a[`${currentPeriod}_count`] || 0);
+            });
+        } else {
+            // Default: sort by period count
+            leaderboard.sort((a, b) => (b[`${currentPeriod}_count`] || 0) - (a[`${currentPeriod}_count`] || 0));
+        }
 
+        console.log(`showLeaderboard: Showing leaderboard with ${leaderboard.length} community validators, period: ${currentPeriod}, filter: ${currentFilter}`);
+
+        // Clear existing content
         while (leaderboardDiv.firstChild) {
             leaderboardDiv.removeChild(leaderboardDiv.firstChild);
         }
@@ -184,11 +210,48 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Render validator cards
         leaderboard.forEach((v, index) => {
             const card = createValidatorCard(v, `${currentPeriod}_count`, index + 1);
             leaderboardDiv.appendChild(card);
         });
 
+        // Create period selector
+        const periodContainer = document.createElement('div');
+        periodContainer.className = 'mt-4';
+        periodContainer.innerHTML = `
+            <label for="period-selector" class="mr-2">Period:</label>
+            <select id="period-selector" class="border rounded p-1">
+                <option value="daily" ${currentPeriod === 'daily' ? 'selected' : ''}>Daily</option>
+                <option value="weekly" ${currentPeriod === 'weekly' ? 'selected' : ''}>Weekly</option>
+                <option value="monthly" ${currentPeriod === 'monthly' ? 'selected' : ''}>Monthly</option>
+                <option value="all" ${currentPeriod === 'all' ? 'selected' : ''}>All Time</option>
+            </select>
+            <label for="filter-selector" class="ml-4 mr-2">Sort By:</label>
+            <select id="filter-selector" class="border rounded p-1">
+                <option value="default" ${currentFilter === 'default' ? 'selected' : ''}>Default (${currentPeriod} activations)</option>
+                <option value="stake" ${currentFilter === 'stake' ? 'selected' : ''}>Node Stake</option>
+                <option value="reward" ${currentFilter === 'reward' ? 'selected' : ''}>Current Rewards</option>
+                <option value="status" ${currentFilter === 'status' ? 'selected' : ''}>Node Status</option>
+            </select>
+        `;
+        leaderboardDiv.appendChild(periodContainer);
+
+        // Add event listeners for selectors
+        const periodSelector = periodContainer.querySelector('#period-selector');
+        periodSelector.addEventListener('change', () => {
+            console.log('periodSelector: Period changed to:', periodSelector.value);
+            fetchValidators(periodSelector.value);
+        });
+
+        const filterSelector = periodContainer.querySelector('#filter-selector');
+        filterSelector.addEventListener('change', () => {
+            console.log('filterSelector: Filter changed to:', filterSelector.value);
+            currentFilter = filterSelector.value;
+            showLeaderboard(); // Re-render with new filter
+        });
+
+        // Update button styles
         removeIndicator();
         leaderboardBtn.innerHTML = 'Leaderboard (Most Active)';
         leaderboardBtn.appendChild(createIndicator());
@@ -201,7 +264,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showLoserboard() {
         activeTab = 'loserboard';
-        periodSelector.disabled = true;
         const limit = Math.min(2000, currentStandbyNodes.length);
         const loserboard = currentStandbyNodes.slice(0, limit);
 
@@ -264,14 +326,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const truncatedAddress = address.length > 10 ? `${address.slice(0, 5)}…${address.slice(-5)}` : address;
         const nominator = validator.nominator || 'N/A';
         const truncatedNominator = nominator.length > 10 ? `${nominator.slice(0, 5)}…${nominator.slice(-5)}` : nominator;
-        const escapedAlias = escapeHtml(validator.alias || ''); // Empty if no alias
+        const escapedAlias = escapeHtml(validator.alias || '');
 
         const card = document.createElement('a');
         card.href = `https://explorer.shardeum.org/account/${encodeURIComponent(address)}`;
         card.target = '_blank';
         card.className = 'validator-card community-node';
 
-        // Move rank above avatar
         const rankSpan = document.createElement('span');
         rankSpan.className = 'rank';
         rankSpan.textContent = rank;
@@ -395,7 +456,6 @@ document.addEventListener('DOMContentLoaded', () => {
         card.target = '_blank';
         card.className = 'validator-card community-node';
 
-        // Move rank above avatar
         const rankSpan = document.createElement('span');
         rankSpan.className = 'rank';
         rankSpan.textContent = rank;
@@ -414,7 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const nameStrong = document.createElement('strong');
         nameStrong.textContent = 'Name: ';
         nameSpan.appendChild(nameStrong);
-        nameSpan.appendChild(document.createTextNode('')); // Empty if no alias
+        nameSpan.appendChild(document.createTextNode(''));
         textContainer.appendChild(nameSpan);
 
         const addressSpan = document.createElement('span');
@@ -454,20 +514,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return card;
     }
 
-    periodSelector.addEventListener('change', () => {
-        if (activeTab === 'leaderboard') {
-            console.log('periodSelector: Period changed to:', periodSelector.value);
-            fetchValidators(periodSelector.value);
-        }
-    });
-
     leaderboardBtn.addEventListener('click', () => {
         console.log('leaderboardBtn: Clicked');
-        if (currentValidators.length > 0) {
-            showLeaderboard();
-        } else {
-            fetchValidators(currentPeriod);
-        }
+        fetchValidators(currentPeriod); // Always fetch fresh data
     });
 
     loserboardBtn.addEventListener('click', () => {
