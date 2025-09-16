@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentValidators = [];
     let currentStandbyNodes = [];
     let currentPeriod = 'weekly';
-    let currentFilter = 'default'; // New: Track current filter ('default', 'stake', 'reward', 'status')
+    let currentFilter = 'default'; // Track current filter ('default', 'stake', 'reward', 'status')
     let activeTab = 'leaderboard';
 
     function createIndicator() {
@@ -216,35 +216,39 @@ document.addEventListener('DOMContentLoaded', () => {
             leaderboardDiv.appendChild(card);
         });
 
-        // Create period selector
-        const periodContainer = document.createElement('div');
-        periodContainer.className = 'mt-4';
-        periodContainer.innerHTML = `
-            <label for="period-selector" class="mr-2">Period:</label>
-            <select id="period-selector" class="border rounded p-1">
-                <option value="daily" ${currentPeriod === 'daily' ? 'selected' : ''}>Daily</option>
-                <option value="weekly" ${currentPeriod === 'weekly' ? 'selected' : ''}>Weekly</option>
-                <option value="monthly" ${currentPeriod === 'monthly' ? 'selected' : ''}>Monthly</option>
-                <option value="all" ${currentPeriod === 'all' ? 'selected' : ''}>All Time</option>
-            </select>
-            <label for="filter-selector" class="ml-4 mr-2">Sort By:</label>
-            <select id="filter-selector" class="border rounded p-1">
-                <option value="default" ${currentFilter === 'default' ? 'selected' : ''}>Default (${currentPeriod} activations)</option>
-                <option value="stake" ${currentFilter === 'stake' ? 'selected' : ''}>Node Stake</option>
-                <option value="reward" ${currentFilter === 'reward' ? 'selected' : ''}>Current Rewards</option>
-                <option value="status" ${currentFilter === 'status' ? 'selected' : ''}>Node Status</option>
-            </select>
+        // Create period and filter selectors
+        const selectorContainer = document.createElement('div');
+        selectorContainer.className = 'mt-4 flex justify-center space-x-4';
+        selectorContainer.innerHTML = `
+            <div>
+                <label for="period-selector" class="text-gray-700 font-medium mr-2">Select Period:</label>
+                <select id="period-selector" class="p-2 border rounded">
+                    <option value="daily" ${currentPeriod === 'daily' ? 'selected' : ''}>Daily</option>
+                    <option value="weekly" ${currentPeriod === 'weekly' ? 'selected' : ''}>Weekly</option>
+                    <option value="monthly" ${currentPeriod === 'monthly' ? 'selected' : ''}>Monthly</option>
+                    <option value="all" ${currentPeriod === 'all' ? 'selected' : ''}>All Time</option>
+                </select>
+            </div>
+            <div>
+                <label for="filter-selector" class="text-gray-700 font-medium mr-2">Sort By:</label>
+                <select id="filter-selector" class="p-2 border rounded">
+                    <option value="default" ${currentFilter === 'default' ? 'selected' : ''}>Default (${currentPeriod} activations)</option>
+                    <option value="stake" ${currentFilter === 'stake' ? 'selected' : ''}>Node Stake</option>
+                    <option value="reward" ${currentFilter === 'reward' ? 'selected' : ''}>Current Rewards</option>
+                    <option value="status" ${currentFilter === 'status' ? 'selected' : ''}>Node Status</option>
+                </select>
+            </div>
         `;
-        leaderboardDiv.appendChild(periodContainer);
+        leaderboardDiv.appendChild(selectorContainer);
 
         // Add event listeners for selectors
-        const periodSelector = periodContainer.querySelector('#period-selector');
+        const periodSelector = selectorContainer.querySelector('#period-selector');
         periodSelector.addEventListener('change', () => {
             console.log('periodSelector: Period changed to:', periodSelector.value);
             fetchValidators(periodSelector.value);
         });
 
-        const filterSelector = periodContainer.querySelector('#filter-selector');
+        const filterSelector = selectorContainer.querySelector('#filter-selector');
         filterSelector.addEventListener('change', () => {
             console.log('filterSelector: Filter changed to:', filterSelector.value);
             currentFilter = filterSelector.value;
