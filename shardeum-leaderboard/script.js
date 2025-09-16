@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentValidators = [];
     let currentStandbyNodes = [];
     let currentPeriod = 'weekly';
-    let currentFilter = 'default'; // Track current filter ('default', 'stake', 'reward', 'status')
+    let currentFilter = 'default';
     let activeTab = 'leaderboard';
 
     function createIndicator() {
@@ -41,15 +41,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (indicator) indicator.remove();
     }
 
-    // Convert hexadecimal wei to SHM (1 SHM = 10^18 wei)
     function formatSHM(value, decimals = 10) {
         try {
             if (!value || value === '0' || value === '' || value === null || value === undefined) {
                 console.log(`formatSHM: Invalid or zero value: ${value}`);
                 return '0 SHM';
             }
-            const num = parseInt(value, 16); // Parse hex string to decimal
-            const shm = num / 1e18; // Divide by 10^18 for SHM
+            const num = parseInt(value, 16);
+            const shm = num / 1e18;
             const result = `${shm.toFixed(decimals)} SHM`;
             console.log(`formatSHM: Input: ${value}, Output: ${result}`);
             return result;
@@ -59,32 +58,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Convert hex to number for sorting
     function parseSHM(value) {
         try {
             if (!value || value === '0' || value === '' || value === null || value === undefined) {
                 return 0;
             }
-            return parseInt(value, 16) / 1e18; // Convert hex to SHM
+            return parseInt(value, 16) / 1e18;
         } catch (error) {
             console.error(`parseSHM: Error parsing value: ${value}`, error);
             return 0;
         }
     }
 
-    // Convert timestamp to readable UTC and CET date
     function formatTimestamp(timestamp) {
         if (!timestamp || timestamp === 0 || timestamp === '0' || timestamp === null) {
             console.log(`formatTimestamp: Invalid timestamp: ${timestamp}`);
             return 'N/A';
         }
         try {
-            const date = new Date(Number(timestamp) * 1000); // Convert seconds to milliseconds
+            const date = new Date(Number(timestamp) * 1000);
             const today = new Date();
-            today.setHours(0, 0, 0, 0); // Set to start of today in UTC
+            today.setHours(0, 0, 0, 0);
             const isToday = date.toDateString() === today.toDateString();
 
-            // UTC time
             const utcOptions = {
                 timeZone: 'UTC',
                 hour: 'numeric',
@@ -93,7 +89,6 @@ document.addEventListener('DOMContentLoaded', () => {
             };
             const utcTime = date.toLocaleString('en-US', utcOptions).replace(',', '');
 
-            // CET time (using Europe/Berlin for CET/CEST handling)
             const cetOptions = {
                 timeZone: 'Europe/Berlin',
                 hour: 'numeric',
@@ -102,7 +97,6 @@ document.addEventListener('DOMContentLoaded', () => {
             };
             const cetTime = date.toLocaleString('en-US', cetOptions).replace(',', '');
 
-            // Date prefix (Today or short date)
             const datePrefix = isToday
                 ? 'Today'
                 : date.toLocaleString('en-US', {
@@ -160,7 +154,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const standbyNodes = await response.json();
             console.log('fetchStandbyNodes: Standby nodes received:', standbyNodes);
             if (!Array.isArray(standbyNodes) || standbyNodes.length === 0) {
-                throw new Error('fetchStandbyNodes: No standby nodes returned or invalid data format');
+                console.warn('fetchStandbyNodes: No standby nodes returned or invalid data format');
+                currentStandbyNodes = [];
+                showLoserboard();
+                return;
             }
             currentStandbyNodes = [...standbyNodes].sort((a, b) => b.standby_hours - a.standby_hours);
             showLoserboard();
@@ -177,7 +174,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const limit = Math.min(2000, communityValidators.length);
         let leaderboard = communityValidators.slice(0, limit);
 
-        // Apply sorting based on currentFilter
         if (currentFilter === 'stake') {
             leaderboard.sort((a, b) => parseSHM(b.stake_lock) - parseSHM(a.stake_lock));
         } else if (currentFilter === 'reward') {
@@ -190,33 +186,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 return (b[`${currentPeriod}_count`] || 0) - (a[`${currentPeriod}_count`] || 0);
             });
         } else {
-            // Default: sort by period count
             leaderboard.sort((a, b) => (b[`${currentPeriod}_count`] || 0) - (a[`${currentPeriod}_count`] || 0));
         }
 
         console.log(`showLeaderboard: Showing leaderboard with ${leaderboard.length} community validators, period: ${currentPeriod}, filter: ${currentFilter}`);
 
-        // Clear existing content
         while (leaderboardDiv.firstChild) {
             leaderboardDiv.removeChild(leaderboardDiv.firstChild);
         }
         loserboardDiv.innerHTML = '';
 
-        if (leaderboard.length === 0) {
-            const noData = document.createElement('p');
-            noData.className = 'text-gray-600';
-            noData.textContent = 'No community validators available for this period.';
-            leaderboardDiv.appendChild(noData);
-            return;
-        }
-
-        // Render validator cards
-        leaderboard.forEach((v, index) => {
-            const card = createValidatorCard(v, `${currentPeriod}_count`, index + 1);
-            leaderboardDiv.appendChild(card);
-        });
-
-        // Create period and filter selectors
+        // Create selector container
         const selectorContainer = document.createElement('div');
         selectorContainer.className = 'mt-4 flex justify-center space-x-4';
         selectorContainer.innerHTML = `
@@ -240,8 +220,24 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
         leaderboardDiv.appendChild(selectorContainer);
+        console.log('showLeaderboard: Selector container added');
 
-        // Add event listeners for selectors
+        if (leaderboard.length === 0) {
+            const noData = document.createElement('p');
+            noData.className = 'text-gray-600 mt-4';
+            noData.textContent = 'No community validators available for this period.';
+            leaderboardDiv.appendChild(noData);
+            return;
+        }
+
+        const cardContainer = document.createElement('div');
+        cardContainer.className = 'card-container mt-4';
+        leaderboard.forEach((v, index) => {
+            const card = createValidatorCard(v, `${currentPeriod}_count`, index + 1);
+            cardContainer.appendChild(card);
+        });
+        leaderboardDiv.appendChild(cardContainer);
+
         const periodSelector = selectorContainer.querySelector('#period-selector');
         periodSelector.addEventListener('change', () => {
             console.log('periodSelector: Period changed to:', periodSelector.value);
@@ -252,18 +248,15 @@ document.addEventListener('DOMContentLoaded', () => {
         filterSelector.addEventListener('change', () => {
             console.log('filterSelector: Filter changed to:', filterSelector.value);
             currentFilter = filterSelector.value;
-            showLeaderboard(); // Re-render with new filter
+            showLeaderboard();
         });
 
-        // Update button styles
         removeIndicator();
         leaderboardBtn.innerHTML = 'Leaderboard (Most Active)';
         leaderboardBtn.appendChild(createIndicator());
-        leaderboardBtn.classList.add('bg-blue-600', 'text-white');
-        leaderboardBtn.classList.remove('bg-gray-200', 'text-gray-700');
+        leaderboardBtn.className = 'px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700';
         loserboardBtn.innerHTML = 'Loserboard (Least Active)';
-        loserboardBtn.classList.add('bg-gray-200', 'text-gray-700');
-        loserboardBtn.classList.remove('bg-blue-600', 'text-white');
+        loserboardBtn.className = 'px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300';
     }
 
     function showLoserboard() {
@@ -280,7 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (loserboard.length === 0) {
             const noData = document.createElement('p');
-            noData.className = 'text-gray-600';
+            noData.className = 'text-gray-600 mt-4';
             noData.textContent = 'No standby nodes available.';
             loserboardDiv.appendChild(noData);
             return;
@@ -293,12 +286,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         removeIndicator();
         leaderboardBtn.innerHTML = 'Leaderboard (Most Active)';
-        leaderboardBtn.classList.add('bg-gray-200', 'text-gray-700');
-        leaderboardBtn.classList.remove('bg-blue-600', 'text-white');
+        leaderboardBtn.className = 'px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300';
         loserboardBtn.innerHTML = 'Loserboard (Least Active)';
         loserboardBtn.appendChild(createIndicator());
-        loserboardBtn.classList.add('bg-blue-600', 'text-white');
-        loserboardBtn.classList.remove('bg-gray-200', 'text-gray-700');
+        loserboardBtn.className = 'px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700';
     }
 
     function createValidatorCard(validator, countKey, rank) {
@@ -478,7 +469,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const nameStrong = document.createElement('strong');
         nameStrong.textContent = 'Name: ';
         nameSpan.appendChild(nameStrong);
-        nameSpan.appendChild(document.createTextNode(''));
+        nameSpan.appendChild(document.createTextNode('N/A'));
         textContainer.appendChild(nameSpan);
 
         const addressSpan = document.createElement('span');
@@ -520,16 +511,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     leaderboardBtn.addEventListener('click', () => {
         console.log('leaderboardBtn: Clicked');
-        fetchValidators(currentPeriod); // Always fetch fresh data
+        fetchValidators(currentPeriod);
     });
 
     loserboardBtn.addEventListener('click', () => {
         console.log('loserboardBtn: Clicked');
-        if (currentStandbyNodes.length > 0) {
-            showLoserboard();
-        } else {
-            fetchStandbyNodes();
-        }
+        fetchStandbyNodes();
     });
 
     fetchValidators('weekly');

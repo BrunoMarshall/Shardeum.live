@@ -69,22 +69,22 @@ body {
     align-items: center;
     justify-content: center;
 }
-button.active:hover {
-    background-color: #2563eb;
-}
 #leaderboard, #loserboard {
-    padding-top: 1rem !important;
-    margin-top: 0 !important;
-    margin-bottom: 1.5rem !important;
+    padding-top: 1rem;
+    margin-bottom: 1.5rem;
     max-height: 80vh;
     overflow-y: auto;
     padding-right: 1rem;
 }
 #leaderboard:empty, #loserboard:empty {
-    height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
+    height: 0;
+    margin: 0;
+    padding: 0;
     display: none;
+}
+.card-container {
+    max-height: 70vh;
+    overflow-y: auto;
 }
 .validator-card .alias-input,
 .validator-card .avatar-select {
