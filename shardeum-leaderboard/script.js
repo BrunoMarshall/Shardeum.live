@@ -133,6 +133,27 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!Array.isArray(validators) || validators.length === 0) {
                 throw new Error('fetchValidators: No validators returned or invalid data format');
             }
+
+            // Fetch activation days for each validator
+            for (const validator of validators) {
+                try {
+                    const response = await fetch(`${backendUrl}/api/validator-increments/${encodeURIComponent(validator.address)}/monthly`, {
+                        mode: 'cors',
+                        headers: { 'User-Agent': 'Shardeum-Leaderboard/1.0' }
+                    });
+                    if (response.ok) {
+                        validator.activationDays = await response.json();
+                        console.log(`Fetched activation days for validator ${validator.address}:`, validator.activationDays);
+                    } else {
+                        validator.activationDays = [];
+                        console.warn(`Failed to fetch activation days for validator ${validator.address}: ${response.status}`);
+                    }
+                } catch (error) {
+                    validator.activationDays = [];
+                    console.error(`Error fetching activation days for validator ${validator.address}:`, error.message);
+                }
+            }
+
             currentValidators = [...validators];
             currentPeriod = period;
             showLeaderboard();
@@ -168,6 +189,54 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function createMonthCalendar(activationDays) {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        const monthName = now.toLocaleString('en-US', { month: 'long' });
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const firstDay = new Date(year, month, 1).getDay(); // 0 (Sun) to 6 (Sat)
+
+        const calendar = document.createElement('div');
+        calendar.className = 'month-calendar';
+
+        const title = document.createElement('div');
+        title.className = 'calendar-title';
+        title.textContent = `${monthName} ${year}`;
+        calendar.appendChild(title);
+
+        const grid = document.createElement('div');
+        grid.className = 'calendar-grid';
+
+        // Add weekday headers
+        const weekdays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+        weekdays.forEach(day => {
+            const dayHeader = document.createElement('div');
+            dayHeader.className = 'calendar-day-header';
+            dayHeader.textContent = day;
+            grid.appendChild(dayHeader);
+        });
+
+        // Add empty cells for days before the first day of the month
+        for (let i = 0; i < firstDay; i++) {
+            const emptyCell = document.createElement('div');
+            emptyCell.className = 'calendar-day empty';
+            grid.appendChild(emptyCell);
+        }
+
+        // Add days of the month
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dayCell = document.createElement('div');
+            dayCell.className = 'calendar-day';
+            dayCell.classList.add(activationDays.includes(day) ? 'active' : 'inactive');
+            dayCell.textContent = day;
+            grid.appendChild(dayCell);
+        }
+
+        calendar.appendChild(grid);
+        return calendar;
+    }
+
     function showLeaderboard() {
         activeTab = 'leaderboard';
         const communityValidators = currentValidators.filter(v => !v.foundation);
@@ -196,7 +265,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         loserboardDiv.innerHTML = '';
 
-        // Create selector container
         const selectorContainer = document.createElement('div');
         selectorContainer.className = 'mt-4 flex justify-center space-x-4';
         selectorContainer.innerHTML = `
@@ -305,7 +373,8 @@ document.addEventListener('DOMContentLoaded', () => {
             formatted_start_time: formatTimestamp(validator.reward_start_time),
             reward_end_time: validator.reward_end_time,
             formatted_end_time: formatTimestamp(validator.reward_end_time),
-            penalty: validator.penalty
+            penalty: validator.penalty,
+            activationDays: validator.activationDays
         });
 
         function escapeHtml(text) {
@@ -429,6 +498,10 @@ document.addEventListener('DOMContentLoaded', () => {
         ipSpan.appendChild(ipStrong);
         ipSpan.appendChild(document.createTextNode(escapeHtml(ipAddress)));
         nodeInfo.appendChild(ipSpan);
+
+        // Add monthly calendar
+        const calendar = createMonthCalendar(validator.activationDays || []);
+        nodeInfo.appendChild(calendar);
 
         card.appendChild(nodeInfo);
 
