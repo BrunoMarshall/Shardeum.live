@@ -29,6 +29,10 @@
             <button id="leaderboard-btn" class="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700">Leaderboard (Most Active)</button>
             <button id="loserboard-btn" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300">Loserboard (Least Active)</button>
         </div>
+        <div id="loading-bar" class="hidden w-full bg-gray-200 rounded-full h-2.5 mb-4">
+            <div class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+        </div>
+        <div id="selection-container" class="hidden mt-4 flex justify-center space-x-4"></div>
         <div id="leaderboard" class="grid grid-cols-1 gap-4"></div>
         <div id="loserboard" class="grid grid-cols-1 gap-4"></div>
         <h3 class="text-xl font-semibold mb-4">Customize Your Validator</h3>

@@ -132,3 +132,6 @@ body {
 .calendar-day.empty {
     background-color: transparent;
 }
+#loading-bar {
+    transition: width 0.5s ease-in-out;
+}

@@ -4,12 +4,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const loserboardDiv = document.getElementById('loserboard');
     const leaderboardBtn = document.getElementById('leaderboard-btn');
     const loserboardBtn = document.getElementById('loserboard-btn');
+    const selectionContainer = document.getElementById('selection-container');
+    const loadingBar = document.getElementById('loading-bar');
     const backendUrl = 'https://leaderboard.shardeum.live';
     let currentValidators = [];
     let currentStandbyNodes = [];
     let currentPeriod = 'weekly';
     let currentFilter = 'default';
-    let activeTab = 'leaderboard';
+    let activeTab = null;
 
     function createIndicator() {
         console.log('Creating indicator with CSS animation');
@@ -39,6 +41,27 @@ document.addEventListener('DOMContentLoaded', () => {
     function removeIndicator() {
         const indicator = document.getElementById('status-indicator');
         if (indicator) indicator.remove();
+    }
+
+    function showLoadingBar() {
+        loadingBar.classList.remove('hidden');
+        const progress = loadingBar.querySelector('div');
+        let width = 0;
+        const interval = setInterval(() => {
+            if (width >= 100) {
+                width = 0;
+            } else {
+                width += 10;
+            }
+            progress.style.width = `${width}%`;
+        }, 500);
+        return interval;
+    }
+
+    function hideLoadingBar(interval) {
+        clearInterval(interval);
+        loadingBar.classList.add('hidden');
+        loadingBar.querySelector('div').style.width = '0%';
     }
 
     function formatSHM(value, decimals = 10) {
@@ -114,6 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function fetchValidators(period) {
+        const loadingInterval = showLoadingBar();
         try {
             console.log(`fetchValidators: Fetching validators for period: ${period}`);
             const response = await fetch(`${backendUrl}/api/validators?period=${period}`, {
@@ -161,10 +185,13 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('fetchValidators: Error fetching validators:', error);
             leaderboardDiv.innerHTML = '<p class="text-red-600">Error loading validators. Please try again later.</p>';
             loserboardDiv.innerHTML = '';
+        } finally {
+            hideLoadingBar(loadingInterval);
         }
     }
 
     async function fetchStandbyNodes() {
+        const loadingInterval = showLoadingBar();
         try {
             console.log('fetchStandbyNodes: Fetching standby nodes');
             const response = await fetch(`${backendUrl}/api/standby-nodes`, {
@@ -186,6 +213,8 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('fetchStandbyNodes: Error fetching standby nodes:', error);
             loserboardDiv.innerHTML = '<p class="text-red-600">Error loading loserboard. Please try again later.</p>';
             leaderboardDiv.innerHTML = '';
+        } finally {
+            hideLoadingBar(loadingInterval);
         }
     }
 
@@ -265,36 +294,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         loserboardDiv.innerHTML = '';
 
-        const selectorContainer = document.createElement('div');
-        selectorContainer.className = 'mt-4 flex justify-center space-x-4';
-        selectorContainer.innerHTML = `
-            <div>
-                <label for="period-selector" class="text-gray-700 font-medium mr-2">Select Period:</label>
-                <select id="period-selector" class="p-2 border rounded">
-                    <option value="daily" ${currentPeriod === 'daily' ? 'selected' : ''}>Daily</option>
-                    <option value="weekly" ${currentPeriod === 'weekly' ? 'selected' : ''}>Weekly</option>
-                    <option value="monthly" ${currentPeriod === 'monthly' ? 'selected' : ''}>Monthly</option>
-                    <option value="all" ${currentPeriod === 'all' ? 'selected' : ''}>All Time</option>
-                </select>
-            </div>
-            <div>
-                <label for="filter-selector" class="text-gray-700 font-medium mr-2">Sort By:</label>
-                <select id="filter-selector" class="p-2 border rounded">
-                    <option value="default" ${currentFilter === 'default' ? 'selected' : ''}>Default (${currentPeriod} activations)</option>
-                    <option value="stake" ${currentFilter === 'stake' ? 'selected' : ''}>Node Stake</option>
-                    <option value="reward" ${currentFilter === 'reward' ? 'selected' : ''}>Current Rewards</option>
-                    <option value="status" ${currentFilter === 'status' ? 'selected' : ''}>Node Status</option>
-                </select>
-            </div>
-        `;
-        leaderboardDiv.appendChild(selectorContainer);
-        console.log('showLeaderboard: Selector container added');
-
         if (leaderboard.length === 0) {
             const noData = document.createElement('p');
             noData.className = 'text-gray-600 mt-4';
             noData.textContent = 'No community validators available for this period.';
             leaderboardDiv.appendChild(noData);
+            removeIndicator();
+            leaderboardBtn.innerHTML = 'Leaderboard (Most Active)';
+            leaderboardBtn.appendChild(createIndicator());
+            leaderboardBtn.className = 'px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700';
+            loserboardBtn.innerHTML = 'Loserboard (Least Active)';
+            loserboardBtn.className = 'px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300';
             return;
         }
 
@@ -305,19 +315,6 @@ document.addEventListener('DOMContentLoaded', () => {
             cardContainer.appendChild(card);
         });
         leaderboardDiv.appendChild(cardContainer);
-
-        const periodSelector = selectorContainer.querySelector('#period-selector');
-        periodSelector.addEventListener('change', () => {
-            console.log('periodSelector: Period changed to:', periodSelector.value);
-            fetchValidators(periodSelector.value);
-        });
-
-        const filterSelector = selectorContainer.querySelector('#filter-selector');
-        filterSelector.addEventListener('change', () => {
-            console.log('filterSelector: Filter changed to:', filterSelector.value);
-            currentFilter = filterSelector.value;
-            showLeaderboard();
-        });
 
         removeIndicator();
         leaderboardBtn.innerHTML = 'Leaderboard (Most Active)';
@@ -338,12 +335,20 @@ document.addEventListener('DOMContentLoaded', () => {
             loserboardDiv.removeChild(loserboardDiv.firstChild);
         }
         leaderboardDiv.innerHTML = '';
+        selectionContainer.innerHTML = '';
+        selectionContainer.classList.add('hidden');
 
         if (loserboard.length === 0) {
             const noData = document.createElement('p');
             noData.className = 'text-gray-600 mt-4';
             noData.textContent = 'No standby nodes available.';
             loserboardDiv.appendChild(noData);
+            removeIndicator();
+            leaderboardBtn.innerHTML = 'Leaderboard (Most Active)';
+            leaderboardBtn.className = 'px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300';
+            loserboardBtn.innerHTML = 'Loserboard (Least Active)';
+            loserboardBtn.appendChild(createIndicator());
+            loserboardBtn.className = 'px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700';
             return;
         }
 
@@ -582,16 +587,67 @@ document.addEventListener('DOMContentLoaded', () => {
         return card;
     }
 
+    function showLeaderboardSelection() {
+        activeTab = 'leaderboard';
+        leaderboardDiv.innerHTML = '';
+        loserboardDiv.innerHTML = '';
+        selectionContainer.classList.remove('hidden');
+        selectionContainer.innerHTML = `
+            <div>
+                <label for="period-selector" class="text-gray-700 font-medium mr-2">Select Period:</label>
+                <select id="period-selector" class="p-2 border rounded">
+                    <option value="daily" ${currentPeriod === 'daily' ? 'selected' : ''}>Daily</option>
+                    <option value="weekly" ${currentPeriod === 'weekly' ? 'selected' : ''}>Weekly</option>
+                    <option value="monthly" ${currentPeriod === 'monthly' ? 'selected' : ''}>Monthly</option>
+                    <option value="all" ${currentPeriod === 'all' ? 'selected' : ''}>All Time</option>
+                </select>
+            </div>
+            <div>
+                <label for="filter-selector" class="text-gray-700 font-medium mr-2">Sort By:</label>
+                <select id="filter-selector" class="p-2 border rounded">
+                    <option value="default" ${currentFilter === 'default' ? 'selected' : ''}>Default (${currentPeriod} activations)</option>
+                    <option value="stake" ${currentFilter === 'stake' ? 'selected' : ''}>Node Stake</option>
+                    <option value="reward" ${currentFilter === 'reward' ? 'selected' : ''}>Current Rewards</option>
+                    <option value="status" ${currentFilter === 'status' ? 'selected' : ''}>Node Status</option>
+                </select>
+            </div>
+            <button id="show-btn" class="px-6 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700">Show</button>
+        `;
+        removeIndicator();
+        leaderboardBtn.innerHTML = 'Leaderboard (Most Active)';
+        leaderboardBtn.appendChild(createIndicator());
+        leaderboardBtn.className = 'px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700';
+        loserboardBtn.innerHTML = 'Loserboard (Least Active)';
+        loserboardBtn.className = 'px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300';
+
+        const periodSelector = selectionContainer.querySelector('#period-selector');
+        const filterSelector = selectionContainer.querySelector('#filter-selector');
+        const showBtn = selectionContainer.querySelector('#show-btn');
+
+        periodSelector.addEventListener('change', () => {
+            console.log('periodSelector: Period changed to:', periodSelector.value);
+            currentPeriod = periodSelector.value;
+            filterSelector.querySelector('option[value="default"]').textContent = `Default (${currentPeriod} activations)`;
+        });
+
+        filterSelector.addEventListener('change', () => {
+            console.log('filterSelector: Filter changed to:', filterSelector.value);
+            currentFilter = filterSelector.value;
+        });
+
+        showBtn.addEventListener('click', () => {
+            console.log('showBtn: Fetching validators for period:', currentPeriod);
+            fetchValidators(currentPeriod);
+        });
+    }
+
     leaderboardBtn.addEventListener('click', () => {
         console.log('leaderboardBtn: Clicked');
-        fetchValidators(currentPeriod);
+        showLeaderboardSelection();
     });
 
     loserboardBtn.addEventListener('click', () => {
         console.log('loserboardBtn: Clicked');
         fetchStandbyNodes();
     });
-
-    fetchValidators('weekly');
-    fetchStandbyNodes();
 });
