@@ -49,12 +49,12 @@ document.addEventListener('DOMContentLoaded', () => {
         let width = 0;
         const interval = setInterval(() => {
             if (width >= 100) {
-                width = 0;
+                width = 0; // Reset to 0 to loop
             } else {
-                width += 10;
+                width += 2; // Increment by 2% every 160ms to complete in ~8 seconds (100 / 2 * 160ms = 8000ms)
             }
             progress.style.width = `${width}%`;
-        }, 500);
+        }, 160);
         return interval;
     }
 
