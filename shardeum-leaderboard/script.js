@@ -276,6 +276,31 @@ document.addEventListener('DOMContentLoaded', () => {
     function showLeaderboard() {
         activeTab = 'leaderboard';
         const communityValidators = currentValidators.filter(v => !v.foundation);
+
+        // Assign original ranks before filtering
+        let sortedValidators = [...communityValidators];
+        if (currentFilter === 'stake') {
+            sortedValidators.sort((a, b) => parseSHM(b.stake_lock) - parseSHM(a.stake_lock));
+        } else if (currentFilter === 'reward') {
+            sortedValidators.sort((a, b) => parseSHM(b.reward) - parseSHM(a.reward));
+        } else if (currentFilter === 'status') {
+            sortedValidators.sort((a, b) => {
+                const statusA = a.status === 'Active' ? 1 : 0;
+                const statusB = b.status === 'Active' ? 1 : 0;
+                if (statusA !== statusB) return statusB - statusA;
+                return (b[`${currentPeriod}_count`] || 0) - (a[`${currentPeriod}_count`] || 0);
+            });
+        } else {
+            sortedValidators.sort((a, b) => (b[`${currentPeriod}_count`] || 0) - (a[`${currentPeriod}_count`] || 0));
+        }
+
+        // Create a map of validators to their original ranks
+        const rankMap = new Map();
+        sortedValidators.forEach((v, index) => {
+            rankMap.set(v.address, index + 1);
+        });
+
+        // Apply search filter
         const filteredValidators = communityValidators.filter(v => {
             if (!searchQuery) return true;
             const query = searchQuery.toLowerCase();
@@ -286,9 +311,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 (v.identifier && v.identifier.toLowerCase().includes(query))
             );
         });
+
         const limit = Math.min(2000, filteredValidators.length);
         let leaderboard = filteredValidators.slice(0, limit);
 
+        // Sort filtered validators according to currentFilter
         if (currentFilter === 'stake') {
             leaderboard.sort((a, b) => parseSHM(b.stake_lock) - parseSHM(a.stake_lock));
         } else if (currentFilter === 'reward') {
@@ -327,8 +354,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const cardContainer = document.createElement('div');
         cardContainer.className = 'card-container mt-4';
-        leaderboard.forEach((v, index) => {
-            const card = createValidatorCard(v, `${currentPeriod}_count`, index + 1);
+        leaderboard.forEach(v => {
+            const originalRank = rankMap.get(v.address);
+            const card = createValidatorCard(v, `${currentPeriod}_count`, originalRank);
             cardContainer.appendChild(card);
         });
         leaderboardDiv.appendChild(cardContainer);
@@ -611,23 +639,25 @@ document.addEventListener('DOMContentLoaded', () => {
         loserboardDiv.innerHTML = '';
         selectionContainer.classList.remove('hidden');
         selectionContainer.innerHTML = `
-            <div>
-                <label for="period-selector" class="text-gray-700 font-medium mr-2">Select Period:</label>
-                <select id="period-selector" class="p-2 border rounded">
-                    <option value="daily" ${currentPeriod === 'daily' ? 'selected' : ''}>Daily</option>
-                    <option value="weekly" ${currentPeriod === 'weekly' ? 'selected' : ''}>Weekly</option>
-                    <option value="monthly" ${currentPeriod === 'monthly' ? 'selected' : ''}>Monthly</option>
-                    <option value="all" ${currentPeriod === 'all' ? 'selected' : ''}>All Time</option>
-                </select>
-            </div>
-            <div>
-                <label for="filter-selector" class="text-gray-700 font-medium mr-2">Sort By:</label>
-                <select id="filter-selector" class="p-2 border rounded">
-                    <option value="default" ${currentFilter === 'default' ? 'selected' : ''}>Default (${currentPeriod} activations)</option>
-                    <option value="stake" ${currentFilter === 'stake' ? 'selected' : ''}>Node Stake</option>
-                    <option value="reward" ${currentFilter === 'reward' ? 'selected' : ''}>Current Rewards</option>
-                    <option value="status" ${currentFilter === 'status' ? 'selected' : ''}>Node Status</option>
-                </select>
+            <div class="flex space-x-4">
+                <div>
+                    <label for="period-selector" class="text-gray-700 font-medium mr-2">Select Period:</label>
+                    <select id="period-selector" class="p-2 border rounded">
+                        <option value="daily" ${currentPeriod === 'daily' ? 'selected' : ''}>Daily</option>
+                        <option value="weekly" ${currentPeriod === 'weekly' ? 'selected' : ''}>Weekly</option>
+                        <option value="monthly" ${currentPeriod === 'monthly' ? 'selected' : ''}>Monthly</option>
+                        <option value="all" ${currentPeriod === 'all' ? 'selected' : ''}>All Time</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="filter-selector" class="text-gray-700 font-medium mr-2">Sort By:</label>
+                    <select id="filter-selector" class="p-2 border rounded">
+                        <option value="default" ${currentFilter === 'default' ? 'selected' : ''}>Default (${currentPeriod} activations)</option>
+                        <option value="stake" ${currentFilter === 'stake' ? 'selected' : ''}>Node Stake</option>
+                        <option value="reward" ${currentFilter === 'reward' ? 'selected' : ''}>Current Rewards</option>
+                        <option value="status" ${currentFilter === 'status' ? 'selected' : ''}>Node Status</option>
+                    </select>
+                </div>
             </div>
             <div class="search-container">
                 <label for="search-input" class="text-gray-700 font-medium mr-2">Search:</label>

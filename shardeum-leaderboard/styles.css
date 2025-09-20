@@ -142,13 +142,15 @@ body {
     position: relative;
     display: flex;
     align-items: center;
+    width: 100%;
+    max-width: 300px;
+    margin-top: 0.5rem;
 }
 .search-input {
     padding: 0.5rem 2.5rem 0.5rem 0.75rem;
     border: 1px solid #d1d5db;
     border-radius: 0.375rem;
     width: 100%;
-    max-width: 300px;
 }
 .search-input:focus {
     outline: none;
