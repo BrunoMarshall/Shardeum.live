@@ -132,3 +132,39 @@ body {
 .calendar-day.empty {
     background-color: transparent;
 }
+#loading-bar {
+    transition: all 0.3s ease;
+}
+#loading-bar div {
+    transition: width 0.16s ease;
+}
+.search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.search-input {
+    padding: 0.5rem 2.5rem 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    width: 100%;
+    max-width: 300px;
+}
+.search-input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+.clear-search {
+    position: absolute;
+    right: 0.5rem;
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    color: #6b7280;
+    cursor: pointer;
+    display: none;
+}
+.clear-search:hover {
+    color: #2563eb;
+}

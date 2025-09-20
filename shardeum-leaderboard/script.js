@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentPeriod = 'weekly';
     let currentFilter = 'default';
     let activeTab = null;
+    let searchQuery = '';
 
     function createIndicator() {
         console.log('Creating indicator with CSS animation');
@@ -62,6 +63,12 @@ document.addEventListener('DOMContentLoaded', () => {
         clearInterval(interval);
         loadingBar.classList.add('hidden');
         loadingBar.querySelector('div').style.width = '0%';
+    }
+
+    function sanitizeInput(input) {
+        const div = document.createElement('div');
+        div.textContent = input;
+        return div.innerHTML;
     }
 
     function formatSHM(value, decimals = 10) {
@@ -269,8 +276,18 @@ document.addEventListener('DOMContentLoaded', () => {
     function showLeaderboard() {
         activeTab = 'leaderboard';
         const communityValidators = currentValidators.filter(v => !v.foundation);
-        const limit = Math.min(2000, communityValidators.length);
-        let leaderboard = communityValidators.slice(0, limit);
+        const filteredValidators = communityValidators.filter(v => {
+            if (!searchQuery) return true;
+            const query = searchQuery.toLowerCase();
+            return (
+                (v.alias && v.alias.toLowerCase().includes(query)) ||
+                (v.address && v.address.toLowerCase().includes(query)) ||
+                (v.nominator && v.nominator.toLowerCase().includes(query)) ||
+                (v.identifier && v.identifier.toLowerCase().includes(query))
+            );
+        });
+        const limit = Math.min(2000, filteredValidators.length);
+        let leaderboard = filteredValidators.slice(0, limit);
 
         if (currentFilter === 'stake') {
             leaderboard.sort((a, b) => parseSHM(b.stake_lock) - parseSHM(a.stake_lock));
@@ -287,7 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
             leaderboard.sort((a, b) => (b[`${currentPeriod}_count`] || 0) - (a[`${currentPeriod}_count`] || 0));
         }
 
-        console.log(`showLeaderboard: Showing leaderboard with ${leaderboard.length} community validators, period: ${currentPeriod}, filter: ${currentFilter}`);
+        console.log(`showLeaderboard: Showing leaderboard with ${leaderboard.length} community validators, period: ${currentPeriod}, filter: ${currentFilter}, search: ${searchQuery}`);
 
         while (leaderboardDiv.firstChild) {
             leaderboardDiv.removeChild(leaderboardDiv.firstChild);
@@ -297,7 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (leaderboard.length === 0) {
             const noData = document.createElement('p');
             noData.className = 'text-gray-600 mt-4';
-            noData.textContent = 'No community validators available for this period.';
+            noData.textContent = searchQuery ? 'No validators match your search.' : 'No community validators available for this period.';
             leaderboardDiv.appendChild(noData);
             removeIndicator();
             leaderboardBtn.innerHTML = 'Leaderboard (Most Active)';
@@ -589,6 +606,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showLeaderboardSelection() {
         activeTab = 'leaderboard';
+        searchQuery = ''; // Reset search query
         leaderboardDiv.innerHTML = '';
         loserboardDiv.innerHTML = '';
         selectionContainer.classList.remove('hidden');
@@ -611,6 +629,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     <option value="status" ${currentFilter === 'status' ? 'selected' : ''}>Node Status</option>
                 </select>
             </div>
+            <div class="search-container">
+                <label for="search-input" class="text-gray-700 font-medium mr-2">Search:</label>
+                <input type="text" id="search-input" class="search-input" placeholder="Name, Address, Nominator, or IP">
+                <button id="clear-search" class="clear-search" title="Clear search">&times;</button>
+            </div>
             <button id="show-btn" class="px-6 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700">Show</button>
         `;
         removeIndicator();
@@ -622,6 +645,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const periodSelector = selectionContainer.querySelector('#period-selector');
         const filterSelector = selectionContainer.querySelector('#filter-selector');
+        const searchInput = selectionContainer.querySelector('#search-input');
+        const clearSearchBtn = selectionContainer.querySelector('#clear-search');
         const showBtn = selectionContainer.querySelector('#show-btn');
 
         periodSelector.addEventListener('change', () => {
@@ -633,6 +658,32 @@ document.addEventListener('DOMContentLoaded', () => {
         filterSelector.addEventListener('change', () => {
             console.log('filterSelector: Filter changed to:', filterSelector.value);
             currentFilter = filterSelector.value;
+            if (currentValidators.length > 0) {
+                showLeaderboard();
+            }
+        });
+
+        let debounceTimeout;
+        searchInput.addEventListener('input', () => {
+            clearTimeout(debounceTimeout);
+            debounceTimeout = setTimeout(() => {
+                searchQuery = sanitizeInput(searchInput.value.trim());
+                console.log('searchInput: Search query updated:', searchQuery);
+                clearSearchBtn.style.display = searchQuery ? 'block' : 'none';
+                if (activeTab === 'leaderboard' && currentValidators.length > 0) {
+                    showLeaderboard();
+                }
+            }, 300);
+        });
+
+        clearSearchBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            searchQuery = '';
+            clearSearchBtn.style.display = 'none';
+            console.log('clearSearchBtn: Search query cleared');
+            if (activeTab === 'leaderboard' && currentValidators.length > 0) {
+                showLeaderboard();
+            }
         });
 
         showBtn.addEventListener('click', () => {
@@ -648,6 +699,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loserboardBtn.addEventListener('click', () => {
         console.log('loserboardBtn: Clicked');
+        searchQuery = ''; // Reset search query when switching to Loserboard
         fetchStandbyNodes();
     });
 });
