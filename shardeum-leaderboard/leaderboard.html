@@ -3,86 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shardeum Leaderboard</title>
+    <title>Shardeum Validator Leaderboard & Loserboard</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <style>
-        .validator-card {
-            display: flex;
-            align-items: center;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border: 1px solid #e2e8f0;
-            border-radius: 0.5rem;
-            background-color: #fff;
-            transition: background-color 0.2s;
-        }
-        .validator-card:hover {
-            background-color: #f7fafc;
-        }
-        .foundation-node {
-            border-left: 4px solid #4a90e2;
-        }
-        .community-node {
-            border-left: 4px solid #38a169;
-        }
-        .rank {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-right: 1rem;
-        }
-        .text-container {
-            flex: 1;
-            margin-left: 1rem;
-        }
-        .text-container span {
-            display: block;
-            margin-bottom: 0.5rem;
-        }
-        .node-info {
-            margin-left: 1rem;
-            text-align: right;
-        }
-        .calendar {
-            display: inline-block;
-            padding: 0.5rem;
-            border: 1px solid #e2e8f0;
-            border-radius: 0.25rem;
-        }
-        .loading-bar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 4px;
-            background-color: #4a90e2;
-            width: 0;
-            transition: width 0.1s;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="assets/shardeum_live_favicon.png">
 </head>
 <body class="bg-gray-100 font-sans">
-    <div class="container mx-auto p-4">
-        <h1 class="text-3xl font-bold mb-4">Shardeum Leaderboard</h1>
-        <div class="flex space-x-4 mb-4">
-            <button id="leaderboard-btn" class="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700">
-                Leaderboard (Most Active)
-            </button>
-            <button id="loserboard-btn" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300">
-                Loserboard (Least Active)
-            </button>
-            <select id="period-select" class="p-2 border rounded-lg">
-                <option value="daily">Daily</option>
-                <option value="weekly" selected>Weekly</option>
-                <option value="monthly">Monthly</option>
-                <option value="all">All Time</option>
-            </select>
-            <button id="show-btn" class="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700">
-                Show
-            </button>
+    <nav class="bg-blue-600 text-white py-4">
+        <div class="max-w-4xl mx-auto flex justify-between items-center px-6">
+            <div class="flex items-center">
+                <img src="assets/shardeum_live_logo.png" alt="Shardeum Logo" class="h-12 mr-3">
+                <h1 class="text-xl font-bold">Shardeum Validator Leaderboard</h1>
+            </div>
+            <div>
+                <a href="../index.html" class="text-white hover:underline mr-4">Home</a>
+                <a href="leaderboard.html" class="text-white hover:underline font-semibold">Leaderboard</a>
+                <a href="../about.html" class="text-white hover:underline">About</a>
+            </div>
         </div>
-        <div id="selection-container" class="mb-4"></div>
-        <div id="leaderboard"></div>
-        <div id="loserboard"></div>
-    </div>
+    </nav>
+    <main class="max-w-4xl mx-auto my-8 p-6 bg-white rounded-lg shadow-lg">
+        <h2 class="text-2xl font-semibold text-center mb-6">Validator Leaderboard & Loserboard</h2>
+        <p class="text-center text-gray-600 mb-4">View the most and least active community validators on the Shardeum network.</p>
+        <div class="flex justify-center mb-6 space-x-4">
+            <button id="leaderboard-btn" class="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700">Leaderboard (Most Active)</button>
+            <button id="loserboard-btn" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300">Loserboard (Least Active)</button>
+        </div>
+        <div id="leaderboard" class="grid grid-cols-1 gap-4"></div>
+        <div id="loserboard" class="grid grid-cols-1 gap-4"></div>
+        <h3 class="text-xl font-semibold mb-4">Customize Your Validator</h3>
+        <p class="text-gray-700 mb-4">If you want your validator to have a custom avatar and name, please contact us in the <a href="https://discord.gg/shardeum" class="text-blue-600 hover:underline" target="_blank">Shardeum Discord</a>, Node-operators group. We'll handle the updates securely!</p>
+    </main>
+    <footer class="bg-blue-600 text-white py-4 text-center">
+        <p>© 2025 Shardeum Validator Leaderboard. Powered by <a href="https://shardeum.org" class="underline">Shardeum</a>.</p>
+        <p class="mt-2">Data sourced from <a href="https://api.shardeum.org" class="underline">Shardeum API</a>.</p>
+        <p class="mt-2">Developed from Shardeum community members to the community, for beer: <a href="https://explorer.shardeum.org/account/0x1f3d3427d5d6af7cfb6a04380292ba5af028bf08" class="underline"><code>0x1F3D3427D5D6aF7cfb6a04380292ba5AF028bf08</code></a></p>
+    </footer>
     <script src="script.js"></script>
 </body>
 </html>
