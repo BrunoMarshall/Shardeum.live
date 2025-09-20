@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (width >= 100) {
                 width = 0; // Reset to 0 to loop
             } else {
-                width += 2; // Increment by 2% every 160ms to complete in ~8 seconds (100 / 2 * 160ms = 8000ms)
+                width += 2; // Increment by 2% every 160ms to complete in ~8 seconds
             }
             progress.style.width = `${width}%`;
         }, 160);
@@ -161,20 +161,20 @@ document.addEventListener('DOMContentLoaded', () => {
             // Fetch activation days for each validator
             for (const validator of validators) {
                 try {
-                    const response = await fetch(`${backendUrl}/api/validator-increments/${encodeURIComponent(validator.address)}/monthly`, {
+                    const response = await fetch(`${backendUrl}/api/validator-increments/${encodeURIComponent(validator.address)}/monthly?period=${period}`, {
                         mode: 'cors',
                         headers: { 'User-Agent': 'Shardeum-Leaderboard/1.0' }
                     });
                     if (response.ok) {
                         validator.activationDays = await response.json();
-                        console.log(`Fetched activation days for validator ${validator.address}:`, validator.activationDays);
+                        console.log(`Fetched activation days for validator ${validator.address} (period: ${period}):`, validator.activationDays);
                     } else {
                         validator.activationDays = [];
-                        console.warn(`Failed to fetch activation days for validator ${validator.address}: ${response.status}`);
+                        console.warn(`Failed to fetch activation days for validator ${validator.address} (period: ${period}): ${response.status}`);
                     }
                 } catch (error) {
                     validator.activationDays = [];
-                    console.error(`Error fetching activation days for validator ${validator.address}:`, error.message);
+                    console.error(`Error fetching activation days for validator ${validator.address} (period: ${period}):`, error.message);
                 }
             }
 
