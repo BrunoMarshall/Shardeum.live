@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loserboardBtn = document.getElementById('loserboard-btn');
     const selectionContainer = document.getElementById('selection-container');
     const searchInput = document.getElementById('search-input');
+    const clearSearchBtn = document.getElementById('clear-search');
     const loadingBar = document.getElementById('loading-bar');
     const backendUrl = 'https://leaderboard.shardeum.live';
     let currentValidators = [];
@@ -209,18 +210,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) throw new Error(`fetchStandbyNodes: Network response was not ok: ${response.status}`);
             const standbyNodes = await response.json();
             console.log('fetchStandbyNodes: Standby nodes received:', standbyNodes);
-            if (!Array.isArray(standbyNodes) || standbyNodes.length === 0) {
-                console.warn('fetchStandbyNodes: No standby nodes returned or invalid data format');
-                currentStandbyNodes = [];
-                showLoserboard();
-                return;
-            }
-            currentStandbyNodes = [...standbyNodes].sort((a, b) => b.standby_hours - a.standby_hours);
+            currentStandbyNodes = Array.isArray(standbyNodes) ? [...standbyNodes].sort((a, b) => b.standby_hours - a.standby_hours) : [];
             showLoserboard();
         } catch (error) {
             console.error('fetchStandbyNodes: Error fetching standby nodes:', error);
-            loserboardDiv.innerHTML = '<p class="text-red-600">Error loading loserboard. Please try again later.</p>';
-            leaderboardDiv.innerHTML = '';
+            currentStandbyNodes = [];
+            showLoserboard();
         } finally {
             hideLoadingBar(loadingInterval);
         }
@@ -319,6 +314,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         loserboardDiv.innerHTML = '';
 
+        // Show search bar now that validators are loaded
+        const searchContainer = document.getElementById('search-container');
+        searchContainer.classList.remove('hidden');
+
         if (leaderboard.length === 0) {
             const noData = document.createElement('p');
             noData.className = 'text-gray-600 mt-4';
@@ -363,10 +362,14 @@ document.addEventListener('DOMContentLoaded', () => {
         selectionContainer.innerHTML = '';
         selectionContainer.classList.add('hidden');
 
+        // Hide search bar for loserboard
+        const searchContainer = document.getElementById('search-container');
+        searchContainer.classList.add('hidden');
+
         if (loserboard.length === 0) {
             const noData = document.createElement('p');
             noData.className = 'text-gray-600 mt-4';
-            noData.textContent = 'No standby nodes available.';
+            noData.textContent = 'No standby nodes available at this time.';
             loserboardDiv.appendChild(noData);
             removeIndicator();
             leaderboardBtn.innerHTML = 'Leaderboard (Most Active)';
@@ -618,6 +621,9 @@ document.addEventListener('DOMContentLoaded', () => {
         leaderboardDiv.innerHTML = '';
         loserboardDiv.innerHTML = '';
         selectionContainer.classList.remove('hidden');
+        // Hide search bar until validators are loaded
+        const searchContainer = document.getElementById('search-container');
+        searchContainer.classList.add('hidden');
         selectionContainer.innerHTML = `
             <div>
                 <label for="period-selector" class="text-gray-700 font-medium mr-2">Select Period:</label>
@@ -671,8 +677,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Search input event listener
     searchInput.addEventListener('input', () => {
-        searchQuery = sanitizeInput(searchInput.value.trim());
-        console.log('searchInput: Search query updated:', searchQuery);
+        const searchContainer = document.getElementById('search-container');
+        if (!searchContainer.classList.contains('hidden')) {
+            searchQuery = sanitizeInput(searchInput.value.trim());
+            console.log('searchInput: Search query updated:', searchQuery);
+            if (activeTab === 'leaderboard') {
+                showLeaderboard();
+            }
+        }
+    });
+
+    // Clear search button event listener
+    clearSearchBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        searchQuery = '';
+        console.log('clearSearchBtn: Search cleared');
         if (activeTab === 'leaderboard') {
             showLeaderboard();
         }
@@ -690,4 +709,7 @@ document.addEventListener('DOMContentLoaded', () => {
         searchQuery = '';
         fetchStandbyNodes();
     });
+
+    // Initialize with leaderboard selection
+    showLeaderboardSelection();
 });
