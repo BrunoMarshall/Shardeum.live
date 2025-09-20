@@ -16,8 +16,19 @@ const showBtn = document.getElementById('show-btn');
 const leaderboardBtn = document.getElementById('leaderboard-btn');
 const loserboardBtn = document.getElementById('loserboard-btn');
 const selectionContainer = document.getElementById('selection-container');
-const filterSelect = document.getElementById('filter-select');
-const searchInput = document.getElementById('search-input');
+let filterSelect = document.getElementById('filter-select');
+let searchInput = document.getElementById('search-input');
+
+// Log missing elements
+if (!leaderboardDiv) console.error('leaderboardDiv is null: Element with id="leaderboard" not found');
+if (!loserboardDiv) console.error('loserboardDiv is null: Element with id="loserboard" not found');
+if (!periodSelect) console.error('periodSelect is null: Element with id="period-select" not found');
+if (!showBtn) console.error('showBtn is null: Element with id="show-btn" not found');
+if (!leaderboardBtn) console.error('leaderboardBtn is null: Element with id="leaderboard-btn" not found');
+if (!loserboardBtn) console.error('loserboardBtn is null: Element with id="loserboard-btn" not found');
+if (!selectionContainer) console.error('selectionContainer is null: Element with id="selection-container" not found');
+if (!filterSelect) console.warn('filterSelect is null: Element with id="filter-select" not found, will be created dynamically');
+if (!searchInput) console.warn('searchInput is null: Element with id="search-input" not found, will be created dynamically');
 
 function createIndicator() {
     console.log('Creating indicator with CSS animation');
@@ -377,8 +388,12 @@ async function fetchValidators(period) {
         showLeaderboard();
     } catch (error) {
         console.error('fetchValidators: Error fetching validators:', error);
-        leaderboardDiv.innerHTML = '<p class="text-red-600">Error loading validators. Please try again later.</p>';
-        loserboardDiv.innerHTML = '';
+        if (leaderboardDiv) {
+            leaderboardDiv.innerHTML = '<p class="text-red-600">Error loading validators. Please try again later.</p>';
+        }
+        if (loserboardDiv) {
+            loserboardDiv.innerHTML = '';
+        }
     } finally {
         hideLoadingBar(loadingInterval);
         isFetching = false;
@@ -417,6 +432,10 @@ async function fetchStandbyNodes() {
 
 function showLeaderboard() {
     activeTab = 'leaderboard';
+    if (!leaderboardDiv || !loserboardDiv) {
+        console.error('showLeaderboard: Missing leaderboardDiv or loserboardDiv');
+        return;
+    }
     const communityValidators = currentValidators.filter(v => !v.foundation);
     console.log(`showLeaderboard: Found ${communityValidators.length} community validators before filtering`);
 
@@ -458,7 +477,11 @@ function showLeaderboard() {
     loserboardDiv.innerHTML = '';
 
     const searchContainer = document.getElementById('search-container');
-    searchContainer.classList.remove('hidden');
+    if (searchContainer) {
+        searchContainer.classList.remove('hidden');
+    } else {
+        console.warn('searchContainer not found');
+    }
 
     if (leaderboard.length === 0) {
         console.warn('showLeaderboard: No validators to display');
@@ -467,11 +490,15 @@ function showLeaderboard() {
         noData.textContent = searchQuery ? 'No validators match your search.' : 'No community validators available for this period.';
         leaderboardDiv.appendChild(noData);
         removeIndicator();
-        leaderboardBtn.innerHTML = 'Leaderboard (Most Active)';
-        leaderboardBtn.appendChild(createIndicator());
-        leaderboardBtn.className = 'px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700';
-        loserboardBtn.innerHTML = 'Loserboard (Least Active)';
-        loserboardBtn.className = 'px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300';
+        if (leaderboardBtn) {
+            leaderboardBtn.innerHTML = 'Leaderboard (Most Active)';
+            leaderboardBtn.appendChild(createIndicator());
+            leaderboardBtn.className = 'px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700';
+        }
+        if (loserboardBtn) {
+            loserboardBtn.innerHTML = 'Loserboard (Least Active)';
+            loserboardBtn.className = 'px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300';
+        }
         return;
     }
 
@@ -485,15 +512,23 @@ function showLeaderboard() {
     leaderboardDiv.appendChild(cardContainer);
 
     removeIndicator();
-    leaderboardBtn.innerHTML = 'Leaderboard (Most Active)';
-    leaderboardBtn.appendChild(createIndicator());
-    leaderboardBtn.className = 'px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700';
-    loserboardBtn.innerHTML = 'Loserboard (Least Active)';
-    loserboardBtn.className = 'px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300';
+    if (leaderboardBtn) {
+        leaderboardBtn.innerHTML = 'Leaderboard (Most Active)';
+        leaderboardBtn.appendChild(createIndicator());
+        leaderboardBtn.className = 'px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700';
+    }
+    if (loserboardBtn) {
+        loserboardBtn.innerHTML = 'Loserboard (Least Active)';
+        loserboardBtn.className = 'px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300';
+    }
 }
 
 function showLoserboard() {
     activeTab = 'loserboard';
+    if (!leaderboardDiv || !loserboardDiv) {
+        console.error('showLoserboard: Missing leaderboardDiv or loserboardDiv');
+        return;
+    }
     const limit = Math.min(2000, currentStandbyNodes.length);
     const loserboard = currentStandbyNodes.slice(0, limit);
 
@@ -503,11 +538,15 @@ function showLoserboard() {
         loserboardDiv.removeChild(loserboardDiv.firstChild);
     }
     leaderboardDiv.innerHTML = '';
-    selectionContainer.innerHTML = '';
-    selectionContainer.classList.add('hidden');
+    if (selectionContainer) {
+        selectionContainer.innerHTML = '';
+        selectionContainer.classList.add('hidden');
+    }
 
     const searchContainer = document.getElementById('search-container');
-    searchContainer.classList.add('hidden');
+    if (searchContainer) {
+        searchContainer.classList.add('hidden');
+    }
 
     if (loserboard.length === 0) {
         console.warn('showLoserboard: No standby nodes to display');
@@ -516,11 +555,15 @@ function showLoserboard() {
         noData.textContent = 'No standby nodes available at this time.';
         loserboardDiv.appendChild(noData);
         removeIndicator();
-        leaderboardBtn.innerHTML = 'Leaderboard (Most Active)';
-        leaderboardBtn.className = 'px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300';
-        loserboardBtn.innerHTML = 'Loserboard (Least Active)';
-        loserboardBtn.appendChild(createIndicator());
-        loserboardBtn.className = 'px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700';
+        if (leaderboardBtn) {
+            leaderboardBtn.innerHTML = 'Leaderboard (Most Active)';
+            leaderboardBtn.className = 'px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300';
+        }
+        if (loserboardBtn) {
+            loserboardBtn.innerHTML = 'Loserboard (Least Active)';
+            loserboardBtn.appendChild(createIndicator());
+            loserboardBtn.className = 'px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700';
+        }
         return;
     }
 
@@ -531,15 +574,23 @@ function showLoserboard() {
     });
 
     removeIndicator();
-    leaderboardBtn.innerHTML = 'Leaderboard (Most Active)';
-    leaderboardBtn.className = 'px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300';
-    loserboardBtn.innerHTML = 'Loserboard (Least Active)';
-    loserboardBtn.appendChild(createIndicator());
-    loserboardBtn.className = 'px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700';
+    if (leaderboardBtn) {
+        leaderboardBtn.innerHTML = 'Leaderboard (Most Active)';
+        leaderboardBtn.className = 'px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300';
+    }
+    if (loserboardBtn) {
+        loserboardBtn.innerHTML = 'Loserboard (Least Active)';
+        loserboardBtn.appendChild(createIndicator());
+        loserboardBtn.className = 'px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700';
+    }
 }
 
 function updateSelectionContainer() {
     console.log('updateSelectionContainer: Updating with period:', currentPeriod);
+    if (!selectionContainer) {
+        console.error('updateSelectionContainer: selectionContainer is null');
+        return;
+    }
     selectionContainer.innerHTML = '';
     selectionContainer.classList.remove('hidden');
     const select = document.createElement('select');
@@ -564,56 +615,69 @@ function updateSelectionContainer() {
     const searchContainer = document.createElement('div');
     searchContainer.id = 'search-container';
     searchContainer.className = 'mt-2';
-    const searchInput = document.createElement('input');
-    searchInput.id = 'search-input';
-    searchInput.type = 'text';
-    searchInput.placeholder = 'Search by name, address, nominator, or IP';
-    searchInput.className = 'p-2 border rounded-lg w-full';
-    searchInput.value = searchQuery;
-    searchContainer.appendChild(searchInput);
+    const searchInputEl = document.createElement('input');
+    searchInputEl.id = 'search-input';
+    searchInputEl.type = 'text';
+    searchInputEl.placeholder = 'Search by name, address, nominator, or IP';
+    searchInputEl.className = 'p-2 border rounded-lg w-full';
+    searchInputEl.value = searchQuery;
+    searchContainer.appendChild(searchInputEl);
     selectionContainer.appendChild(searchContainer);
+
+    // Update global references
+    filterSelect = select;
+    searchInput = searchInputEl;
+
+    // Attach event listeners after creating elements
+    filterSelect.addEventListener('change', () => {
+        console.log('filterSelect: Changed to', filterSelect.value);
+        currentFilter = filterSelect.value;
+        showLeaderboard();
+    });
+
+    searchInput.addEventListener('input', () => {
+        console.log('searchInput: Input changed to', searchInput.value);
+        searchQuery = searchInput.value;
+        showLeaderboard();
+    });
 }
 
-periodSelect.addEventListener('change', () => {
-    console.log('periodSelect: Changed to', periodSelect.value);
-    currentPeriod = periodSelect.value;
-    updateSelectionContainer();
-});
-
-filterSelect.addEventListener('change', () => {
-    console.log('filterSelect: Changed to', filterSelect.value);
-    currentFilter = filterSelect.value;
-    showLeaderboard();
-});
-
-searchInput.addEventListener('input', () => {
-    console.log('searchInput: Input changed to', searchInput.value);
-    searchQuery = searchInput.value;
-    showLeaderboard();
-});
-
-showBtn.addEventListener('click', () => {
-    console.log('showBtn: Fetching validators for period:', periodSelect.value);
-    fetchValidators(periodSelect.value);
-});
-
-leaderboardBtn.addEventListener('click', () => {
-    console.log('leaderboardBtn: Clicked');
-    if (activeTab !== 'leaderboard') {
-        fetchValidators(currentPeriod);
+function initializeEventListeners() {
+    if (periodSelect) {
+        periodSelect.addEventListener('change', () => {
+            console.log('periodSelect: Changed to', periodSelect.value);
+            currentPeriod = periodSelect.value;
+            updateSelectionContainer();
+        });
     }
-    updateSelectionContainer();
-});
-
-loserboardBtn.addEventListener('click', () => {
-    console.log('loserboardBtn: Clicked');
-    if (activeTab !== 'loserboard') {
-        fetchStandbyNodes();
+    if (showBtn) {
+        showBtn.addEventListener('click', () => {
+            console.log('showBtn: Fetching validators for period:', periodSelect?.value || currentPeriod);
+            fetchValidators(periodSelect?.value || currentPeriod);
+        });
     }
-});
+    if (leaderboardBtn) {
+        leaderboardBtn.addEventListener('click', () => {
+            console.log('leaderboardBtn: Clicked');
+            if (activeTab !== 'leaderboard') {
+                fetchValidators(currentPeriod);
+            }
+            updateSelectionContainer();
+        });
+    }
+    if (loserboardBtn) {
+        loserboardBtn.addEventListener('click', () => {
+            console.log('loserboardBtn: Clicked');
+            if (activeTab !== 'loserboard') {
+                fetchStandbyNodes();
+            }
+        });
+    }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOMContentLoaded: Initializing');
     updateSelectionContainer();
+    initializeEventListeners();
     fetchValidators(currentPeriod);
 });
