@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const leaderboardBtn = document.getElementById('leaderboard-btn');
     const loserboardBtn = document.getElementById('loserboard-btn');
     const selectionContainer = document.getElementById('selection-container');
+    const searchInput = document.getElementById('search-input');
     const loadingBar = document.getElementById('loading-bar');
     const backendUrl = 'https://leaderboard.shardeum.live';
     let currentValidators = [];
@@ -12,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentPeriod = 'weekly';
     let currentFilter = 'default';
     let activeTab = null;
+    let searchQuery = '';
 
     function createIndicator() {
         console.log('Creating indicator with CSS animation');
@@ -134,6 +136,12 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error(`formatTimestamp: Error formatting timestamp: ${timestamp}`, error);
             return 'N/A';
         }
+    }
+
+    function sanitizeInput(input) {
+        const div = document.createElement('div');
+        div.textContent = input || '';
+        return div.innerHTML;
     }
 
     async function fetchValidators(period) {
@@ -263,14 +271,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         calendar.appendChild(grid);
+        if (!activationDays || activationDays.length === 0) {
+            const noData = document.createElement('div');
+            noData.className = 'text-gray-600 text-center text-xs mt-2';
+            noData.textContent = 'No activations this month';
+            calendar.appendChild(noData);
+        }
         return calendar;
     }
 
     function showLeaderboard() {
         activeTab = 'leaderboard';
         const communityValidators = currentValidators.filter(v => !v.foundation);
-        const limit = Math.min(2000, communityValidators.length);
-        let leaderboard = communityValidators.slice(0, limit);
+        // Apply search filter
+        const filteredValidators = communityValidators.filter(v => {
+            if (!searchQuery) return true;
+            const query = searchQuery.toLowerCase();
+            return (
+                (v.alias && v.alias.toLowerCase().includes(query)) ||
+                (v.address && v.address.toLowerCase().includes(query)) ||
+                (v.nominator && v.nominator.toLowerCase().includes(query)) ||
+                (v.identifier && v.identifier.toLowerCase().includes(query))
+            );
+        });
+        const limit = Math.min(2000, filteredValidators.length);
+        let leaderboard = filteredValidators.slice(0, limit);
 
         if (currentFilter === 'stake') {
             leaderboard.sort((a, b) => parseSHM(b.stake_lock) - parseSHM(a.stake_lock));
@@ -287,7 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
             leaderboard.sort((a, b) => (b[`${currentPeriod}_count`] || 0) - (a[`${currentPeriod}_count`] || 0));
         }
 
-        console.log(`showLeaderboard: Showing leaderboard with ${leaderboard.length} community validators, period: ${currentPeriod}, filter: ${currentFilter}`);
+        console.log(`showLeaderboard: Showing leaderboard with ${leaderboard.length} community validators, period: ${currentPeriod}, filter: ${currentFilter}, search: ${searchQuery}`);
 
         while (leaderboardDiv.firstChild) {
             leaderboardDiv.removeChild(leaderboardDiv.firstChild);
@@ -297,7 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (leaderboard.length === 0) {
             const noData = document.createElement('p');
             noData.className = 'text-gray-600 mt-4';
-            noData.textContent = 'No community validators available for this period.';
+            noData.textContent = searchQuery ? 'No validators match your search.' : 'No community validators available for this period.';
             leaderboardDiv.appendChild(noData);
             removeIndicator();
             leaderboardBtn.innerHTML = 'Leaderboard (Most Active)';
@@ -505,6 +530,7 @@ document.addEventListener('DOMContentLoaded', () => {
         nodeInfo.appendChild(ipSpan);
 
         // Add monthly calendar
+        console.log(`Creating calendar for validator ${validator.address} with activationDays:`, validator.activationDays);
         const calendar = createMonthCalendar(validator.activationDays || []);
         nodeInfo.appendChild(calendar);
 
@@ -628,11 +654,13 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('periodSelector: Period changed to:', periodSelector.value);
             currentPeriod = periodSelector.value;
             filterSelector.querySelector('option[value="default"]').textContent = `Default (${currentPeriod} activations)`;
+            fetchValidators(currentPeriod); // Auto-refresh on period change
         });
 
         filterSelector.addEventListener('change', () => {
             console.log('filterSelector: Filter changed to:', filterSelector.value);
             currentFilter = filterSelector.value;
+            showLeaderboard(); // Re-apply filter with current validators
         });
 
         showBtn.addEventListener('click', () => {
@@ -641,13 +669,25 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Search input event listener
+    searchInput.addEventListener('input', () => {
+        searchQuery = sanitizeInput(searchInput.value.trim());
+        console.log('searchInput: Search query updated:', searchQuery);
+        if (activeTab === 'leaderboard') {
+            showLeaderboard();
+        }
+    });
+
     leaderboardBtn.addEventListener('click', () => {
         console.log('leaderboardBtn: Clicked');
+        searchQuery = sanitizeInput(searchInput.value.trim());
         showLeaderboardSelection();
     });
 
     loserboardBtn.addEventListener('click', () => {
         console.log('loserboardBtn: Clicked');
+        searchInput.value = ''; // Clear search when switching to loserboard
+        searchQuery = '';
         fetchStandbyNodes();
     });
 });
