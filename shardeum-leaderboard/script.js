@@ -147,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const loadingInterval = showLoadingBar();
         try {
             console.log(`fetchValidators: Fetching validators for period: ${period}`);
-            const response = await fetch(`${backendUrl}/api/validators?period=${period}`, {
+            const response = await fetch(`${backendUrl}/api/validators?period=${period}&cache_bust=${new Date().getTime()}`, {
                 mode: 'cors',
                 headers: { 'User-Agent': 'Shardeum-Leaderboard/1.0' }
             });
@@ -275,7 +275,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showLeaderboard() {
         activeTab = 'leaderboard';
-        const communityValidators = currentValidators.filter(v => !v.foundation);
+        let communityValidators = currentValidators.filter(v => !v.foundation);
+
+        // For daily period, only show validators with daily_count > 0
+        if (currentPeriod === 'daily') {
+            communityValidators = communityValidators.filter(v => v.daily_count > 0);
+        }
 
         // Assign original ranks before filtering
         let sortedValidators = [...communityValidators];
